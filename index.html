@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Site em Construção</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f7f7f7;
+      color: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+    }
+
+    .conteudo {
+      padding: 60px;
+    }
+
+    .icone {
+      font-size: 42px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 6vw, 4.8rem);
+      line-height: 0.95;
+      margin-bottom: 24px;
+    }
+
+    .linha {
+      width: 80px;
+      height: 5px;
+      background: #f5b51b;
+      border-radius: 10px;
+      margin-bottom: 24px;
+    }
+
+    p {
+      font-size: 1.15rem;
+      line-height: 1.7;
+      color: #555;
+      margin-bottom: 25px;
+    }
+
+    .imagem {
+      min-height: 520px;
+      background:
+        linear-gradient(rgba(255,255,255,.10), rgba(255,255,255,.10)),
+        url("obras.png") center center / cover no-repeat;
+    }
+
+    footer {
+      margin-top: 25px;
+      text-align: center;
+      color: #888;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 800px) {
+      body {
+        padding: 15px;
+      }
+
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      .conteudo {
+        padding: 40px 30px;
+        text-align: center;
+      }
+
+      .linha {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .imagem {
+        min-height: 320px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <section class="container">
+      <div class="conteudo">
+        <div class="icone">🚧</div>
+
+        <h1>Site em<br>construção</h1>
+
+        <div class="linha"></div>
+
+        <p>
+          Estamos trabalhando para deixar tudo pronto.
+          Em breve nosso site estará disponível.
+        </p>
+      </div>
+
+      <div class="imagem" aria-label="Ilustração de site em obras"></div>
+    </section>
+
+    <footer>
+      &copy; 2026 Seu Site. Todos os direitos reservados.
+    </footer>
+  </main>
+</body>
+</html>
