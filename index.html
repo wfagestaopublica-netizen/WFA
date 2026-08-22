@@ -283,6 +283,9 @@
     .app-view-site:hover { border-color: var(--gold-500); color: white; }
     .site-preview-bar { position: fixed; z-index: 95; left: 50%; bottom: 22px; transform: translateX(-50%); display: none; align-items: center; gap: 14px; padding: 11px 18px; background: var(--navy-950); color: white; box-shadow: 0 12px 32px rgba(3,16,26,.35); }
     body.sessao-ativa:not(.app-active) .site-preview-bar { display: flex; }
+    body.previa-ativa:not(.app-active) .site-preview-bar.previa { display: flex; }
+    .site-preview-bar.previa { background: #7a5a12; }
+
     .site-preview-bar span { font-size: 12px; letter-spacing: .03em; }
     .site-preview-bar button { padding: 7px 14px; border: 1px solid rgba(255,255,255,.28); background: transparent; color: white; font: inherit; font-size: 12px; cursor: pointer; }
     .site-preview-bar button:hover { border-color: var(--gold-500); }
@@ -1972,6 +1975,22 @@
       <button class="gate-access" type="button" data-open-login>Acesso restrito</button>
     </div>
   </div>
+  <script>
+    /* Link de pré-visualização: wfagestaopublica.com.br/#homepage libera a página
+       pública sem login, apenas nesta aba, até ela ser fechada.                  */
+    (function () {
+      var CHAVE = 'homepage';
+      var MARCA = 'wfaPreviaPublica';
+      var pedido = window.location.hash.replace('#', '').toLowerCase() === CHAVE;
+      var jaAtivo = false;
+      try { jaAtivo = sessionStorage.getItem(MARCA) === '1'; } catch (error) { jaAtivo = false; }
+      if (!pedido && !jaAtivo) return;
+      try { sessionStorage.setItem(MARCA, '1'); } catch (error) { /* aba anônima */ }
+      document.body.classList.remove('em-construcao');
+      document.body.classList.add('previa-ativa');
+      if (pedido && window.history.replaceState) window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }());
+  </script>
   <div class="utility-bar">
     <div class="container utility-inner">
       <span>Assessoria contábil especializada em gestão pública</span>
@@ -2306,12 +2325,13 @@
 
         <section class="app-view" data-view-panel="configuracoes">
           <div class="view-heading"><div><p>Administração</p><h2>Configurações</h2></div></div>
-          <div class="settings-card"><h3>Autenticação do sistema</h3><p>O painel está conectado ao projeto <strong>wfa-gestao</strong> e usa o Firebase Authentication. Não existe usuário ou senha fixa dentro do HTML.</p><div class="firebase-note"><strong>Para liberar o primeiro acesso:</strong> no Console do Firebase, habilite o provedor E-mail/Senha e cadastre o usuário administrador. Antes de publicar, inclua também o domínio final do GitHub Pages na lista de domínios autorizados.</div></div>
+          <div class="settings-card"><h3>Acesso ao sistema</h3><p>O acesso é individual, feito por e-mail e senha, e administrado fora desta página. Nenhuma credencial fica gravada no site.</p></div>
           <div class="settings-card"><h3>Dados salvos neste navegador</h3><p>Os PDFs carregados, a tabela do comparador com as correções, a trilha de auditoria e a última tela aberta ficam guardados no armazenamento local (IndexedDB) deste computador. Nada é enviado para servidores e os dados não acompanham outro navegador ou outra máquina.</p><p id="storageSummary" class="storage-summary">Verificando armazenamento…</p><button class="ghost-button" id="storageClear" type="button">Apagar dados salvos deste navegador</button></div>
         </section>
       </main>
     </div>
     <div class="app-toast" id="appToast" role="status"></div>
+    <div class="site-preview-bar previa" id="previewPublicBar"><span>Pré-visualização — o site ainda não está aberto ao público</span><button type="button" id="endPreview">Encerrar</button></div>
     <div class="site-preview-bar" id="sitePreviewBar"><span>Pré-visualizando a homepage como visitante</span><button type="button" id="backToApp">Voltar ao sistema</button></div>
     <div class="compare-editor-backdrop" id="compareEditor" role="presentation">
       <section class="compare-editor" role="dialog" aria-modal="true" aria-labelledby="compareEditorTitle">
@@ -2335,7 +2355,7 @@
         <div class="modal-heading"><span class="brand-symbol" aria-hidden="true"><span class="wf-letters">WF</span><span class="a-letter"></span></span><div><h2 id="loginTitle">Login</h2><p>Acesso ao sistema WFA</p></div></div>
         <form class="login-form" id="loginForm"><label>E-mail<input id="loginEmail" type="email" required placeholder="seuemail@dominio.com.br" autocomplete="username"></label><label>Senha<input id="loginPassword" type="password" required placeholder="Digite sua senha" autocomplete="current-password"></label><div class="login-options"><label><input id="rememberLogin" type="checkbox"> Manter conectado</label><a href="#" id="forgotPassword">Esqueci minha senha</a></div><button class="login-submit" id="loginSubmit" type="submit">Entrar <span>→</span></button></form>
         <div class="login-message" id="loginMessage" role="status"></div>
-        <p class="modal-note">Ao adicionar dados ao sistema, proteja-os também com regras de acesso no Firestore e no Storage.</p>
+        <p class="modal-note">Ambiente restrito. O acesso é pessoal e intransferível.</p>
       </div>
     </section>
   </div>
@@ -2384,7 +2404,7 @@
       }
       function leaveApp() {
         document.body.classList.remove('app-active', 'app-compact', 'app-hide-welcome', 'sessao-ativa');
-        if (document.body.dataset.construcao === 'on') document.body.classList.add('em-construcao');
+        if (document.body.dataset.construcao === 'on' && !document.body.classList.contains('previa-ativa')) document.body.classList.add('em-construcao');
         app.setAttribute('aria-hidden', 'true');
         appSidebar.classList.remove('open');
       }
@@ -2406,7 +2426,7 @@
       document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { closeLogin(); appSidebar.classList.remove('open'); } });
       loginForm.addEventListener('submit', async function (event) {
         event.preventDefault();
-        if (!authAdapter) { setLoginMessage('O Firebase ainda não foi configurado. Envie os dados do aplicativo Web para ativar o login real.', true); return; }
+        if (!authAdapter) { setLoginMessage('O serviço de acesso está indisponível no momento. Tente novamente em instantes.', true); return; }
         loginSubmit.disabled = true;
         loginSubmit.firstChild.textContent = 'Entrando... ';
         try {
@@ -2422,7 +2442,7 @@
       forgotPassword.addEventListener('click', async function (event) {
         event.preventDefault();
         const email = document.getElementById('loginEmail').value.trim();
-        if (!authAdapter) { setLoginMessage('O Firebase precisa ser configurado antes da recuperação de senha.', true); return; }
+        if (!authAdapter) { setLoginMessage('O serviço de acesso está indisponível no momento. Tente novamente em instantes.', true); return; }
         if (!email) { setLoginMessage('Informe seu e-mail para receber a recuperação de senha.', true); return; }
         try { await authAdapter.reset(email); setLoginMessage('Se o e-mail estiver cadastrado, as instruções de recuperação serão enviadas.', false); }
         catch (error) { setLoginMessage('Não foi possível solicitar a recuperação agora.', true); }
@@ -2433,6 +2453,10 @@
         showToast('Pré-visualizando a homepage. Use "Voltar ao sistema" para retornar.');
       });
       document.getElementById('backToApp').addEventListener('click', function () { document.body.classList.add('app-active'); });
+      document.getElementById('endPreview').addEventListener('click', function () {
+        try { sessionStorage.removeItem('wfaPreviaPublica'); } catch (error) { /* ignora */ }
+        window.location.reload();
+      });
       document.getElementById('appLogout').addEventListener('click', async function () { if (authAdapter) await authAdapter.signOut(); leaveApp(); });
 
       const viewTitles = { workspace:'Central de documentos', overview:'Visão geral', municipios:'Municípios', obrigacoes:'Obrigações', documentos:'Documentos', relatorios:'Relatórios', ferramentas:'Ferramentas contábeis', 'comparador-fontes':'Comparador de fontes', personalizar:'Personalizar página', configuracoes:'Configurações' };
@@ -3700,7 +3724,8 @@
         });
         if (typeof dados.emConstrucao === 'boolean') {
           document.body.dataset.construcao = dados.emConstrucao ? 'on' : 'off';
-          document.body.classList.toggle('em-construcao', dados.emConstrucao && !document.body.classList.contains('app-active'));
+          var liberado = document.body.classList.contains('app-active') || document.body.classList.contains('previa-ativa');
+          document.body.classList.toggle('em-construcao', dados.emConstrucao && !liberado);
         }
         if (dados.cores && dados.cores.destaque) {
           var local = {};
