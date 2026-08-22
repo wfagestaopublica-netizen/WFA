@@ -392,6 +392,20 @@
     .cms-image b { display: block; margin-bottom: 6px; color: var(--navy-900); font-size: 13px; }
     .cms-image small { display: block; margin-top: 5px; color: #9aa5aa; font-size: 11px; }
     .cms-image input { font-size: 13px; }
+    .cms-edit-bar { position: fixed; z-index: 96; left: 50%; bottom: 22px; transform: translateX(-50%); display: none; align-items: center; gap: 14px; padding: 12px 18px; background: var(--navy-950); color: white; box-shadow: 0 14px 36px rgba(3,16,26,.4); }
+    body.cms-editando .cms-edit-bar { display: flex; }
+    .cms-bar-title { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--gold-500); }
+    .cms-bar-count { font-size: 12px; color: rgba(255,255,255,.72); }
+    .cms-edit-bar button { padding: 8px 15px; border: 1px solid rgba(255,255,255,.28); background: transparent; color: white; font: inherit; font-size: 12px; cursor: pointer; }
+    .cms-edit-bar button:hover:not(:disabled) { border-color: var(--gold-500); }
+    .cms-edit-bar .cms-bar-save { background: var(--gold-500); border-color: var(--gold-500); color: var(--navy-950); font-weight: 700; }
+    .cms-edit-bar button:disabled { opacity: .45; cursor: default; }
+    body.cms-editando [data-cms-inline] { outline: 1px dashed rgba(195,154,87,.55); outline-offset: 2px; cursor: text; border-radius: 2px; }
+    body.cms-editando [data-cms-inline]:hover { outline-style: solid; outline-color: var(--gold-500); background: rgba(195,154,87,.1); }
+    body.cms-editando [data-cms-inline]:focus { outline: 2px solid var(--gold-500); background: rgba(195,154,87,.16); }
+    body.cms-editando [data-cms-inline-img] { outline: 2px dashed rgba(195,154,87,.7); outline-offset: -4px; cursor: pointer; }
+    body.cms-editando [data-cms-inline-img]:hover { outline-style: solid; }
+    .cms-inline-wrap { display: inline; }
     .settings-card + .settings-card { margin-top: 18px; }
     .storage-summary { margin-top: 12px; padding: 10px 12px; background: #f4f7f8; border: 1px solid #e1e7ea; color: #55656d; }
     .ghost-button { margin-top: 14px; padding: 9px 16px; background: white; border: 1px solid #c9d2d6; color: var(--navy-900); font: inherit; font-weight: 600; cursor: pointer; }
@@ -2300,23 +2314,24 @@
             <aside class="custom-preview"><small>Prévia</small><div class="preview-window"><div class="preview-side"></div><div class="preview-body"><i></i><h3 id="customPreviewName">WFA Gestão Pública</h3><p>Painel de gestão contábil</p><div><span></span><span></span><span></span></div></div></div><p>As opções poderão ser ampliadas quando o sistema tiver usuários, perfis e identidade por município.</p></aside>
           <div class="cms-card" id="cmsCard">
             <h3>Editor da homepage <span class="cms-tag">publicação global</span></h3>
-            <p>Diferente das preferências ao lado, o que você altera aqui é gravado no repositório <b>wfagestaopublica-netizen/WFA</b> e passa a valer para todos os visitantes do site, cerca de um minuto depois de publicar.</p>
-            <label class="cms-token">Token do GitHub <small>fine-grained, com acesso apenas a este repositório e permissão <b>Contents: Read and write</b></small><input id="cmsToken" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></label>
+            <p>Diferente das preferências ao lado, o que você altera aqui é salvo no servidor e passa a valer para todos os visitantes do site, cerca de um minuto depois.</p>
+            <label class="cms-token">Chave de publicação <small>necessária para salvar as alterações no servidor. Fica guardada apenas neste navegador.</small><input id="cmsToken" type="password" autocomplete="off" spellcheck="false" placeholder="Cole a chave aqui"></label>
             <div class="cms-actions">
-              <button type="button" id="cmsTokenSave">Salvar token neste navegador</button>
-              <button type="button" id="cmsTokenClear">Remover token</button>
-              <a class="cms-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Gerar token no GitHub ↗</a>
+              <button type="button" id="cmsTokenSave">Salvar chave neste navegador</button>
+              <button type="button" id="cmsTokenClear">Remover chave</button>
+              <a class="cms-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Gerar nova chave ↗</a>
             </div>
             <p class="cms-status" id="cmsStatus">Verificando…</p>
             <div class="cms-actions">
-              <button type="button" id="cmsOpen">Abrir editor de conteúdo</button>
-              <button type="button" class="cms-primary" id="cmsPublish" hidden>Publicar no site</button>
+              <button type="button" class="cms-primary" id="cmsInline">✎ Editar direto na página</button>
+              <button type="button" id="cmsOpen">Ver lista de campos</button>
+              <button type="button" id="cmsPublish" hidden>Salvar alterações</button>
               <button type="button" id="cmsDiscard" hidden>Descartar alterações</button>
             </div>
             <div class="cms-editor" id="cmsEditor" hidden>
               <label class="cms-switch"><input id="cmsConstrucao" type="checkbox" checked><span><b>Manter a página "Site em construção" para os visitantes</b><small>Enquanto estiver marcado, quem abrir o endereço vê apenas o aviso de construção. Você continua entrando normalmente pelo botão Acesso restrito. Desmarque e publique quando quiser abrir o site ao público.</small></span></label>
               <label class="cms-accent">Cor de destaque do site público <input id="cmsAccent" type="color" value="#c39a57"></label>
-              <p class="cms-hint">Cada campo abaixo é um trecho de texto da página inicial. A alteração aparece na hora aqui no seu navegador e só vai para o ar quando você clicar em <b>Publicar no site</b>.</p>
+              <p class="cms-hint">Cada campo abaixo é um trecho de texto da página inicial. Serve para ajustes precisos — para o dia a dia, prefira <b>Editar direto na página</b>. A alteração aparece na hora no seu navegador e só vai para o ar quando você clicar em <b>Salvar alterações</b>.</p>
               <div id="cmsFields"></div>
             </div>
           </div>
@@ -2331,6 +2346,12 @@
       </main>
     </div>
     <div class="app-toast" id="appToast" role="status"></div>
+    <div class="cms-edit-bar" id="cmsEditBar">
+      <span class="cms-bar-title">Modo de edição</span>
+      <span class="cms-bar-count" id="cmsBarCount">Nenhuma alteração</span>
+      <button type="button" class="cms-bar-save" id="cmsBarPublish" disabled>Salvar alterações</button>
+      <button type="button" id="cmsBarExit">Sair</button>
+    </div>
     <div class="site-preview-bar previa" id="previewPublicBar"><span>Pré-visualização — o site ainda não está aberto ao público</span><button type="button" id="endPreview">Encerrar</button></div>
     <div class="site-preview-bar" id="sitePreviewBar"><span>Pré-visualizando a homepage como visitante</span><button type="button" id="backToApp">Voltar ao sistema</button></div>
     <div class="compare-editor-backdrop" id="compareEditor" role="presentation">
@@ -3619,14 +3640,13 @@
     }
   </script>
   <script>
-    /* ================== Editor da homepage publicado no GitHub ==================
-       Conteúdo do site fica em conteudo/home.json no repositório. Todo visitante
-       carrega esse arquivo e vê a última versão publicada. A edição acontece no
-       painel interno (Personalizar página) e grava via API do GitHub usando um
-       token pessoal guardado apenas no navegador de quem edita.                */
+    /* ====================== Editor de conteúdo da homepage ======================
+       O conteúdo publicado vive em um arquivo à parte, lido por todos os visitantes
+       quando a página carrega. A edição acontece de dois jeitos: direto na página
+       (clicando no texto) ou pela lista de campos, dentro da área autenticada.   */
     (function () {
       'use strict';
-      var CMS_REPO = { owner:'wfagestaopublica-netizen', repo:'WFA', branch:'main' };
+      var DESTINO = { owner:'wfagestaopublica-netizen', repo:'WFA', branch:'main' };
       var CMS_PATH = 'conteudo/home.json';
       var CMS_IMG_DIR = 'conteudo/img/';
       var TOKEN_KEY = 'wfaGithubToken';
@@ -3634,27 +3654,30 @@
       var SCOPE_LABEL = { cabecalho:'Cabeçalho', inicio:'Topo do site', credentials:'Faixa de normas', empresa:'A empresa', servicos:'Soluções', municipios:'Atuação', metodo:'Método', contato:'Contato', rodape:'Rodapé', geral:'Outros' };
       var SCOPE_ORDER = ['cabecalho','inicio','credentials','empresa','servicos','municipios','metodo','contato','rodape','geral'];
 
-      var mapa = null;          // campos detectados na página, com o texto original
-      var publicado = null;     // conteúdo já publicado (home.json)
-      var imagensPendentes = {};// chave -> { blob, nome, url }
-      var editorMontado = false;
+      var mapa = null;           // trechos encontrados na página, com o texto original
+      var publicado = null;      // conteúdo já no ar
+      var alteracoes = {};       // chave -> texto novo (fonte única da verdade)
+      var imagensPendentes = {}; // chave -> { blob, extensao, url }
+      var listaMontada = false;
+      var editandoNaPagina = false;
+      var seletorImagem = null;
 
-      function toast(text) {
+      function toast(texto) {
         var el = document.getElementById('appToast');
         if (!el) return;
-        el.textContent = text;
+        el.textContent = texto;
         el.classList.add('show');
         clearTimeout(toast.timer);
         toast.timer = setTimeout(function () { el.classList.remove('show'); }, 4000);
       }
-      function setStatus(text, tipo) {
+      function setStatus(texto, tipo) {
         var el = document.getElementById('cmsStatus');
         if (!el) return;
-        el.textContent = text;
+        el.textContent = texto;
         el.className = 'cms-status' + (tipo ? ' ' + tipo : '');
       }
 
-      /* ---------- leitura da página ---------- */
+      /* ---------------- leitura da página ---------------- */
       function escopoDe(node) {
         var el = node.nodeType === 3 ? node.parentElement : node;
         var secao = el.closest('section[id], section[class], header.main-header, footer');
@@ -3680,7 +3703,7 @@
             acceptNode: function (node) {
               var pai = node.parentElement;
               if (!pai) return NodeFilter.FILTER_REJECT;
-              if (pai.closest('#wfaApp, script, style, noscript, .app-toast')) return NodeFilter.FILTER_REJECT;
+              if (pai.closest('#wfaApp, script, style, noscript, .app-toast, .site-preview-bar')) return NodeFilter.FILTER_REJECT;
               var valor = node.nodeValue.trim();
               if (valor.length < 2) return NodeFilter.FILTER_REJECT;
               if (!/[\wÀ-ÿ]/.test(valor)) return NodeFilter.FILTER_REJECT;
@@ -3692,7 +3715,7 @@
             var escopo = escopoDe(node);
             contador[escopo] = (contador[escopo] || 0) + 1;
             var chave = escopo + '.t' + contador[escopo];
-            textos[chave] = { node:node, chave:chave, escopo:escopo, orig:node.nodeValue.trim(), contexto:contextoDe(node) };
+            textos[chave] = { node:node, chave:chave, escopo:escopo, orig:node.nodeValue.trim(), contexto:contextoDe(node), host:null, envolvido:false };
           }
           raiz.querySelectorAll('img').forEach(function (img) {
             if (img.closest('#wfaApp')) return;
@@ -3715,7 +3738,8 @@
           var campo = mapa.textos[chave];
           var salvo = dados.textos[chave];
           if (!campo || !salvo || typeof salvo.v !== 'string') return;
-          if (salvo.o && salvo.o !== campo.orig) return; // o HTML mudou desde a edição: mantém o texto novo do código
+          if (salvo.o && salvo.o !== campo.orig) return; // a página mudou desde a edição: mantém o texto novo
+          alteracoes[chave] = salvo.v;
           aplicarTexto(campo, salvo.v);
         });
         if (dados.imagens) Object.keys(dados.imagens).forEach(function (chave) {
@@ -3734,59 +3758,248 @@
         }
       }
 
-      /* ---------- carregamento público ---------- */
-      function carregarPublicado() {
-        return fetch(CMS_PATH + '?v=' + Date.now(), { cache:'no-store' })
-          .then(function (res) { return res.ok ? res.json() : null; })
-          .catch(function () { return null; });
+      /* ---------------- alterações e rascunho ---------------- */
+      function registrarAlteracao(chave, valor) {
+        var campo = mapa.textos[chave];
+        if (!campo) return;
+        if (valor === campo.orig) delete alteracoes[chave]; else alteracoes[chave] = valor;
+        aplicarTexto(campo, valor);
+        gravarRascunho();
+      }
+      function totalAlteracoes() {
+        return Object.keys(alteracoes).length + Object.keys(imagensPendentes).length;
+      }
+      function corAtual() {
+        var el = document.getElementById('cmsAccent');
+        return el ? el.value : '#c39a57';
+      }
+      function construcaoAtual() {
+        var el = document.getElementById('cmsConstrucao');
+        return el ? el.checked : document.body.dataset.construcao !== 'off';
+      }
+      function gravarRascunho() {
+        var textos = {};
+        Object.keys(alteracoes).forEach(function (chave) {
+          var campo = mapa.textos[chave];
+          if (campo) textos[chave] = { v:alteracoes[chave], o:campo.orig };
+        });
+        try {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({ textos:textos, cores:{ destaque:corAtual() }, emConstrucao:construcaoAtual() }));
+        } catch (error) { /* sem espaço */ }
+        atualizarBotoes();
+        return textos;
+      }
+      function lerRascunho() {
+        try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (error) { return null; }
+      }
+      function atualizarBotoes() {
+        var total = totalAlteracoes();
+        var publicar = document.getElementById('cmsPublish');
+        var descartar = document.getElementById('cmsDiscard');
+        if (publicar) publicar.hidden = false;
+        if (descartar) descartar.hidden = total === 0;
+        var contador = document.getElementById('cmsBarCount');
+        if (contador) contador.textContent = total === 0 ? 'Nenhuma alteração' : total + (total === 1 ? ' alteração pendente' : ' alterações pendentes');
+        var barPublicar = document.getElementById('cmsBarPublish');
+        if (barPublicar) barPublicar.disabled = total === 0;
       }
 
-      /* ---------- API do GitHub ---------- */
+      /* ---------------- edição direto na página ---------------- */
+      var suportaTextoPuro = (function () {
+        var teste = document.createElement('div');
+        try { teste.contentEditable = 'plaintext-only'; return teste.contentEditable === 'plaintext-only'; }
+        catch (error) { return false; }
+      }());
+
+      function prepararAlvo(campo) {
+        if (!campo.host) {
+          var pai = campo.node.parentElement;
+          if (pai && pai.childNodes.length === 1) {
+            campo.host = pai;
+            campo.envolvido = false;
+          } else {
+            var span = document.createElement('span');
+            span.className = 'cms-inline-wrap';
+            campo.node.parentNode.insertBefore(span, campo.node);
+            span.appendChild(campo.node);
+            campo.host = span;
+            campo.envolvido = true;
+          }
+        }
+        campo.host.setAttribute('data-cms-inline', campo.chave);
+        campo.host.setAttribute('contenteditable', suportaTextoPuro ? 'plaintext-only' : 'true');
+        campo.host.setAttribute('spellcheck', 'false');
+        return campo.host;
+      }
+      function soltarAlvo(campo) {
+        if (!campo.host) return;
+        campo.host.removeAttribute('data-cms-inline');
+        campo.host.removeAttribute('contenteditable');
+        campo.host.removeAttribute('spellcheck');
+        if (campo.envolvido && campo.host.parentNode) {
+          campo.host.parentNode.replaceChild(campo.node, campo.host);
+          campo.host = null;
+          campo.envolvido = false;
+        }
+      }
+      function entrarEdicaoNaPagina() {
+        if (editandoNaPagina) return;
+        editandoNaPagina = true;
+        document.body.classList.remove('app-active');
+        document.body.classList.add('cms-editando');
+        Object.keys(mapa.textos).forEach(function (chave) { prepararAlvo(mapa.textos[chave]); });
+        Object.keys(mapa.imagens).forEach(function (chave) { mapa.imagens[chave].el.setAttribute('data-cms-inline-img', chave); });
+        window.scrollTo({ top: 0 });
+        atualizarBotoes();
+        toast('Clique em qualquer texto da página para editar. Nas imagens, clique para trocar.');
+      }
+      function sairEdicaoNaPagina(voltarAoPainel) {
+        if (!editandoNaPagina) return;
+        editandoNaPagina = false;
+        Object.keys(mapa.textos).forEach(function (chave) { soltarAlvo(mapa.textos[chave]); });
+        Object.keys(mapa.imagens).forEach(function (chave) { mapa.imagens[chave].el.removeAttribute('data-cms-inline-img'); });
+        document.body.classList.remove('cms-editando');
+        if (voltarAoPainel !== false) document.body.classList.add('app-active');
+        if (listaMontada) montarLista();
+      }
+
+      document.addEventListener('input', function (evento) {
+        var host = evento.target.closest ? evento.target.closest('[data-cms-inline]') : null;
+        if (!host) return;
+        registrarAlteracao(host.dataset.cmsInline, host.textContent.trim());
+      });
+      document.addEventListener('keydown', function (evento) {
+        if (evento.key !== 'Enter') return;
+        var host = evento.target.closest ? evento.target.closest('[data-cms-inline]') : null;
+        if (host) { evento.preventDefault(); host.blur(); }
+      });
+      document.addEventListener('paste', function (evento) {
+        var host = evento.target.closest ? evento.target.closest('[data-cms-inline]') : null;
+        if (!host || suportaTextoPuro) return;
+        evento.preventDefault();
+        var texto = (evento.clipboardData || window.clipboardData).getData('text').replace(/\s+/g, ' ');
+        document.execCommand('insertText', false, texto);
+      });
+      document.addEventListener('click', function (evento) {
+        if (!editandoNaPagina) return;
+        var img = evento.target.closest ? evento.target.closest('[data-cms-inline-img]') : null;
+        if (img) {
+          evento.preventDefault();
+          abrirSeletorImagem(img.dataset.cmsInlineImg);
+          return;
+        }
+        var link = evento.target.closest ? evento.target.closest('a[href]') : null;
+        if (link && !link.closest('.cms-edit-bar')) evento.preventDefault();
+      }, true);
+      document.addEventListener('submit', function (evento) {
+        if (editandoNaPagina) evento.preventDefault();
+      }, true);
+
+      function abrirSeletorImagem(chave) {
+        if (!seletorImagem) {
+          seletorImagem = document.createElement('input');
+          seletorImagem.type = 'file';
+          seletorImagem.accept = 'image/*';
+          seletorImagem.style.display = 'none';
+          seletorImagem.addEventListener('change', function () {
+            var arquivo = seletorImagem.files && seletorImagem.files[0];
+            var destino = seletorImagem.dataset.chave;
+            seletorImagem.value = '';
+            if (arquivo && destino) trocarImagem(destino, arquivo);
+          });
+          document.body.appendChild(seletorImagem);
+        }
+        seletorImagem.dataset.chave = chave;
+        seletorImagem.click();
+      }
+      function trocarImagem(chave, arquivo) {
+        prepararImagem(arquivo).then(function (resultado) {
+          var url = URL.createObjectURL(resultado.blob);
+          imagensPendentes[chave] = { blob:resultado.blob, extensao:resultado.extensao, url:url };
+          var campo = mapa.imagens[chave];
+          if (campo) campo.el.src = url;
+          var previa = document.querySelector('.cms-image [data-cms-img-key="' + chave + '"]');
+          if (previa) previa.closest('.cms-image').querySelector('img').src = url;
+          atualizarBotoes();
+          toast('Imagem preparada. Use Publicar para enviá-la.');
+        }).catch(function (erro) { toast(erro.message); });
+      }
+
+      /* ---------------- lista de campos ---------------- */
+      function montarLista() {
+        var alvo = document.getElementById('cmsFields');
+        if (!alvo) return;
+        var porEscopo = {};
+        Object.keys(mapa.textos).forEach(function (chave) {
+          var campo = mapa.textos[chave];
+          (porEscopo[campo.escopo] = porEscopo[campo.escopo] || { textos:[], imagens:[] }).textos.push(campo);
+        });
+        Object.keys(mapa.imagens).forEach(function (chave) {
+          var campo = mapa.imagens[chave];
+          (porEscopo[campo.escopo] = porEscopo[campo.escopo] || { textos:[], imagens:[] }).imagens.push(campo);
+        });
+        var escopos = Object.keys(porEscopo).sort(function (a, b) {
+          var ia = SCOPE_ORDER.indexOf(a), ib = SCOPE_ORDER.indexOf(b);
+          return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+        });
+        function escapar(texto) { return texto.replace(/[&<>]/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;' }[c]; }); }
+        alvo.innerHTML = escopos.map(function (escopo) {
+          var grupo = porEscopo[escopo];
+          var linhas = grupo.textos.map(function (campo) {
+            var valor = campo.node.nodeValue.trim();   // reflete o que já está publicado e o que foi editado agora
+            var mudou = typeof alteracoes[campo.chave] === 'string';
+            return '<label class="cms-field' + (mudou ? ' alterado' : '') + '"><small>' + campo.contexto + '</small><textarea rows="' + (valor.length > 90 ? 3 : 1) + '" data-cms-key="' + campo.chave + '">' + escapar(valor) + '</textarea></label>';
+          }).join('');
+          var imagens = grupo.imagens.map(function (campo) {
+            return '<div class="cms-image"><img alt="" src="' + campo.el.currentSrc + '"><div><b>' + campo.alt + '</b><input type="file" accept="image/*" data-cms-img-key="' + campo.chave + '"><small>Reduzida automaticamente antes do envio.</small></div></div>';
+          }).join('');
+          return '<details class="cms-group"><summary>' + (SCOPE_LABEL[escopo] || escopo) + ' <i>' + grupo.textos.length + ' textos' + (grupo.imagens.length ? ' • ' + grupo.imagens.length + ' imagens' : '') + '</i></summary>' + linhas + imagens + '</details>';
+        }).join('');
+        listaMontada = true;
+        atualizarBotoes();
+      }
+
+      /* ---------------- gravação ---------------- */
       function token() { return localStorage.getItem(TOKEN_KEY) || ''; }
       function cabecalhos() {
         return { 'Authorization':'Bearer ' + token(), 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' };
       }
       function urlConteudo(caminho) {
-        return 'https://api.github.com/repos/' + CMS_REPO.owner + '/' + CMS_REPO.repo + '/contents/' + caminho;
+        return 'https://api.github.com/repos/' + DESTINO.owner + '/' + DESTINO.repo + '/contents/' + caminho;
       }
-      function erroGitHub(status, corpo) {
-        if (status === 401) return 'Token inválido ou expirado. Gere outro no GitHub.';
-        if (status === 403) return 'O token não tem permissão de gravação (Contents: Read and write) neste repositório.';
-        if (status === 404) return 'Repositório ou caminho não encontrado. Confirme se o token dá acesso a ' + CMS_REPO.owner + '/' + CMS_REPO.repo + '.';
-        if (status === 409) return 'O arquivo mudou no GitHub desde a última leitura. Recarregue a página e publique de novo.';
-        return 'O GitHub recusou a gravação (' + status + '). ' + String(corpo || '').slice(0, 180);
+      function mensagemErro(status) {
+        if (status === 401) return 'A chave de publicação está inválida ou venceu. Gere uma nova e salve novamente.';
+        if (status === 403) return 'A chave de publicação não tem permissão para salvar alterações.';
+        if (status === 404) return 'Não foi possível alcançar o destino das alterações. Verifique a chave de publicação.';
+        if (status === 409) return 'O conteúdo foi alterado em outra sessão. Recarregue a página e salve novamente.';
+        return 'O servidor não aceitou a gravação no momento. Tente de novo em instantes.';
       }
-      function lerSha(caminho) {
-        return fetch(urlConteudo(caminho) + '?ref=' + CMS_REPO.branch, { headers:cabecalhos(), cache:'no-store' })
+      function lerVersao(caminho) {
+        return fetch(urlConteudo(caminho) + '?ref=' + DESTINO.branch, { headers:cabecalhos(), cache:'no-store' })
           .then(function (res) {
             if (res.status === 404) return null;
-            if (!res.ok) return res.text().then(function (texto) { throw new Error(erroGitHub(res.status, texto)); });
+            if (!res.ok) throw new Error(mensagemErro(res.status));
             return res.json().then(function (json) { return json.sha; });
           });
       }
-      function gravar(caminho, base64, mensagem) {
-        return lerSha(caminho).then(function (sha) {
-          var corpo = { message:mensagem, content:base64, branch:CMS_REPO.branch };
-          if (sha) corpo.sha = sha;
+      function gravar(caminho, base64, resumo) {
+        return lerVersao(caminho).then(function (versao) {
+          var corpo = { message:resumo, content:base64, branch:DESTINO.branch };
+          if (versao) corpo.sha = versao;
           return fetch(urlConteudo(caminho), { method:'PUT', headers:Object.assign({ 'Content-Type':'application/json' }, cabecalhos()), body:JSON.stringify(corpo) })
             .then(function (res) {
-              if (!res.ok) return res.text().then(function (texto) { throw new Error(erroGitHub(res.status, texto)); });
+              if (!res.ok) throw new Error(mensagemErro(res.status));
               return res.json();
             });
         });
       }
       function bytesParaBase64(bytes) {
-        var saida = '';
-        var passo = 0x8000;
+        var saida = '', passo = 0x8000;
         for (var i = 0; i < bytes.length; i += passo) saida += String.fromCharCode.apply(null, bytes.subarray(i, i + passo));
         return btoa(saida);
       }
-
-      /* ---------- imagens ---------- */
       function prepararImagem(file) {
-        var LARGURA_MAX = 1920;
-        var PNG_DIRETO = 700 * 1024;
-        var PNG_LIMITE = 1500 * 1024;
+        var LARGURA_MAX = 1920, PNG_DIRETO = 700 * 1024, PNG_LIMITE = 1500 * 1024;
         return new Promise(function (resolve, reject) {
           if (!/^image\//.test(file.type)) { reject(new Error('Selecione um arquivo de imagem.')); return; }
           if (file.type === 'image/svg+xml') { resolve({ blob:file, extensao:'svg' }); return; }
@@ -3794,22 +4007,15 @@
           var img = new Image();
           img.onload = function () {
             var ehPng = file.type === 'image/png';
-            // PNG pequeno e já estreito (logo, brasão) vai como está, preservando transparência.
-            if (ehPng && img.naturalWidth <= LARGURA_MAX && file.size <= PNG_DIRETO) {
-              URL.revokeObjectURL(url);
-              resolve({ blob:file, extensao:'png' });
-              return;
-            }
+            if (ehPng && img.naturalWidth <= LARGURA_MAX && file.size <= PNG_DIRETO) { URL.revokeObjectURL(url); resolve({ blob:file, extensao:'png' }); return; }
             var escala = Math.min(1, LARGURA_MAX / img.naturalWidth);
             var canvas = document.createElement('canvas');
             canvas.width = Math.round(img.naturalWidth * escala);
             canvas.height = Math.round(img.naturalHeight * escala);
-            var ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
             function comoJpeg() {
               var fundo = document.createElement('canvas');
-              fundo.width = canvas.width;
-              fundo.height = canvas.height;
+              fundo.width = canvas.width; fundo.height = canvas.height;
               var fctx = fundo.getContext('2d');
               fctx.fillStyle = '#ffffff';
               fctx.fillRect(0, 0, fundo.width, fundo.height);
@@ -3820,7 +4026,6 @@
               }, 'image/jpeg', 0.82);
             }
             if (ehPng) {
-              // mantém PNG (transparência) se o resultado não ficar pesado demais para o repositório
               canvas.toBlob(function (blob) {
                 if (blob && blob.size <= PNG_LIMITE) { URL.revokeObjectURL(url); resolve({ blob:blob, extensao:'png' }); return; }
                 comoJpeg();
@@ -3832,199 +4037,131 @@
         });
       }
 
-      /* ---------- rascunho local ---------- */
-      function lerRascunho() {
-        try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (error) { return null; }
-      }
-      function gravarRascunho() {
-        var textos = {};
-        document.querySelectorAll('[data-cms-key]').forEach(function (campo) {
-          var chave = campo.dataset.cmsKey;
-          var original = mapa.textos[chave] ? mapa.textos[chave].orig : '';
-          if (campo.value.trim() !== original) textos[chave] = { v:campo.value.trim(), o:original };
-        });
-        var interruptor = document.getElementById('cmsConstrucao');
-        var rascunho = { textos:textos, cores:{ destaque:document.getElementById('cmsAccent').value }, emConstrucao:interruptor ? interruptor.checked : true };
-        try { localStorage.setItem(DRAFT_KEY, JSON.stringify(rascunho)); } catch (error) { /* sem espaço */ }
-        atualizarBotoes();
-        return rascunho;
-      }
-      function atualizarBotoes() {
-        var rascunho = lerRascunho();
-        var alterou = Boolean((rascunho && Object.keys(rascunho.textos || {}).length) || Object.keys(imagensPendentes).length);
-        var publicar = document.getElementById('cmsPublish');
-        var descartar = document.getElementById('cmsDiscard');
-        if (publicar) publicar.hidden = !editorMontado;
-        if (descartar) descartar.hidden = !alterou;
-      }
-
-      /* ---------- montagem do editor ---------- */
-      function montarEditor() {
-        var alvo = document.getElementById('cmsFields');
-        if (!alvo) return;
-        var rascunho = lerRascunho() || { textos:{} };
-        var porEscopo = {};
-        Object.keys(mapa.textos).forEach(function (chave) {
-          var campo = mapa.textos[chave];
-          (porEscopo[campo.escopo] = porEscopo[campo.escopo] || { textos:[], imagens:[] }).textos.push(campo);
-        });
-        Object.keys(mapa.imagens).forEach(function (chave) {
-          var campo = mapa.imagens[chave];
-          (porEscopo[campo.escopo] = porEscopo[campo.escopo] || { textos:[], imagens:[] }).imagens.push(campo);
-        });
-        var escopos = Object.keys(porEscopo).sort(function (a, b) {
-          var ia = SCOPE_ORDER.indexOf(a); var ib = SCOPE_ORDER.indexOf(b);
-          return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-        });
-        alvo.innerHTML = escopos.map(function (escopo) {
-          var grupo = porEscopo[escopo];
-          var titulo = SCOPE_LABEL[escopo] || escopo;
-          var linhas = grupo.textos.map(function (campo) {
-            var salvo = (rascunho.textos && rascunho.textos[campo.chave]) || (publicado && publicado.textos && publicado.textos[campo.chave]);
-            var valor = salvo && typeof salvo.v === 'string' && (!salvo.o || salvo.o === campo.orig) ? salvo.v : campo.orig;
-            var alterado = valor !== campo.orig;
-            return '<label class="cms-field' + (alterado ? ' alterado' : '') + '"><small>' + campo.contexto + '</small><textarea rows="' + (valor.length > 90 ? 3 : 1) + '" data-cms-key="' + campo.chave + '">' + valor.replace(/[&<>]/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;' }[c]; }) + '</textarea></label>';
-          }).join('');
-          var imagens = grupo.imagens.map(function (campo) {
-            return '<div class="cms-image"><img alt="" src="' + campo.el.currentSrc + '"><div><b>' + campo.alt + '</b><input type="file" accept="image/*" data-cms-img-key="' + campo.chave + '"><small>Enviada redimensionada para no máximo 1920px de largura.</small></div></div>';
-          }).join('');
-          return '<details class="cms-group"><summary>' + titulo + ' <i>' + grupo.textos.length + ' textos' + (grupo.imagens.length ? ' • ' + grupo.imagens.length + ' imagens' : '') + '</i></summary>' + linhas + imagens + '</details>';
-        }).join('');
-
-        alvo.addEventListener('input', function (event) {
-          var campo = event.target.closest('[data-cms-key]');
-          if (!campo) return;
-          var referencia = mapa.textos[campo.dataset.cmsKey];
-          if (!referencia) return;
-          aplicarTexto(referencia, campo.value.trim());
-          campo.closest('.cms-field').classList.toggle('alterado', campo.value.trim() !== referencia.orig);
-          gravarRascunho();
-        });
-        alvo.addEventListener('change', function (event) {
-          var entrada = event.target.closest('[data-cms-img-key]');
-          if (!entrada || !entrada.files || !entrada.files[0]) return;
-          var chave = entrada.dataset.cmsImgKey;
-          prepararImagem(entrada.files[0]).then(function (resultado) {
-            var url = URL.createObjectURL(resultado.blob);
-            imagensPendentes[chave] = { blob:resultado.blob, extensao:resultado.extensao, url:url };
-            var campo = mapa.imagens[chave];
-            if (campo) campo.el.src = url;
-            var previa = entrada.closest('.cms-image').querySelector('img');
-            if (previa) previa.src = url;
-            atualizarBotoes();
-            toast('Imagem pronta (' + Math.round(resultado.blob.size / 1024) + ' KB). Clique em Publicar para enviar.');
-          }).catch(function (erro) { toast(erro.message); });
-        });
-        editorMontado = true;
-        atualizarBotoes();
-      }
-
-      /* ---------- publicação ---------- */
       function publicar() {
-        if (!token()) { setStatus('Configure o token do GitHub antes de publicar.', 'erro'); return; }
-        var botao = document.getElementById('cmsPublish');
-        botao.disabled = true;
-        setStatus('Publicando…', '');
-        var rascunho = gravarRascunho();
+        if (!token()) { setStatus('Configure a chave de publicação antes de salvar.', 'erro'); toast('Chave de publicação não configurada.'); return; }
+        var botoes = [document.getElementById('cmsPublish'), document.getElementById('cmsBarPublish')].filter(Boolean);
+        botoes.forEach(function (b) { b.disabled = true; });
+        setStatus('Salvando as alterações…', '');
+        toast('Salvando as alterações…');
+        var textos = gravarRascunho();
         var conteudo = {
           v: 1,
           atualizadoEm: new Date().toISOString(),
-          textos: Object.assign({}, (publicado && publicado.textos) || {}, rascunho.textos),
+          textos: Object.assign({}, (publicado && publicado.textos) || {}, textos),
           imagens: Object.assign({}, (publicado && publicado.imagens) || {}),
-          cores: rascunho.cores,
-          emConstrucao: rascunho.emConstrucao
+          cores: { destaque: corAtual() },
+          emConstrucao: construcaoAtual()
         };
-        var chavesImagens = Object.keys(imagensPendentes);
         var fila = Promise.resolve();
-        chavesImagens.forEach(function (chave) {
+        Object.keys(imagensPendentes).forEach(function (chave) {
           fila = fila.then(function () {
-            var pendente = imagensPendentes[chave];
-            return pendente.blob.arrayBuffer().then(function (buffer) {
-              var caminho = CMS_IMG_DIR + chave.replace(/[^\w.-]/g, '-') + '-' + Date.now() + '.' + pendente.extensao;
-              setStatus('Enviando imagem ' + caminho + '…', '');
-              return gravar(caminho, bytesParaBase64(new Uint8Array(buffer)), 'Atualiza imagem ' + chave + ' pelo editor da homepage')
+            setStatus('Enviando imagem…', '');
+            return imagensPendentes[chave].blob.arrayBuffer().then(function (buffer) {
+              var caminho = CMS_IMG_DIR + chave.replace(/[^\w.-]/g, '-') + '-' + Date.now() + '.' + imagensPendentes[chave].extensao;
+              return gravar(caminho, bytesParaBase64(new Uint8Array(buffer)), 'Atualiza imagem da homepage')
                 .then(function () { conteudo.imagens[chave] = caminho; });
             });
           });
         });
         fila.then(function () {
-          setStatus('Gravando o conteúdo…', '');
-          var bytes = new TextEncoder().encode(JSON.stringify(conteudo, null, 2));
-          return gravar(CMS_PATH, bytesParaBase64(bytes), 'Atualiza o conteúdo da homepage pelo editor');
-        }).then(function (resposta) {
+          setStatus('Aplicando as alterações…', '');
+          return gravar(CMS_PATH, bytesParaBase64(new TextEncoder().encode(JSON.stringify(conteudo, null, 2))), 'Atualiza o conteúdo da homepage');
+        }).then(function () {
           publicado = conteudo;
           imagensPendentes = {};
           localStorage.removeItem(DRAFT_KEY);
           atualizarBotoes();
-          var link = resposta && resposta.commit && resposta.commit.html_url ? resposta.commit.html_url : '';
-          setStatus('Publicado. O site público atualiza em cerca de 1 minuto (GitHub Pages reconstruindo).' + (link ? ' Commit: ' + link : ''), 'ok');
-          toast('Conteúdo publicado no site.');
+          setStatus('Alterações salvas no servidor. Aguarde cerca de 1 minuto até que a atualização se propague para os visitantes.', 'ok');
+          toast('Alterações salvas. A atualização propaga em cerca de 1 minuto.');
         }).catch(function (erro) {
           setStatus(erro.message, 'erro');
-          toast('Não foi possível publicar.');
-        }).then(function () { botao.disabled = false; });
+          toast('Não foi possível salvar as alterações.');
+        }).then(function () {
+          botoes.forEach(function (b) { b.disabled = false; });
+          atualizarBotoes();
+        });
+      }
+      function descartar() {
+        if (!window.confirm('Descartar todas as alterações que ainda não foram salvas?')) return;
+        localStorage.removeItem(DRAFT_KEY);
+        alteracoes = {};
+        imagensPendentes = {};
+        window.location.reload();
       }
 
-      /* ---------- ligação da interface ---------- */
+      /* ---------------- interface ---------------- */
       function ligarInterface() {
         var entradaToken = document.getElementById('cmsToken');
         if (!entradaToken) return;
-        if (token()) { entradaToken.value = '••••••••••••'; setStatus('Token configurado neste navegador.', 'ok'); }
-        else setStatus('Token ainda não configurado. Sem ele o editor só altera a página localmente.', '');
+        if (token()) { entradaToken.value = '••••••••••••'; setStatus('Chave de publicação configurada neste navegador.', 'ok'); }
+        else setStatus('Sem a chave de publicação, as alterações ficam apenas neste navegador.', '');
 
         document.getElementById('cmsTokenSave').addEventListener('click', function () {
           var valor = entradaToken.value.trim();
-          if (!valor || /^•+$/.test(valor)) { setStatus('Cole o token gerado no GitHub.', 'erro'); return; }
+          if (!valor || /^•+$/.test(valor)) { setStatus('Cole a chave de publicação no campo acima.', 'erro'); return; }
           localStorage.setItem(TOKEN_KEY, valor);
           entradaToken.value = '••••••••••••';
-          setStatus('Token salvo neste navegador.', 'ok');
+          setStatus('Chave salva neste navegador.', 'ok');
         });
         document.getElementById('cmsTokenClear').addEventListener('click', function () {
           localStorage.removeItem(TOKEN_KEY);
           entradaToken.value = '';
-          setStatus('Token removido deste navegador.', '');
+          setStatus('Chave removida deste navegador.', '');
         });
+        document.getElementById('cmsInline').addEventListener('click', entrarEdicaoNaPagina);
+        document.getElementById('cmsBarExit').addEventListener('click', function () { sairEdicaoNaPagina(true); });
+        document.getElementById('cmsBarPublish').addEventListener('click', publicar);
         document.getElementById('cmsOpen').addEventListener('click', function () {
-          var editor = document.getElementById('cmsEditor');
-          montarEditor();
-          editor.hidden = false;
-          this.textContent = 'Recarregar campos';
+          montarLista();
+          document.getElementById('cmsEditor').hidden = false;
+          this.textContent = 'Recarregar lista de campos';
         });
         document.getElementById('cmsPublish').addEventListener('click', publicar);
-        document.getElementById('cmsDiscard').addEventListener('click', function () {
-          localStorage.removeItem(DRAFT_KEY);
-          imagensPendentes = {};
-          setStatus('Alterações locais descartadas. Recarregando…', '');
-          setTimeout(function () { window.location.reload(); }, 700);
+        document.getElementById('cmsDiscard').addEventListener('click', descartar);
+        document.getElementById('cmsFields').addEventListener('input', function (evento) {
+          var campo = evento.target.closest('[data-cms-key]');
+          if (!campo) return;
+          registrarAlteracao(campo.dataset.cmsKey, campo.value.trim());
+          var referencia = mapa.textos[campo.dataset.cmsKey];
+          campo.closest('.cms-field').classList.toggle('alterado', referencia && campo.value.trim() !== referencia.orig);
+        });
+        document.getElementById('cmsFields').addEventListener('change', function (evento) {
+          var entrada = evento.target.closest('[data-cms-img-key]');
+          if (entrada && entrada.files && entrada.files[0]) trocarImagem(entrada.dataset.cmsImgKey, entrada.files[0]);
         });
         var construcao = document.getElementById('cmsConstrucao');
         construcao.addEventListener('change', function () {
           document.body.dataset.construcao = construcao.checked ? 'on' : 'off';
-          if (editorMontado) gravarRascunho();
+          gravarRascunho();
           setStatus(construcao.checked
-            ? 'Ao publicar, os visitantes continuarão vendo o aviso de construção.'
-            : 'Ao publicar, o site ficará aberto ao público. Publique para valer.', '');
+            ? 'Ao salvar, os visitantes continuarão vendo o aviso de construção.'
+            : 'Ao salvar, o site ficará aberto ao público.', '');
         });
         var accent = document.getElementById('cmsAccent');
         accent.addEventListener('input', function () {
           document.documentElement.style.setProperty('--gold-500', accent.value);
-          if (editorMontado) gravarRascunho();
+          gravarRascunho();
         });
+        atualizarBotoes();
       }
 
       function iniciar() {
         mapa = mapear();
-        carregarPublicado().then(function (dados) {
-          publicado = dados;
-          aplicarConteudo(dados);
-          var rascunho = lerRascunho();
-          if (rascunho) aplicarConteudo(rascunho);
-          var accent = document.getElementById('cmsAccent');
-          if (accent) accent.value = (rascunho && rascunho.cores && rascunho.cores.destaque) || (dados && dados.cores && dados.cores.destaque) || '#c39a57';
-          var interruptor = document.getElementById('cmsConstrucao');
-          if (interruptor) interruptor.checked = document.body.dataset.construcao !== 'off';
-          ligarInterface();
-        });
+        fetch(CMS_PATH + '?v=' + Date.now(), { cache:'no-store' })
+          .then(function (res) { return res.ok ? res.json() : null; })
+          .catch(function () { return null; })
+          .then(function (dados) {
+            publicado = dados;
+            aplicarConteudo(dados);
+            alteracoes = {};                       // o publicado é a base, não alteração pendente
+            var rascunho = lerRascunho();
+            if (rascunho) aplicarConteudo(rascunho);
+            var accent = document.getElementById('cmsAccent');
+            if (accent) accent.value = (rascunho && rascunho.cores && rascunho.cores.destaque) || (dados && dados.cores && dados.cores.destaque) || '#c39a57';
+            var interruptor = document.getElementById('cmsConstrucao');
+            if (interruptor) interruptor.checked = document.body.dataset.construcao !== 'off';
+            ligarInterface();
+          });
       }
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
       else iniciar();
