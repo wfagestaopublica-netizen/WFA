@@ -437,6 +437,25 @@
     /* botão de pré-visualização legível sobre o rodapé claro da barra lateral */
     .app-view-site { background: white; border: 1px solid #24699a; color: #1c5278; font-weight: 700; }
     .app-view-site:hover { background: #24699a; border-color: #24699a; color: white; }
+    /* ================= galeria de scripts ================= */
+    .galeria-intro { margin: 0 0 12px; color: #6b8290; font-size: 12.5px; }
+    .galeria-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 12px; }
+    .script-banner { display: flex; flex-direction: column; gap: 9px; min-height: 132px; padding: 15px 16px; background: white; border: 1px solid #cdd8e0; text-align: left; font: inherit; cursor: pointer; transition: border-color .12s, box-shadow .12s; }
+    .script-banner:hover:not(:disabled) { border-color: #205e8a; box-shadow: 0 4px 14px rgba(18,41,59,.09); }
+    .script-banner:disabled { cursor: not-allowed; background: #fbfcfd; }
+    .script-banner-topo { display: flex; align-items: center; gap: 10px; }
+    .script-banner-sigla { width: 32px; height: 32px; flex: none; display: grid; place-items: center; background: #205e8a; color: white; font: 700 12px Cambria, Georgia, serif; }
+    .script-banner:disabled .script-banner-sigla { background: #b3c2cd; }
+    .script-banner-nome { color: #12293b; font: 700 14.5px/1.2 Cambria, Georgia, serif; }
+    .script-banner-desc { flex: 1; color: #5b7688; font-size: 12px; line-height: 1.45; }
+    .script-banner-pe { display: flex; align-items: center; gap: 7px; padding-top: 9px; border-top: 1px solid #eef2f5; font-size: 11.5px; }
+    .script-banner-estado { display: inline-flex; align-items: center; gap: 5px; color: #7b8f9c; }
+    .script-banner-estado .ponto { width: 7px; height: 7px; border-radius: 50%; background: #c3d0d9; }
+    .script-banner.pronto .script-banner-estado { color: #1c6b46; font-weight: 600; }
+    .script-banner.pronto .script-banner-estado .ponto { background: #2f7d55; }
+    .script-banner-acao { margin-left: auto; color: #205e8a; font-weight: 700; }
+    .script-banner:disabled .script-banner-acao { color: #a9b8c3; }
+    .galeria-vazio { padding: 20px; background: white; border: 1px dashed #cdd8e0; color: #8399a6; font-size: 12.5px; text-align: center; }
     /* ================= tela de execução do script ================= */
     .exec { width: min(100%, 1080px); background: white; border: 1px solid #cdd8e0; }
     .exec-topo { display: flex; align-items: center; gap: 13px; padding: 13px 18px; background: #12293b; color: white; }
@@ -2621,7 +2640,7 @@
       <div class="app-brand"><span class="brand-symbol" aria-hidden="true"><span class="wf-letters">WF</span><span class="a-letter"></span></span><span class="app-brand-copy"><strong>WFA</strong><span>Gestão Pública</span></span><button class="app-recolher" id="appRecolher" type="button" title="Recolher a barra lateral" aria-label="Recolher a barra lateral"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M11.8 5.5 7.3 10l4.5 4.5"/></svg></button></div>
       <p class="app-nav-label">Scripts</p>
       <nav class="app-nav" id="appScriptNav" aria-label="Scripts disponíveis">
-        <button type="button" data-app-view="comparador-fontes" data-script="comparador" title="Comparador de fontes"><span class="app-nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6.5 3.5h7a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1z"/><path d="M8 7h4M8 10h4M8 13h2.5"/></svg></span><span class="app-nav-texto">Comparador de fontes</span><span class="app-nav-meta" id="scriptCompareMeta">0/3</span></button>
+        <button type="button" data-app-view="comparador-fontes" data-script="comparador" title="Scripts disponíveis"><span class="app-nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6.5 3.5h7a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1z"/><path d="M8 7h4M8 10h4M8 13h2.5"/></svg></span><span class="app-nav-texto">Scripts</span><span class="app-nav-meta" id="scriptCompareMeta">0/3</span></button>
       </nav>
 
       <div class="sidebar-files-heading"><p class="app-nav-label">Documentos</p><button class="sidebar-upload-icon" id="workspaceUploadTrigger" type="button" title="Adicionar documentos" aria-label="Adicionar documentos"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 4.8v10.4M4.8 10h10.4"/></svg></button><input id="workspaceUploadInput" type="file" accept="application/pdf,.pdf" multiple hidden></div>
@@ -2663,36 +2682,17 @@
         <section class="app-view compare-view" id="compareView" data-view-panel="comparador-fontes">
           <div class="view-heading compare-workspace-heading compare-menu-only" hidden><button class="compare-files-button" id="compareFilesToggle" type="button" hidden aria-expanded="false" aria-controls="compareSetup"><b id="compareFilesButtonLabel">Documentos</b><span id="compareFilesButtonCount">0/2</span></button><button id="compareOptionsToggle" type="button" hidden aria-expanded="false" aria-controls="compareOptionsMenu">Menu</button><div id="compareOptionsMenu" hidden></div></div>
           <div class="compare-shell">
-            <section class="exec" id="compareEmptyState">
-              <header class="exec-topo">
-                <span class="exec-marca" aria-hidden="true">CF</span>
-                <div class="exec-identidade">
-                  <small>Script de conferência</small>
-                  <h3 id="compareEmptyTitle">Comparador de fontes</h3>
-                </div>
-                <span class="exec-estado" id="scriptBriefState">0 de 3</span>
-              </header>
-              <div class="exec-grade">
-                <aside class="exec-sobre">
-                  <p class="exec-titulo-bloco">O que este script faz</p>
-                  <p id="compareEmptyText">Lê o quadro <b>Total por fonte de recurso</b> no fim de cada relatório e cruza os valores fonte a fonte.</p>
-                  <p class="exec-titulo-bloco">Relatórios aceitos</p>
-                  <ul class="exec-tipos" id="scriptBriefTipos"></ul>
-                  <p class="exec-nota">Dois documentos já bastam. O terceiro entra como coluna extra na planilha.</p>
-                </aside>
-                <div class="exec-lista">
-                  <div class="exec-lista-topo">
-                    <span>Documentos disponíveis</span>
-                    <button type="button" data-app-view="workspace">Gerenciar</button>
-                  </div>
-                  <ul class="exec-docs" id="scriptBriefInputs"></ul>
-                </div>
-              </div>
-              <footer class="exec-rodape">
-                <span class="exec-dica" id="scriptBriefDica">Marque os documentos que entram nesta execução.</span>
-                <button type="button" class="exec-secundario" id="scriptBriefUpload">Carregar documentos</button>
-                <button type="button" class="exec-principal" id="scriptBriefRun" disabled>Escolha ao menos dois documentos</button>
-              </footer>
+            <section class="galeria" id="compareEmptyState">
+              <p class="galeria-intro" id="galeriaIntro">Marque os documentos na barra lateral e clique no script que quer rodar.</p>
+              <div class="galeria-grade" id="galeriaScripts"></div>
+              <h3 id="compareEmptyTitle" hidden></h3>
+              <span id="compareEmptyText" hidden></span>
+              <span id="scriptBriefState" hidden></span>
+              <span id="scriptBriefDica" hidden></span>
+              <ul id="scriptBriefInputs" hidden></ul>
+              <ul id="scriptBriefTipos" hidden></ul>
+              <button id="scriptBriefRun" type="button" hidden></button>
+              <button id="scriptBriefUpload" type="button" hidden></button>
             </section>
             <div class="compare-files-backdrop" id="compareFilesBackdrop" hidden></div>
             <section class="compare-setup expanded" id="compareSetup" aria-label="Preparação da comparação" aria-hidden="true" inert hidden>
@@ -3034,94 +3034,69 @@
       });
       document.getElementById('appLogout').addEventListener('click', async function () { if (authAdapter) await authAdapter.signOut(); leaveApp(); });
 
-      const viewTitles = { workspace:'Central de documentos', 'comparador-fontes':'Comparador de fontes', personalizar:'Personalizar página', configuracoes:'Configurações' };
-      // painel do script: você escolhe quais documentos entram nesta execução
-      const selecaoScript = new Set();
-      function documentosElegiveis() {
-        return workspaceState.files.filter(function (item) { return item.status === 'ready' && ROLE_INFO[item.role]; });
-      }
-      function conflitoDeTipos() {
-        const vistos = {};
-        let conflito = null;
-        selecaoScript.forEach(function (id) {
-          const item = workspaceState.files.find(function (candidato) { return candidato.id === id; });
-          if (!item) return;
-          if (vistos[item.role]) conflito = ROLE_INFO[item.role].nome;
-          vistos[item.role] = true;
+      const viewTitles = { workspace:'Central de documentos', 'comparador-fontes':'Scripts', personalizar:'Personalizar página', configuracoes:'Configurações' };
+      /* ============ Galeria de scripts ============
+         Cada script declara o que aceita e o mínimo que precisa. A seleção vem
+         da lista de documentos da barra lateral — a mesma para todos.        */
+      const SCRIPTS = [
+        {
+          id: 'comparador',
+          sigla: 'CF',
+          nome: 'Comparador de fontes',
+          descricao: 'Lê o quadro Total por fonte de recurso no fim de cada relatório e cruza os valores fonte a fonte.',
+          minimo: 2,
+          executar: function () { launchWorkspaceComparator(); }
+        }
+      ];
+
+      function documentosSelecionados() {
+        return workspaceState.files.filter(function (item) {
+          return workspaceState.selected.has(item.id) && item.status === 'ready' && ROLE_INFO[item.role];
         });
-        return conflito;
+      }
+      function tiposSelecionados() {
+        const tipos = [];
+        documentosSelecionados().forEach(function (item) { if (tipos.indexOf(item.role) === -1) tipos.push(item.role); });
+        return tipos;
+      }
+      function situacaoDoScript(script) {
+        const selecionados = documentosSelecionados();
+        const tipos = tiposSelecionados();
+        if (!workspaceState.files.length) return { ok:false, texto:'Nenhum documento carregado' };
+        if (!selecionados.length) return { ok:false, texto:'Nenhum documento marcado' };
+        if (tipos.length < script.minimo) return { ok:false, texto:'Marque ' + script.minimo + ' tipos diferentes' };
+        if (selecionados.length > tipos.length) return { ok:false, texto:'Há dois documentos do mesmo tipo' };
+        return { ok:true, texto:tipos.length + ' documentos marcados' };
       }
       function renderScriptBrief() {
-        const lista = document.getElementById('scriptBriefInputs');
-        if (!lista || typeof workspaceState === 'undefined') return;
-        const elegiveis = documentosElegiveis();
-        Array.from(selecaoScript).forEach(function (id) {
-          if (!elegiveis.some(function (item) { return item.id === id; })) selecaoScript.delete(id);
-        });
-
-        // tipos aceitos, com marcador de disponibilidade
-        const tipos = document.getElementById('scriptBriefTipos');
-        if (tipos) {
-          tipos.innerHTML = COMPARE_ROLES.map(function (papel) {
-            const tem = elegiveis.some(function (item) { return item.role === papel; });
-            return '<li class="' + (tem ? 'tem' : '') + '"><span class="marcador"></span>' + escapeHtml(ROLE_INFO[papel].nome) + '</li>';
-          }).join('');
-        }
-
-        if (!elegiveis.length) {
-          lista.innerHTML = '<li class="exec-vazio">Nenhum relatório reconhecido ainda. Carregue os PDFs para escolher aqui.</li>';
-        } else {
-          lista.innerHTML = elegiveis.map(function (item) {
-            const marcado = selecaoScript.has(item.id);
-            return '<li class="' + (marcado ? 'tem' : '') + '"><label>' +
-              '<input type="checkbox" data-script-doc="' + escapeHtml(item.id) + '"' + (marcado ? ' checked' : '') + '>' +
-              '<span class="caixa" aria-hidden="true">' + (marcado ? '✓' : '') + '</span>' +
-              '<b title="' + escapeHtml(item.file.name) + '">' + escapeHtml(item.file.name) + '</b>' +
-              '<span class="tipo">' + escapeHtml(ROLE_INFO[item.role].nome) + '</span>' +
-              '<span class="peso">' + escapeHtml(formatBytes(item.file.size)) + '</span>' +
-              '</label></li>';
-          }).join('');
+        const grade = document.getElementById('galeriaScripts');
+        if (!grade || typeof workspaceState === 'undefined') return;
+        grade.innerHTML = SCRIPTS.map(function (script) {
+          const situacao = situacaoDoScript(script);
+          return '<button class="script-banner' + (situacao.ok ? ' pronto' : '') + '" type="button" data-script-run="' + escapeHtml(script.id) + '"' + (situacao.ok ? '' : ' disabled') + '>' +
+            '<span class="script-banner-topo"><span class="script-banner-sigla">' + escapeHtml(script.sigla) + '</span><span class="script-banner-nome">' + escapeHtml(script.nome) + '</span></span>' +
+            '<span class="script-banner-desc">' + escapeHtml(script.descricao) + '</span>' +
+            '<span class="script-banner-pe"><span class="script-banner-estado"><span class="ponto"></span>' + escapeHtml(situacao.texto) + '</span><span class="script-banner-acao">' + (situacao.ok ? 'Executar →' : 'Indisponível') + '</span></span>' +
+            '</button>';
+        }).join('');
+        const intro = document.getElementById('galeriaIntro');
+        if (intro) {
+          intro.textContent = workspaceState.files.length
+            ? 'Marque os documentos na barra lateral e clique no script que quer rodar.'
+            : 'Carregue relatórios em PDF pelo + da barra lateral para liberar os scripts.';
         }
         atualizarResumoDoBrief();
       }
-      // atualiza contador e botão sem refazer a lista, para não perder o item clicado
       function atualizarResumoDoBrief() {
-        const elegiveis = documentosElegiveis();
-        const conflito = conflitoDeTipos();
-        const total = selecaoScript.size;
-        const marcador = document.getElementById('scriptBriefState');
-        if (marcador) {
-          marcador.textContent = total + ' de ' + elegiveis.length;
-          marcador.classList.toggle('pronto', total >= 2 && !conflito);
-        }
-        const botao = document.getElementById('scriptBriefRun');
-        if (botao) {
-          botao.disabled = total < 2 || Boolean(conflito);
-          botao.textContent = total >= 2 && !conflito ? 'Executar com ' + total + ' documentos' : 'Executar';
-        }
-        const dica = document.getElementById('scriptBriefDica');
-        if (dica) {
-          dica.textContent = conflito ? 'Há dois documentos de ' + conflito.toLowerCase() + ' marcados. Deixe apenas um.'
-            : total >= 2 ? 'Pronto para executar com ' + total + ' documentos.'
-            : elegiveis.length ? 'Marque ao menos dois documentos de tipos diferentes.'
-            : 'Carregue relatórios em PDF para começar.';
-          dica.classList.toggle('alerta', Boolean(conflito));
-        }
-      }
-      // mostra na barra lateral quantos documentos o script já tem prontos
-      function atualizarResumoDosScripts() {
         const marcador = document.getElementById('scriptCompareMeta');
-        if (!marcador || typeof workspaceState === 'undefined') return;
-        const tipos = [];
-        workspaceState.files.forEach(function (item) {
-          if (item.status === 'ready' && ROLE_INFO[item.role] && tipos.indexOf(item.role) === -1) tipos.push(item.role);
-        });
-        marcador.textContent = tipos.length + '/3';
-        marcador.title = tipos.length >= 2 ? 'Pronto para executar' : 'Carregue ao menos dois relatórios';
-        marcador.classList.toggle('pronto', tipos.length >= 2);
-        renderScriptBrief();
-        if (window.wfaAtualizarStatus) window.wfaAtualizarStatus();
+        if (!marcador) return;
+        const tipos = tiposSelecionados().length;
+        marcador.textContent = tipos + '/3';
+        marcador.classList.toggle('pronto', tipos >= 2);
       }
+
+      function atualizarResumoDosScripts() { renderScriptBrief(); }
+
       function selectView(view) {
         wfaCurrentView = view;
         document.querySelectorAll('[data-view-panel]').forEach(function (panel) { panel.classList.toggle('active', panel.dataset.viewPanel === view); });
@@ -3530,7 +3505,7 @@
         if (!pdfFiles.length) { showToast('Selecione um ou mais arquivos em PDF.'); return; }
         if (pdfFiles.length !== allFiles.length) showToast('Arquivos que não eram PDF foram ignorados.');
         for (const file of pdfFiles) {
-          const item = upsertWorkspaceFile(file, 'unknown', 'processing', true);
+          const item = upsertWorkspaceFile(file, 'unknown', 'processing', false);   // quem escolhe é você
           try {
             item.role = (await detectCompareFileRole(file)) || 'unknown';
             item.status = item.role === 'unknown' ? 'error' : 'ready';
@@ -3614,22 +3589,11 @@
       });
       workspaceDom.rows.addEventListener('click', function (event) { const button = event.target.closest('[data-workspace-remove]'); if (button) removeWorkspaceFile(button.dataset.workspaceRemove); });
       document.querySelectorAll('[data-workspace-tool="compare"]').forEach(function (button) { button.addEventListener('click', launchWorkspaceComparator); });
-      document.getElementById('scriptBriefInputs').addEventListener('change', function (evento) {
-        const caixa = evento.target.closest('[data-script-doc]');
-        if (!caixa) return;
-        if (caixa.checked) selecaoScript.add(caixa.dataset.scriptDoc); else selecaoScript.delete(caixa.dataset.scriptDoc);
-        const item = caixa.closest('li');
-        item.classList.toggle('tem', caixa.checked);
-        const marca = item.querySelector('.caixa');
-        if (marca) marca.textContent = caixa.checked ? '✓' : '';
-        atualizarResumoDoBrief();
-      });
-      document.getElementById('scriptBriefUpload').addEventListener('click', function () { workspaceDom.upload.click(); });
-      document.getElementById('scriptBriefRun').addEventListener('click', function () {
-        if (selecaoScript.size < 2) return;
-        workspaceState.selected = new Set(selecaoScript);
-        renderWorkspaceFiles();
-        launchWorkspaceComparator();
+      document.getElementById('galeriaScripts').addEventListener('click', function (evento) {
+        const banner = evento.target.closest('[data-script-run]');
+        if (!banner || banner.disabled) return;
+        const script = SCRIPTS.find(function (item) { return item.id === banner.dataset.scriptRun; });
+        if (script) script.executar();
       });
       workspaceDom.run.addEventListener('click', launchWorkspaceComparator);
       renderWorkspaceFiles();
