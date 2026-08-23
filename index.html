@@ -473,6 +473,37 @@
     .sidebar-run b { display: block; color: #12293b; font-size: 12px; font-weight: 700; }
     .sidebar-run small { display: block; margin-top: 2px; color: #6f8697; font-size: 10.5px; }
     .sidebar-run i { display: block; margin-top: 3px; color: #205e8a; font-size: 10px; font-style: normal; font-weight: 700; }
+    /* ---- planilha editável ---- */
+    .compare-grid-table .sheet-row-number { position: relative; cursor: default; }
+    .compare-grid-table .sheet-row-number .excluir-linha { position: absolute; inset: 0; display: none; place-items: center; color: #c9403f; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .compare-grid-table tbody tr:hover .sheet-row-number .numero { visibility: hidden; }
+    .compare-grid-table tbody tr:hover .sheet-row-number .excluir-linha { display: grid; }
+    .compare-grid-table .sheet-row-number .excluir-linha:hover { background: #c9403f; color: white; }
+    .titulo-coluna { display: inline-block; min-width: 24px; padding: 1px 3px; border-radius: 2px; outline: 0; cursor: text; }
+    .titulo-coluna:hover { background: rgba(255,255,255,.16); }
+    .titulo-coluna:focus { background: white; color: #12293b; box-shadow: 0 0 0 2px var(--gold-500); }
+    .remover-coluna { margin-left: 6px; padding: 0 4px; border: 0; border-radius: 2px; background: transparent; color: rgba(255,255,255,.6); font: inherit; font-size: 13px; line-height: 1; cursor: pointer; }
+    .remover-coluna:hover { background: #c9403f; color: white; }
+    .compare-grid-table td.coluna-calculada { cursor: help; }
+
+    /* ---- densidade da tela do comparador ---- */
+    body.app-active .compare-view .compare-shell { gap: 10px; }
+    body.app-active .compare-table-card { margin-top: 8px; }
+    body.app-active .sheet-commandbar { padding: 5px 7px; gap: 6px; }
+    body.app-active .sheet-commands button { padding: 3px 8px; font-size: 10.5px; }
+    body.app-active .sheet-namebox { min-width: 50px; padding: 3px 7px; font-size: 10.5px; }
+    body.app-active .sheet-formula { padding: 3px 8px; font-size: 10.5px; }
+    body.app-active .sheet-hint { font-size: 9.5px; }
+    body.app-active .compare-grid-table th { padding: 6px 9px; font-size: 10.5px; }
+    body.app-active .compare-grid-table td { padding: 0; font-size: 11.5px; }
+    body.app-active .compare-view.active .compare-grid-table .cell-editor { min-height: 28px; height: 28px; padding: 0 8px; font-size: 11.5px; }
+    body.app-active .compare-grid-table .cell-stack small { padding: 0 8px 3px; font-size: 8.5px; }
+    body.app-active .compare-grid-table .sheet-row-number { padding: 0; font-size: 10px; }
+    body.app-active .compare-grid-table thead tr.sheet-letters th { height: 16px; font-size: 9px; }
+    body.app-active .compare-table-footer { padding: 6px 10px; font-size: 10.5px; }
+    body.app-active .compare-summary-details summary { padding: 7px 11px; font-size: 12px; }
+    body.app-active .compare-kpi { padding: 8px 10px; }
+    body.app-active .compare-kpi strong { font-size: 17px; }
     /* ---- confirmação dentro do sistema ---- */
     .app-confirm { position: fixed; z-index: 130; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(6,20,30,.55); }
     .app-confirm[hidden] { display: none; }
@@ -2499,6 +2530,7 @@
                   <span class="sheet-formula" id="sheetFormula">Selecione uma célula</span>
                   <span class="sheet-commands">
                     <button type="button" data-sheet-cmd="add" title="Inserir nova fonte (Ctrl+Shift+=)">＋ Linha</button>
+                    <button type="button" data-sheet-cmd="col" title="Criar uma coluna livre para anotações">＋ Coluna</button>
                     <button type="button" data-sheet-cmd="del" title="Excluir a linha da célula selecionada (Ctrl+-)" disabled>－ Linha</button>
                     <button type="button" data-sheet-cmd="asc" title="Ordenar por fonte, crescente">A→Z</button>
                     <button type="button" data-sheet-cmd="desc" title="Ordenar por fonte, decrescente">Z→A</button>
@@ -2507,7 +2539,7 @@
                   </span>
                   <span class="sheet-hint">Setas navegam · Enter desce · Tab avança · Esc desfaz a célula</span>
                 </div>
-                <div class="compare-table-wrap"><table class="compare-table compare-grid-table"><colgroup><col class="col-row-number"><col class="col-source"><col class="col-description"><col class="col-money"><col class="col-money"><col class="col-money"><col class="col-money"><col class="col-execution"><col class="col-status"><col class="col-actions"></colgroup><thead><tr class="sheet-letters"><th class="sheet-corner"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th></tr><tr><th class="sheet-corner">#</th><th><button class="sheet-sort-button" id="compareSortSource" type="button" aria-label="Classificar por fonte de recurso" aria-sort="ascending">Fonte de recurso <span id="compareSortSourceIcon">↑</span></button></th><th>Descrição</th><th class="num col-budget">Orçado</th><th class="num col-committed">Empenhado</th><th class="num col-collected">Arrecadado</th><th class="num">Diferença</th><th class="num">Execução</th><th>Situação</th><th>Excluir</th></tr></thead><tbody id="compareTableBody"></tbody><tfoot><tr><th class="sheet-corner"></th><th colspan="2">Total das fontes</th><th class="num col-budget" id="compareTotalBudget">R$ 0,00</th><th class="num col-committed" id="compareTotalCommitted">R$ 0,00</th><th class="num col-collected" id="compareTotalCollected">R$ 0,00</th><th class="num" id="compareTotalDifference">R$ 0,00</th><th class="num" id="compareTotalExecution">—</th><th colspan="2"></th></tr></tfoot></table></div>
+                <div class="compare-table-wrap"><table class="compare-table compare-grid-table" id="compareTable"><colgroup id="compareCols"></colgroup><thead id="compareHead"></thead><tbody id="compareTableBody"></tbody><tfoot id="compareFoot"></tfoot></table></div>
                 <div class="compare-table-footer"><span id="compareCount">0 fontes exibidas</span><span>Células claras são editáveis • Enter salva • Esc cancela</span><span>Valores em reais (R$)</span></div>
               </article>
 
@@ -2866,7 +2898,7 @@
       };
       function papeisCarregados() { return COMPARE_ROLES.filter(function (papel) { return Boolean(compareState.files[papel]); }); }
       function papeisComRelatorio() { return COMPARE_ROLES.filter(function (papel) { return Boolean(compareState.reports[papel]); }); }
-      const compareState = { files: { budget: null, committed: null, collected: null }, reports: {}, rows: [], audit: [], editorMode: null, editorKey: null, sourceSort: 'asc' };
+      const compareState = { files: { budget: null, committed: null, collected: null }, reports: {}, rows: [], audit: [], editorMode: null, editorKey: null, sourceSort: 'asc', colunasExtras: [], titulos: {} };
       const compareDom = {
         run: document.getElementById('compareRun'), progress: document.getElementById('compareProgress'), alert: document.getElementById('compareAlert'), results: document.getElementById('compareResults'),
         processHint: document.getElementById('compareProcessHint'), tableBody: document.getElementById('compareTableBody'), search: document.getElementById('compareSearch'), status: document.getElementById('compareStatusFilter'),
@@ -3474,10 +3506,42 @@
         document.getElementById('kpiAbove').textContent = above;
         compareDom.summaryLabel.textContent = rows.length + ' fontes • ' + matched + ' em todos os relatórios • ' + above + ' arrecadadas acima do orçado';
       }
+      const LETRAS_COLUNA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+      // Estrutura da planilha: colunas de dados são editáveis, as calculadas não.
+      function colunasDaTabela() {
+        const colunas = [
+          { id:'key', tipo:'texto', titulo:'Fonte de recurso', largura:150, classe:'cell-code' },
+          { id:'description', tipo:'texto', titulo:'Descrição', largura:300, classe:'' }
+        ];
+        papeisComRelatorio().forEach(function (papel) {
+          colunas.push({ id:papel, tipo:'moeda', titulo:ROLE_INFO[papel].curto, largura:118, classe:'cell-money' });
+        });
+        colunas.push({ id:'diferenca', tipo:'calculada', titulo:'Diferença', largura:118, formula:'Arrecadado menos Orçado' });
+        colunas.push({ id:'execucao', tipo:'calculada', titulo:'Execução', largura:88, formula:'Arrecadado dividido por Orçado' });
+        colunas.push({ id:'situacao', tipo:'calculada', titulo:'Situação', largura:170, formula:'comparação entre os relatórios' });
+        (compareState.colunasExtras || []).forEach(function (extra) {
+          colunas.push({ id:extra.id, tipo:'livre', titulo:extra.titulo, largura:150, classe:'' });
+        });
+        return colunas.map(function (coluna) {
+          const personalizado = compareState.titulos && compareState.titulos[coluna.id];
+          if (personalizado) coluna.titulo = personalizado;
+          return coluna;
+        });
+      }
+
+      function valorCalculado(row, id) {
+        if (id === 'diferenca') return formatBrl(row.collected - row.budget);
+        if (id === 'execucao') return formatPercent(row.budget !== 0 ? (row.collected / row.budget) * 100 : NaN);
+        return compareStatus(row).label;
+      }
+
       function renderCompareTable() {
         const query = normalizeSearch(compareDom.search.value);
         const filter = compareDom.status.value;
         const allRows = activeCompareRows();
+        const colunas = colunasDaTabela();
+
         const rows = allRows.filter(function (row) {
           const status = compareStatus(row);
           const matchesSearch = !query || normalizeSearch(row.key + ' ' + row.description).includes(query);
@@ -3490,30 +3554,105 @@
           const comparison = left.key.localeCompare(right.key, 'pt-BR', { numeric:true, sensitivity:'base' });
           return compareState.sourceSort === 'asc' ? comparison : -comparison;
         });
+
+        // colunas
+        document.getElementById('compareCols').innerHTML = '<col class="col-row-number">' +
+          colunas.map(function (coluna) { return '<col style="width:' + coluna.largura + 'px">'; }).join('');
+
+        // cabeçalho: linha de letras + linha de títulos renomeáveis
+        const letras = '<tr class="sheet-letters"><th class="sheet-corner"></th>' +
+          colunas.map(function (coluna, indice) { return '<th>' + LETRAS_COLUNA[indice] + '</th>'; }).join('') + '</tr>';
+        const titulos = '<tr><th class="sheet-corner">#</th>' +
+          colunas.map(function (coluna) {
+            const seta = coluna.id === 'key' ? '<button class="sheet-sort-button" id="compareSortSource" type="button" aria-label="Classificar por fonte de recurso"><span id="compareSortSourceIcon">' + (compareState.sourceSort === 'asc' ? '↑' : '↓') + '</span></button>' : '';
+            const numerica = coluna.tipo === 'moeda' || coluna.id === 'diferenca' || coluna.id === 'execucao';
+            return '<th class="' + (numerica ? 'num ' : '') + 'col-' + escapeHtml(coluna.id) + (coluna.tipo === 'calculada' ? ' coluna-calculada' : '') + '">' +
+              '<span class="titulo-coluna" contenteditable="true" spellcheck="false" data-coluna="' + escapeHtml(coluna.id) + '" title="Clique para renomear">' + escapeHtml(coluna.titulo) + '</span>' + seta +
+              (coluna.tipo === 'livre' ? '<button class="remover-coluna" type="button" data-remover-coluna="' + escapeHtml(coluna.id) + '" title="Remover coluna">×</button>' : '') +
+              '</th>';
+          }).join('') + '</tr>';
+        document.getElementById('compareHead').innerHTML = letras + titulos;
+
+        // corpo
         compareDom.tableBody.innerHTML = rows.map(function (row, rowIndex) {
           const status = compareStatus(row);
-          const difference = row.collected - row.budget;
-          const execution = row.budget !== 0 ? (row.collected / row.budget) * 100 : NaN;
-          const coText = row.co && row.co.length ? '<small>CO: ' + escapeHtml(row.co.join(', ')) + '</small>' : '';
-          const budgetValue = formatBrl(row.budget).replace(/[^\d.,-]/g,'').trim();
-          const committedValue = formatBrl(row.committed).replace(/[^\d.,-]/g,'').trim();
-          const collectedValue = formatBrl(row.collected).replace(/[^\d.,-]/g,'').trim();
-          return '<tr><td class="sheet-row-number">' + (rowIndex + 1) + '</td><td class="editable-cell"><input class="cell-editor cell-code" data-compare-cell="code" data-row-key="' + escapeHtml(row.key) + '" value="' + escapeHtml(row.key) + '" aria-label="Editar fonte de recurso"></td><td class="editable-cell"><div class="cell-stack"><input class="cell-editor" data-compare-cell="description" data-row-key="' + escapeHtml(row.key) + '" value="' + escapeHtml(row.description) + '" aria-label="Editar descrição">' + coText + '</div></td><td class="num editable-cell col-budget"><input class="cell-editor cell-money" data-compare-cell="budget" data-row-key="' + escapeHtml(row.key) + '" value="' + escapeHtml(budgetValue) + '" inputmode="decimal" aria-label="Editar valor orçado"></td><td class="num editable-cell col-committed"><input class="cell-editor cell-money" data-compare-cell="committed" data-row-key="' + escapeHtml(row.key) + '" value="' + escapeHtml(committedValue) + '" inputmode="decimal" aria-label="Editar valor empenhado"></td><td class="num editable-cell col-collected"><input class="cell-editor cell-money" data-compare-cell="collected" data-row-key="' + escapeHtml(row.key) + '" value="' + escapeHtml(collectedValue) + '" inputmode="decimal" aria-label="Editar valor arrecadado"></td><td class="num ' + (difference < 0 ? 'value-negative' : difference > 0 ? 'value-positive' : '') + '">' + formatBrl(difference) + '</td><td class="num">' + formatPercent(execution) + '</td><td><span class="compare-badge ' + status.className + '">' + status.label + '</span></td><td><span class="row-actions"><button class="remove" type="button" data-compare-remove="' + escapeHtml(row.key) + '" aria-label="Remover fonte" title="Remover fonte">Remover</button></span></td></tr>';
+          const celulas = colunas.map(function (coluna) {
+            if (coluna.tipo === 'calculada') {
+              let extraClasse = '';
+              if (coluna.id === 'diferenca') {
+                const diferenca = row.collected - row.budget;
+                extraClasse = diferenca < 0 ? ' value-negative' : diferenca > 0 ? ' value-positive' : '';
+              }
+              const conteudo = coluna.id === 'situacao'
+                ? '<span class="compare-badge ' + status.className + '">' + escapeHtml(status.label) + '</span>'
+                : escapeHtml(valorCalculado(row, coluna.id));
+              const numerica = coluna.id !== 'situacao';
+              return '<td class="' + (numerica ? 'num ' : '') + 'coluna-calculada col-' + escapeHtml(coluna.id) + extraClasse + '" data-calculada="' + escapeHtml(coluna.titulo) + '" data-formula="' + escapeHtml(coluna.formula || '') + '">' + conteudo + '</td>';
+            }
+            if (coluna.tipo === 'livre') {
+              const valor = (row.extras && row.extras[coluna.id]) || '';
+              return '<td class="editable-cell col-' + escapeHtml(coluna.id) + '"><input class="cell-editor" data-compare-extra="' + escapeHtml(coluna.id) + '" data-row-key="' + escapeHtml(row.key) + '" value="' + escapeHtml(valor) + '" aria-label="' + escapeHtml(coluna.titulo) + '"></td>';
+            }
+            const campo = coluna.id === 'key' ? 'code' : coluna.id;
+            let valor = row[coluna.id];
+            if (coluna.tipo === 'moeda') valor = formatBrl(row[coluna.id]).replace(/[^\d.,-]/g, '').trim();
+            if (coluna.id === 'key') valor = row.key;
+            const co = coluna.id === 'description' && row.co && row.co.length ? '<small>CO: ' + escapeHtml(row.co.join(', ')) + '</small>' : '';
+            const entrada = '<input class="cell-editor ' + coluna.classe + '" data-compare-cell="' + campo + '" data-row-key="' + escapeHtml(row.key) + '" value="' + escapeHtml(String(valor)) + '"' + (coluna.tipo === 'moeda' ? ' inputmode="decimal"' : '') + ' aria-label="' + escapeHtml(coluna.titulo) + '">';
+            return '<td class="' + (coluna.tipo === 'moeda' ? 'num ' : '') + 'editable-cell col-' + escapeHtml(coluna.id) + '">' + (co ? '<div class="cell-stack">' + entrada + co + '</div>' : entrada) + '</td>';
+          }).join('');
+          return '<tr><td class="sheet-row-number"><span class="numero">' + (rowIndex + 1) + '</span><span class="excluir-linha" data-compare-remove="' + escapeHtml(row.key) + '" title="Excluir esta fonte">×</span></td>' + celulas + '</tr>';
         }).join('');
-        const totalBudget = allRows.reduce(function (sum,row) { return sum + row.budget; }, 0);
-        const totalCommitted = allRows.reduce(function (sum,row) { return sum + row.committed; }, 0);
-        const totalCollected = allRows.reduce(function (sum,row) { return sum + row.collected; }, 0);
-        document.getElementById('compareTotalBudget').textContent = formatBrl(totalBudget);
-        document.getElementById('compareTotalCommitted').textContent = formatBrl(totalCommitted);
-        document.getElementById('compareTotalCollected').textContent = formatBrl(totalCollected);
+
+        // rodapé de totais
+        const totais = colunas.map(function (coluna) {
+          if (coluna.tipo === 'moeda') {
+            const soma = allRows.reduce(function (acumulado, row) { return acumulado + row[coluna.id]; }, 0);
+            return '<th class="num col-' + escapeHtml(coluna.id) + '">' + formatBrl(soma) + '</th>';
+          }
+          if (coluna.id === 'diferenca') {
+            const orcado = allRows.reduce(function (a, row) { return a + row.budget; }, 0);
+            const arrecadado = allRows.reduce(function (a, row) { return a + row.collected; }, 0);
+            return '<th class="num">' + formatBrl(arrecadado - orcado) + '</th>';
+          }
+          if (coluna.id === 'execucao') {
+            const orcado = allRows.reduce(function (a, row) { return a + row.budget; }, 0);
+            const arrecadado = allRows.reduce(function (a, row) { return a + row.collected; }, 0);
+            return '<th class="num">' + formatPercent(orcado ? (arrecadado / orcado) * 100 : NaN) + '</th>';
+          }
+          if (coluna.id === 'key') return '<th>Total das fontes</th>';
+          return '<th></th>';
+        }).join('');
+        document.getElementById('compareFoot').innerHTML = '<tr><th class="sheet-corner"></th>' + totais + '</tr>';
+
+        document.getElementById('compareCount').textContent = rows.length + (rows.length === 1 ? ' fonte exibida' : ' fontes exibidas');
         const cartao = document.querySelector('.compare-table-card');
         if (cartao) COMPARE_ROLES.forEach(function (papel) { cartao.classList.toggle('tem-' + papel, Boolean(compareState.reports[papel])); });
-        document.getElementById('compareTotalDifference').textContent = formatBrl(totalCollected - totalBudget);
-        document.getElementById('compareTotalExecution').textContent = formatPercent(totalBudget ? (totalCollected / totalBudget) * 100 : NaN);
-        document.getElementById('compareCount').textContent = rows.length + (rows.length === 1 ? ' fonte exibida' : ' fontes exibidas');
         renderCompareKpis();
         persistWfaLater();
       }
+
+      function criarColunaLivre() {
+        compareState.colunasExtras = compareState.colunasExtras || [];
+        const id = 'extra' + (compareState.colunasExtras.length + 1) + '-' + Date.now().toString(36);
+        compareState.colunasExtras.push({ id: id, titulo: 'Nova coluna' });
+        renderCompareTable();
+        addAudit('Coluna criada', 'Coluna livre adicionada à tabela para anotações.', 'Estrutura');
+        regravarExecucaoAberta();
+        showToast('Coluna criada. Clique no título para renomeá-la.');
+        setTimeout(function () {
+          const titulo = document.querySelector('.titulo-coluna[data-coluna="' + id + '"]');
+          if (titulo) {
+            titulo.focus();
+            const faixa = document.createRange();
+            faixa.selectNodeContents(titulo);
+            const selecao = window.getSelection();
+            selecao.removeAllRanges();
+            selecao.addRange(faixa);
+          }
+        }, 60);
+      }
+
       function renderCompareResults() {
         if (compareState.reports.budget) renderCompareMeta(compareState.reports.budget, 'budgetMeta');
         if (compareState.reports.collected) renderCompareMeta(compareState.reports.collected, 'collectedMeta');
@@ -3587,11 +3726,66 @@
       });
       compareDom.search.addEventListener('input', renderCompareTable);
       compareDom.status.addEventListener('change', renderCompareTable);
-      compareDom.sortSource.addEventListener('click', function () {
-        compareState.sourceSort = compareState.sourceSort === 'asc' ? 'desc' : 'asc';
-        compareDom.sortSourceIcon.textContent = compareState.sourceSort === 'asc' ? '↑' : '↓';
-        compareDom.sortSource.setAttribute('aria-sort', compareState.sourceSort === 'asc' ? 'ascending' : 'descending');
+      const cabecalhoTabela = document.getElementById('compareHead');
+      cabecalhoTabela.addEventListener('click', function (evento) {
+        if (evento.target.closest('#compareSortSource')) {
+          compareState.sourceSort = compareState.sourceSort === 'asc' ? 'desc' : 'asc';
+          renderCompareTable();
+          return;
+        }
+        const remover = evento.target.closest('[data-remover-coluna]');
+        if (remover) {
+          const id = remover.dataset.removerColuna;
+          window.wfaConfirmar('A coluna e o que foi digitado nela serão removidos da tabela.', 'Remover coluna', 'Remover')
+            .then(function (sim) {
+              if (!sim) return;
+              compareState.colunasExtras = (compareState.colunasExtras || []).filter(function (coluna) { return coluna.id !== id; });
+              compareState.rows.forEach(function (row) { if (row.extras) delete row.extras[id]; });
+              renderCompareTable();
+              addAudit('Coluna removida', 'A coluna personalizada foi excluída da tabela.', 'Estrutura');
+              regravarExecucaoAberta();
+            });
+        }
+      });
+      // renomear título: confirma ao sair do campo ou com Enter
+      cabecalhoTabela.addEventListener('keydown', function (evento) {
+        const titulo = evento.target.closest('.titulo-coluna');
+        if (!titulo) return;
+        if (evento.key === 'Enter') { evento.preventDefault(); titulo.blur(); }
+        if (evento.key === 'Escape') { evento.preventDefault(); renderCompareTable(); }
+      });
+      cabecalhoTabela.addEventListener('focusout', function (evento) {
+        const titulo = evento.target.closest('.titulo-coluna');
+        if (!titulo) return;
+        const id = titulo.dataset.coluna;
+        const novo = titulo.textContent.trim();
+        if (!novo) { renderCompareTable(); return; }
+        compareState.titulos = compareState.titulos || {};
+        const padrao = colunasDaTabela().find(function (coluna) { return coluna.id === id; });
+        if (padrao && novo === padrao.titulo) return;
+        compareState.titulos[id] = novo;
+        const extra = (compareState.colunasExtras || []).find(function (coluna) { return coluna.id === id; });
+        if (extra) extra.titulo = novo;
+        addAudit('Coluna renomeada', 'Título alterado para “' + novo + '”.', 'Estrutura');
         renderCompareTable();
+        regravarExecucaoAberta();
+      });
+      // aviso ao tentar editar uma coluna calculada
+      compareDom.tableBody.addEventListener('click', function (evento) {
+        const calculada = evento.target.closest('.coluna-calculada');
+        if (!calculada) return;
+        showToast(calculada.dataset.calculada + ' é calculada automaticamente (' + calculada.dataset.formula + '). Edite as colunas de origem para alterá-la.');
+      });
+      // extras livres
+      compareDom.tableBody.addEventListener('change', function (evento) {
+        const campo = evento.target.closest('[data-compare-extra]');
+        if (!campo) return;
+        const row = findCompareRow(campo.dataset.rowKey);
+        if (!row) return;
+        row.extras = row.extras || {};
+        row.extras[campo.dataset.compareExtra] = campo.value;
+        persistWfaLater();
+        regravarExecucaoAberta();
       });
 
       function findCompareRow(key) { return compareState.rows.find(function (row) { return row.key === key && !row.deleted; }); }
@@ -3920,6 +4114,8 @@
             rows: compareState.rows,
             audit: compareState.audit,
             sourceSort: compareState.sourceSort,
+            colunasExtras: compareState.colunasExtras,
+            titulos: compareState.titulos,
             hasResults: compareDom.results.hidden === false,
             search: compareDom.search.value,
             status: compareDom.status.value
@@ -3960,6 +4156,8 @@
 
           if (savedCompare) {
             compareState.sourceSort = savedCompare.sourceSort || 'asc';
+            compareState.colunasExtras = savedCompare.colunasExtras || [];
+            compareState.titulos = savedCompare.titulos || {};
             [['budget', savedCompare.budgetId], ['committed', savedCompare.committedId], ['collected', savedCompare.collectedId]].forEach(function (entry) {
               const item = entry[1] ? findWorkspaceFile(entry[1]) : null;
               if (!item) return;
@@ -4160,6 +4358,7 @@
             renderCompareTable();
             return;
           }
+          if (comando === 'col') { criarColunaLivre(); return; }
           if (comando === 'xlsx') { document.getElementById('compareExportXlsx').click(); return; }
         }
         document.querySelectorAll('[data-sheet-cmd]').forEach(function (botao) {
@@ -4354,7 +4553,7 @@
               return acc;
             }, {})
           };
-          await stores.state.setItem(PREFIXO_EXEC + id, { resumo: resumo, reports: compareState.reports, rows: compareState.rows, audit: compareState.audit });
+          await stores.state.setItem(PREFIXO_EXEC + id, { resumo: resumo, reports: compareState.reports, rows: compareState.rows, audit: compareState.audit, colunasExtras: compareState.colunasExtras, titulos: compareState.titulos });
           execucaoAberta = id;
           renderExecucoes();
         } catch (error) { /* sem armazenamento: a execução segue apenas na tela */ }
@@ -4406,6 +4605,27 @@
         } catch (error) { /* ignora */ }
       }
 
+      // a aba aberta acompanha as edições de estrutura e de células
+      let regravarTimer = null;
+      function regravarExecucaoAberta() {
+        if (!execucaoAberta) return;
+        clearTimeout(regravarTimer);
+        regravarTimer = setTimeout(async function () {
+          try {
+            const stores = await getWfaStores();
+            const registro = await stores.state.getItem(PREFIXO_EXEC + execucaoAberta);
+            if (!registro) return;
+            registro.rows = compareState.rows;
+            registro.audit = compareState.audit;
+            registro.colunasExtras = compareState.colunasExtras;
+            registro.titulos = compareState.titulos;
+            registro.resumo.fontes = compareState.rows.filter(function (row) { return !row.deleted; }).length;
+            await stores.state.setItem(PREFIXO_EXEC + execucaoAberta, registro);
+            renderExecucoes();
+          } catch (error) { /* segue sem regravar */ }
+        }, 600);
+      }
+
       async function excluirExecucao(id) {
         try {
           const stores = await getWfaStores();
@@ -4430,6 +4650,8 @@
           compareState.reports = registro.reports;
           compareState.rows = registro.rows;
           compareState.audit = registro.audit || [];
+          compareState.colunasExtras = registro.colunasExtras || [];
+          compareState.titulos = registro.titulos || {};
           execucaoAberta = id;
           COMPARE_ROLES.forEach(function (papel) {
             const relatorio = compareState.reports[papel];
