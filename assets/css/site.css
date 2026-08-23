@@ -399,6 +399,12 @@
 
     .cms-edit-bar .cms-bar-drop { border-color: rgba(255,255,255,.2); color: rgba(255,255,255,.6); }
     .cms-edit-bar .cms-bar-drop:hover:not(:disabled) { border-color: #b03a3a; color: #ff9c9c; }
+    .cms-move-bar { position: fixed; z-index: 98; display: flex; gap: 2px; padding: 3px; background: var(--navy-950); box-shadow: 0 6px 18px rgba(3,16,26,.36); }
+    .cms-move-bar button { width: 30px; height: 26px; border: 0; background: transparent; color: white; font: inherit; font-size: 14px; line-height: 1; cursor: pointer; }
+    .cms-move-bar button:hover:not(:disabled) { background: var(--gold-500); color: var(--navy-950); }
+    .cms-move-bar button:disabled { color: rgba(255,255,255,.28); cursor: default; }
+    .cms-move-bar .cms-move-alvo { width: auto; padding: 0 9px; color: var(--gold-400); font-size: 11px; font-weight: 600; }
+    .cms-move-bar .cms-move-alvo:hover { background: var(--gold-500); color: var(--navy-950); }
     .cms-format-bar { position: fixed; z-index: 97; display: flex; gap: 6px; padding: 5px; background: var(--navy-950); box-shadow: 0 8px 22px rgba(3,16,26,.4); }
     .cms-format-bar button { padding: 5px 11px; border: 0; background: transparent; color: white; font: inherit; font-size: 12px; cursor: pointer; }
     .cms-format-bar #cmsFormatOn { color: var(--gold-400); font-style: italic; }

@@ -78,44 +78,148 @@
         var classe = (el.className || '').toString().split(' ')[0];
         return classe ? tag + '.' + classe : tag;
       }
+      /* Cada trecho editável carrega o próprio nome no HTML (data-bloco).
+         Antes o nome era recontado a cada carregamento, e qualquer mexida na
+         página deslocava a numeração — o que estava publicado ia junto. */
+      function editavel(el) {
+        return !el.closest('#wfaApp, .app-toast, .site-preview-bar, .cms-edit-bar, .construction-gate');
+      }
       function mapear() {
-        var raizes = [document.querySelector('header.main-header'), document.querySelector('main'), document.querySelector('footer')].filter(Boolean);
         var blocos = {};
         var imagens = {};
-        var contador = {};
-        var contadorImg = {};
-        function registrar(el) {
-          var escopo = escopoDe(el);
-          contador[escopo] = (contador[escopo] || 0) + 1;
-          var chave = escopo + '.b' + contador[escopo];
-          blocos[chave] = { el:el, chave:chave, escopo:escopo, orig:sanitizar(el.innerHTML), rotulo:rotuloDe(el) };
-        }
-        function percorrer(el) {
-          if (el.closest('#wfaApp, .app-toast, .site-preview-bar, .cms-edit-bar, .construction-gate')) return;
-          var tag = el.tagName;
-          if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'SVG') return;
-          if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-          var temTexto = false;
-          var soInline = true;
-          for (var i = 0; i < el.childNodes.length; i += 1) {
-            var no = el.childNodes[i];
-            if (no.nodeType === 3) { if (/[\wÀ-ÿ]/.test(no.nodeValue)) temTexto = true; }
-            else if (no.nodeType === 1 && !INLINE_OK[no.tagName]) soInline = false;
-          }
-          if (temTexto && soInline) { registrar(el); return; }
-          for (var j = 0; j < el.children.length; j += 1) percorrer(el.children[j]);
-        }
-        raizes.forEach(function (raiz) {
-          percorrer(raiz);
-          raiz.querySelectorAll('img').forEach(function (img) {
-            if (img.closest('#wfaApp')) return;
-            var escopo = escopoDe(img);
-            contadorImg[escopo] = (contadorImg[escopo] || 0) + 1;
-            var chave = escopo + '.img' + contadorImg[escopo];
-            imagens[chave] = { el:img, chave:chave, escopo:escopo, rotulo:img.getAttribute('alt') || img.className || 'imagem' };
-          });
+        Array.prototype.forEach.call(document.querySelectorAll('[data-bloco]'), function (el) {
+          if (!editavel(el)) return;
+          var chave = el.getAttribute('data-bloco');
+          blocos[chave] = { el:el, chave:chave, escopo:escopoDe(el), orig:sanitizar(el.innerHTML), rotulo:rotuloDe(el) };
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('[data-imagem]'), function (el) {
+          if (!editavel(el)) return;
+          var chave = el.getAttribute('data-imagem');
+          imagens[chave] = { el:el, chave:chave, escopo:escopoDe(el), rotulo:el.getAttribute('alt') || el.className || 'imagem' };
         });
         return { blocos:blocos, imagens:imagens };
+      }
+
+      /* ---------------- ordem dos blocos ----------------
+         Mover não reescreve a página: guarda-se a ordem dos irmãos e ela é
+         reaplicada ao carregar. Cada grupo é uma lista de chaves na ordem
+         desejada; a unidade movida pode ser o próprio bloco ou o cartão que
+         o contém, quando o bloco está sozinho ali dentro.              */
+      var ordemAtual = [];
+
+      function profundidade(el) {
+        var n = 0;
+        while (el.parentElement) { n += 1; el = el.parentElement; }
+        return n;
+      }
+      function chaveDaUnidade(el) {
+        if (el.hasAttribute && el.hasAttribute('data-bloco')) return el.getAttribute('data-bloco');
+        var dentro = el.querySelector('[data-bloco]');
+        return dentro ? dentro.getAttribute('data-bloco') : null;
+      }
+      // irmãos que também carregam texto editável, na ordem em que estão na página
+      function irmaosMoveis(el) {
+        var pai = el.parentElement;
+        if (!pai) return [];
+        return Array.prototype.filter.call(pai.children, function (filho) {
+          return filho === el || (filho.nodeType === 1 && (filho.hasAttribute('data-bloco') || filho.querySelector('[data-bloco]')));
+        });
+      }
+      // Do trecho para fora: cada nível é algo que pode trocar de lugar com os
+      // vizinhos — o parágrafo, depois o cartão que o contém, e assim por diante.
+      function escadaDeUnidades(el) {
+        var niveis = [];
+        var atual = el;
+        var voltas = 0;
+        while (atual && atual.parentElement && voltas < 10) {
+          if (atual.tagName === 'MAIN' || atual.tagName === 'BODY' || atual.tagName === 'FOOTER' || atual.tagName === 'HEADER') break;
+          var irmaos = irmaosMoveis(atual);
+          if (irmaos.length > 1) niveis.push({ el:atual, irmaos:irmaos, indice:irmaos.indexOf(atual) });
+          atual = atual.parentElement;
+          voltas += 1;
+        }
+        return niveis;
+      }
+      function unidadeMovel(el, nivel) {
+        var niveis = escadaDeUnidades(el);
+        if (!niveis.length) return null;
+        return niveis[Math.min(nivel || 0, niveis.length - 1)];
+      }
+      function nomeDaUnidade(unidade, el) {
+        if (unidade.el === el) return 'trecho';
+        var classe = (unidade.el.className || '').toString().split(' ')[0];
+        if (/card|item|crest|step|cartao/i.test(classe)) return 'cartão';
+        if (unidade.el.tagName === 'SECTION') return 'seção';
+        return 'bloco';
+      }
+      function podeMover(el, direcao, nivel) {
+        var unidade = unidadeMovel(el, nivel);
+        if (!unidade) return false;
+        var destino = unidade.indice + direcao;
+        return destino >= 0 && destino < unidade.irmaos.length;
+      }
+      function moverBloco(chave, direcao, nivel) {
+        var campo = mapa.blocos[chave];
+        if (!campo) return false;
+        var unidade = unidadeMovel(campo.el, nivel);
+        if (!unidade) return false;
+        var destino = unidade.indice + direcao;
+        if (destino < 0 || destino >= unidade.irmaos.length) return false;
+        var pai = unidade.el.parentElement;
+        var vizinho = unidade.irmaos[destino];
+        if (direcao < 0) pai.insertBefore(unidade.el, vizinho);
+        else pai.insertBefore(vizinho, unidade.el);
+        registrarOrdem(pai);
+        gravarRascunho();
+        return true;
+      }
+      // guarda a ordem final dos irmãos deste pai, substituindo o registro anterior
+      function registrarOrdem(pai) {
+        var irmaos = Array.prototype.filter.call(pai.children, function (filho) {
+          return filho.nodeType === 1 && (filho.hasAttribute('data-bloco') || filho.querySelector('[data-bloco]'));
+        });
+        var chaves = irmaos.map(chaveDaUnidade).filter(Boolean);
+        if (chaves.length < 2) return;
+        ordemAtual = ordemAtual.filter(function (grupo) { return grupo[0] !== chaves[0] && chaves.indexOf(grupo[0]) === -1; });
+        ordemAtual.push(chaves);
+      }
+      // reaplica a ordem guardada: cada unidade volta para a posição que lhe cabe
+      function aplicarOrdem(grupos) {
+        if (!Array.isArray(grupos)) return;
+        ordemAtual = [];
+        grupos.forEach(function (grupo) {
+          if (!Array.isArray(grupo) || grupo.length < 2) return;
+          var unidades = grupo.map(function (chave) {
+            var bloco = document.querySelector('[data-bloco="' + chave + '"]');
+            return bloco && editavel(bloco) ? bloco : null;
+          });
+          if (unidades.some(function (u) { return !u; })) return;
+          // sobe as mais fundas até que todas dividam o mesmo pai
+          var voltas = 0;
+          while (voltas < 12) {
+            var pais = unidades.map(function (u) { return u.parentElement; });
+            if (pais.every(function (p) { return p && p === pais[0]; })) break;
+            var niveis = unidades.map(profundidade);
+            var maior = Math.max.apply(null, niveis);
+            unidades = unidades.map(function (u, i) { return niveis[i] === maior ? u.parentElement : u; });
+            voltas += 1;
+          }
+          var pai = unidades[0] && unidades[0].parentElement;
+          if (!pai || !unidades.every(function (u) { return u.parentElement === pai; })) return;
+          if (new Set(unidades).size !== unidades.length) return;
+          // marca as posições atuais e recoloca cada unidade na sua vez
+          var emOrdemDeTela = unidades.slice().sort(function (a, b) {
+            return (a.compareDocumentPosition(b) & 4) ? -1 : 1;
+          });
+          var marcas = emOrdemDeTela.map(function (u) {
+            var marca = document.createComment('');
+            pai.insertBefore(marca, u);
+            return marca;
+          });
+          unidades.forEach(function (u, i) { pai.insertBefore(u, marcas[i]); });
+          marcas.forEach(function (m) { if (m.parentNode) m.parentNode.removeChild(m); });
+          ordemAtual.push(grupo.slice());
+        });
       }
 
       function aplicarBloco(campo, valor) {
@@ -134,10 +238,10 @@
           var campo = mapa.blocos[chave];
           var salvo = dados.blocos[chave];
           if (!campo || !salvo || typeof salvo.v !== 'string') return;
-          if (salvo.o && salvo.o !== campo.orig) return; // a página mudou: mantém o conteúdo novo do código
           alteracoes[chave] = salvo.v;
           aplicarBloco(campo, salvo.v);
         });
+        if (dados.ordem) aplicarOrdem(dados.ordem);
         if (dados.imagens) Object.keys(dados.imagens).forEach(function (chave) {
           var campo = mapa.imagens[chave];
           if (campo && dados.imagens[chave]) aplicarImagem(campo, dados.imagens[chave]);
@@ -165,6 +269,8 @@
       }
       function totalAlteracoes() {
         var total = Object.keys(alteracoes).length + Object.keys(imagensPendentes).length + Object.keys(coresAtuais()).length;
+        var ordemPublicada = JSON.stringify((publicado && publicado.ordem) || []);
+        if (JSON.stringify(ordemAtual) !== ordemPublicada) total += 1;
         var construcaoPublicada = publicado && typeof publicado.emConstrucao === 'boolean' ? publicado.emConstrucao : true;
         if (construcaoAtual() !== construcaoPublicada) total += 1;
         return total;
@@ -192,7 +298,7 @@
           var campo = mapa.blocos[chave];
           if (campo) blocos[chave] = { v:alteracoes[chave], o:campo.orig };
         });
-        try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ blocos:blocos, cores:coresAtuais(), emConstrucao:construcaoAtual() })); }
+        try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ blocos:blocos, ordem:ordemAtual, cores:coresAtuais(), emConstrucao:construcaoAtual() })); }
         catch (error) { /* sem espaço */ }
         atualizarBotoes();
         return blocos;
@@ -238,6 +344,7 @@
         if (!editando) return;
         editando = false;
         esconderFormatacao();
+        esconderMover();
         Object.keys(mapa.blocos).forEach(function (chave) {
           var el = mapa.blocos[chave].el;
           el.removeAttribute('data-cms-inline');
@@ -264,6 +371,73 @@
         var el = no.nodeType === 1 ? no : no.parentElement;
         return el ? el.closest('[data-cms-inline]') : null;
       }
+      /* Os botões de mover acompanham o bloco em que se está mexendo. */
+      function esconderMover() {
+        var caixa = document.getElementById('cmsMoveBar');
+        if (caixa) caixa.hidden = true;
+      }
+      var nivelMover = 0;
+      function mostrarMover(el) {
+        var caixa = document.getElementById('cmsMoveBar');
+        if (!caixa || !editando || !el) { esconderMover(); return; }
+        var chave = el.getAttribute('data-bloco');
+        var niveis = escadaDeUnidades(el);
+        if (!niveis.length) { esconderMover(); return; }
+        if (nivelMover > niveis.length - 1) nivelMover = 0;
+        var unidade = niveis[nivelMover];
+        caixa.dataset.bloco = chave;
+        caixa.dataset.nivel = String(nivelMover);
+        var alvoBotao = caixa.querySelector('[data-alvo]');
+        var nome = nomeDaUnidade(unidade, el);
+        alvoBotao.textContent = nome;
+        alvoBotao.hidden = niveis.length < 2;
+        alvoBotao.title = niveis.length < 2 ? '' : 'Mover o ' + nome + ' — clique para escolher o que mover';
+        var subir = caixa.querySelector('[data-mover="-1"]');
+        var descer = caixa.querySelector('[data-mover="1"]');
+        subir.disabled = !podeMover(el, -1, nivelMover);
+        descer.disabled = !podeMover(el, 1, nivelMover);
+        subir.title = 'Mover o ' + nome + ' para cima';
+        descer.title = 'Mover o ' + nome + ' para baixo';
+        var caixaEl = el.getBoundingClientRect();
+        caixa.hidden = false;
+        var largura = caixa.offsetWidth || 74;
+        caixa.style.left = Math.max(6, Math.min(caixaEl.right - largura, window.innerWidth - largura - 6)) + 'px';
+        caixa.style.top = Math.max(6, caixaEl.top - caixa.offsetHeight - 6) + 'px';
+      }
+      document.addEventListener('focusin', function (evento) {
+        if (!editando) return;
+        var bloco = evento.target.closest && evento.target.closest('[data-cms-inline]');
+        if (bloco) { nivelMover = 0; mostrarMover(bloco); }
+      });
+      window.addEventListener('scroll', function () { if (editando) esconderMover(); }, { passive:true });
+      document.addEventListener('click', function (evento) {
+        if (!editando) return;
+        var caixa = document.getElementById('cmsMoveBar');
+        var alvo = evento.target.closest && evento.target.closest('[data-alvo]');
+        if (alvo) {
+          evento.preventDefault();
+          var chaveAlvo = caixa && caixa.dataset.bloco;
+          var elAlvo = chaveAlvo && mapa.blocos[chaveAlvo] && mapa.blocos[chaveAlvo].el;
+          if (!elAlvo) return;
+          nivelMover = (nivelMover + 1) % escadaDeUnidades(elAlvo).length;
+          mostrarMover(elAlvo);
+          return;
+        }
+        var botao = evento.target.closest && evento.target.closest('[data-mover]');
+        if (botao) {
+          evento.preventDefault();
+          var chave = caixa && caixa.dataset.bloco;
+          if (!chave) return;
+          if (moverBloco(chave, Number(botao.dataset.mover), nivelMover)) {
+            var el = mapa.blocos[chave] && mapa.blocos[chave].el;
+            if (el) { el.focus(); mostrarMover(el); }
+            toast('Movido. Publique para valer no site.');
+          }
+          return;
+        }
+        if (!evento.target.closest('[data-cms-inline], .cms-move-bar')) esconderMover();
+      });
+
       function esconderFormatacao() {
         var barra = document.getElementById('cmsFormatBar');
         if (barra) barra.hidden = true;
@@ -575,6 +749,7 @@
           v: 2,
           atualizadoEm: new Date().toISOString(),
           blocos: Object.assign({}, (publicado && publicado.blocos) || {}, blocos),
+          ordem: ordemAtual,
           imagens: Object.assign({}, (publicado && publicado.imagens) || {}),
           cores: coresAtuais(),
           emConstrucao: construcaoAtual()
