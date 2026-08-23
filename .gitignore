@@ -1,0 +1,26 @@
+# dependências
+/node_modules
+
+# artefatos de build de ferramentas que não usamos no site publicado
+/.next/
+/.vinext/
+/out/
+/dist/
+/.wrangler/
+/output/
+/outputs/
+/work/
+/tmp/
+next-env.d.ts
+
+# ambiente
+.env*
+.vercel
+.DS_Store
+*.pem
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*

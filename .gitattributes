@@ -1,0 +1,11 @@
+# mantém LF no repositório, independente do sistema de quem edita
+* text=auto eol=lf
+
+# binários não devem ser convertidos
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.pdf binary
+*.woff2 binary

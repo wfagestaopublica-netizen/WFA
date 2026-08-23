@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>WFA Gestão Pública</title>
+  <script>
+    /* O GitHub Pages não conhece os endereços internos do sistema.
+       Guardamos o caminho pedido e devolvemos para a página principal,
+       que o restaura e abre a tela certa. */
+    (function () {
+      var caminho = window.location.pathname + window.location.search + window.location.hash;
+      window.location.replace('/?rota=' + encodeURIComponent(caminho));
+    }());
+  </script>
+</head>
+<body></body>
+</html>
