@@ -419,7 +419,13 @@
     .cms-img-btn:hover { background: var(--gold-500); color: var(--navy-950); }
     body.cms-editando [data-cms-inline-img] { outline: 2px dashed rgba(195,154,87,.75); outline-offset: -4px; }
     header b, header strong, main b, main strong, footer b, footer strong { font-weight: 700; font-synthesis-weight: none; }
-    .cms-palette { margin-top: 18px; padding: 18px; background: #fbfcfc; border: 1px solid var(--line); }
+    .cms-color-panel { position: fixed; z-index: 96; left: 50%; bottom: 104px; transform: translateX(-50%); width: min(680px, calc(100vw - 32px)); max-height: 60vh; overflow-y: auto; background: white; border: 1px solid var(--navy-950); box-shadow: 0 18px 44px rgba(3,16,26,.35); }
+    body:not(.cms-editando) .cms-color-panel { display: none; }
+    .cms-bar-status { max-width: 320px; font-size: 12px; line-height: 1.4; color: var(--gold-400); }
+    .cms-bar-status.erro { color: #ff9c9c; }
+    .cms-bar-status.ok { color: #8fe0b4; }
+    .cms-edit-bar { flex-wrap: wrap; max-width: calc(100vw - 32px); }
+    .cms-palette { margin-top: 0; padding: 18px; background: white; border: 0; }
     .cms-palette h4 { margin: 0 0 6px; color: var(--navy-900); font: 700 16px/1.2 Cambria, Georgia, serif; }
     .cms-palette > p { margin: 0 0 14px; color: var(--slate); font-size: 13px; line-height: 1.55; }
     .cms-palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 10px; }
@@ -427,14 +433,9 @@
     .cms-palette-grid input { width: 40px; height: 28px; flex: none; padding: 2px; border: 1px solid var(--line); background: white; cursor: pointer; }
     #cmsResetCores { margin-top: 12px; padding: 8px 14px; background: white; border: 1px solid var(--line); color: var(--navy-900); font: inherit; font-size: 13px; cursor: pointer; }
     #cmsResetCores:hover { border-color: var(--gold-500); }
-    /* aproxima o painel interno da identidade da homepage */
-    body.app-active { background: var(--paper); }
-    .app-topbar { background: rgba(255,255,255,.94); border-bottom: 1px solid var(--line); }
-    .app-kpi, .settings-card, .cms-card, .workspace-panel, .app-card { border-color: var(--line); }
-    .app-view-site { border-color: var(--gold-500); color: var(--gold-400); font-weight: 700; }
-    .app-view-site:hover { background: var(--gold-500); color: var(--navy-950); }
-    .view-heading h2 { font-family: Cambria, Georgia, serif; }
-    .app-content { background: var(--paper); }
+    /* botão de pré-visualização legível sobre o rodapé claro da barra lateral */
+    .app-view-site { background: white; border: 1px solid #1b8a76; color: #12695c; font-weight: 700; }
+    .app-view-site:hover { background: #1b8a76; border-color: #1b8a76; color: white; }
     .cor-ouro { color: var(--gold-500) !important; }
     .cor-navy { color: var(--navy-900) !important; }
     .cor-vermelho { color: var(--red-mg) !important; }
@@ -1884,53 +1885,6 @@
     #compareSetup, #compareFilesBackdrop { display: none !important; }
 
 
-    /* Identidade da homepage aplicada ao painel interno */
-    .app-sidebar { color: rgba(255,255,255,.72); background: var(--navy-950); border-right: 1px solid rgba(255,255,255,.08); box-shadow: none; }
-    .app-sidebar::before { display: block; height: 5px; background: linear-gradient(90deg,var(--gold-500) 0 76%,var(--red-mg) 76% 100%); }
-    .app-brand { background: transparent; border-bottom: 1px solid rgba(255,255,255,.1); }
-    .app-brand-copy strong { color: white; }
-    .app-brand-copy span { color: var(--gold-400); }
-    .app-nav-label { color: rgba(255,255,255,.35); }
-    .app-nav button { color: rgba(255,255,255,.66); }
-    .app-nav button:hover { color: white; background: rgba(255,255,255,.06); }
-    .app-nav button.active { color: white; background: rgba(195,154,87,.14); border-left-color: var(--gold-500); }
-    .app-nav button[disabled] { color: rgba(255,255,255,.28); }
-    .app-nav-icon { color: var(--gold-400); background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.16); }
-    .app-nav-meta { color: rgba(255,255,255,.4); }
-    .sidebar-files-heading { border-color: rgba(255,255,255,.1); }
-    .sidebar-upload-icon { color: var(--gold-400); background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.18); }
-    .sidebar-upload-icon:hover { color: var(--navy-950); background: var(--gold-500); border-color: var(--gold-500); }
-    .sidebar-library { border-top-color: rgba(255,255,255,.1); }
-    .sidebar-library-empty { color: rgba(255,255,255,.4); }
-    .sidebar-file:hover { background: rgba(255,255,255,.06); }
-    .sidebar-file input { accent-color: var(--gold-500); }
-    .sidebar-file b { color: rgba(255,255,255,.9); }
-    .sidebar-file small { color: rgba(255,255,255,.45); }
-    .sidebar-admin-nav { border-top-color: rgba(255,255,255,.1); }
-    .app-sidebar-bottom { background: transparent; border-top-color: rgba(255,255,255,.1); }
-    .app-user-mini strong { color: white; }
-    .app-user-mini small { color: rgba(255,255,255,.5); }
-    .app-avatar { color: var(--navy-950); background: var(--gold-500); }
-    .app-logout { color: rgba(255,255,255,.5); }
-    .app-logout:hover { color: var(--gold-400); }
-    .app-topbar { color: var(--ink); background: rgba(255,255,255,.94); border-bottom: 1px solid var(--line); }
-    .app-title small { color: var(--slate); }
-    .app-title h1 { color: var(--navy-900); font-family: Cambria, Georgia, serif; }
-    .app-search { color: var(--ink); background: var(--white); border-color: var(--line); }
-    .app-search:focus { border-color: var(--gold-500); }
-    .app-notification, .app-menu-toggle { color: var(--navy-900); background: var(--white); border-color: var(--line); }
-    .workspace-banner { color: white; background: var(--navy-900); }
-    .workspace-eyebrow { color: var(--gold-400); }
-    .workspace-banner h2 { color: white; font-family: Cambria, Georgia, serif; }
-    .workspace-banner p { color: rgba(255,255,255,.72); }
-    .workspace-tool-trigger { color: var(--navy-950); background: var(--gold-500); border-color: var(--gold-500); }
-    .workspace-tool-trigger:hover { background: var(--gold-400); border-color: var(--gold-400); }
-    .workspace-stat strong { color: var(--navy-900); font-family: Cambria, Georgia, serif; }
-    .workspace-table th { color: var(--slate); background: #eef1f2; }
-    .workspace-file-name > span { color: var(--navy-800); background: #e9eef1; border-color: var(--line); }
-    .workspace-empty-mark { color: var(--navy-800); background: #e9eef1; border-color: var(--line); }
-    .workspace-empty p strong { color: var(--navy-900); }
-
     /* Comparador: menu único e grade editável no padrão de planilha */
     .compare-menu-only { min-height: 38px; margin: 0 0 8px; padding: 0; justify-content: flex-end; }
     .compare-menu-only .view-heading-actions { width: 100%; justify-content: flex-end; }
@@ -2011,6 +1965,18 @@
       font-family: Arial,sans-serif;
       font-size: 11px;
     }
+    .sheet-commandbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 7px 9px; background: #eef3f1; border: 1px solid #cfdcd7; border-bottom: 0; font-family: Arial, sans-serif; }
+    .sheet-namebox { min-width: 58px; padding: 4px 8px; background: white; border: 1px solid #bccdc7; color: #1b5047; font-size: 11px; font-weight: 700; text-align: center; font-family: Consolas, "Courier New", monospace; }
+    .sheet-formula { flex: 1 1 190px; min-width: 140px; padding: 4px 9px; background: white; border: 1px solid #bccdc7; color: #46605a; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sheet-commands { display: flex; flex-wrap: wrap; gap: 5px; }
+    .sheet-commands button { padding: 4px 9px; background: white; border: 1px solid #bccdc7; color: #2d554d; font: inherit; font-size: 11px; cursor: pointer; }
+    .sheet-commands button:hover:not(:disabled) { background: #dcebe5; border-color: #8fb3a9; }
+    .sheet-commands button:disabled { opacity: .45; cursor: default; }
+    .sheet-hint { width: 100%; color: #7b908a; font-size: 10px; }
+    .compare-grid-table thead tr.sheet-letters th { height: 19px; padding: 0; color: #5d7a73; background: #dde8e4; border-right: 1px solid #c3d4ce; border-bottom: 1px solid #c3d4ce; font: 600 10px Consolas, "Courier New", monospace; text-align: center; text-transform: none; letter-spacing: 0; }
+    .compare-grid-table thead tr.sheet-letters th.sheet-corner { background: #cbdcd6 !important; color: #4a6660; }
+    .compare-grid-table td.celula-ativa { box-shadow: inset 0 0 0 2px #157a63; }
+    .compare-grid-table tr.linha-ativa .sheet-row-number { color: white; background: #157a63 !important; }
     .compare-grid-table .cell-code { font-family: Consolas,"Courier New",monospace; font-size: 10.5px; }
     .compare-grid-table .cell-editor:hover { background: transparent; border: 0; }
     .compare-grid-table .cell-editor:focus { color: #183c36; background: #fffef7; border: 0; box-shadow: inset 0 0 0 2px #21866f; }
@@ -2376,7 +2342,20 @@
                   <div class="compare-filters"><input id="compareSearch" type="search" placeholder="Buscar código ou descrição" aria-label="Buscar fonte"><select id="compareStatusFilter" aria-label="Filtrar situação"><option value="all">Todas as situações</option><option value="matched">Nos dois relatórios</option><option value="only-budget">Somente no orçado</option><option value="only-collected">Somente no arrecadado</option><option value="above">Acima do orçado</option><option value="edited">Com correção manual</option></select></div>
                   <div class="compare-table-options"><button class="compare-table-options-trigger" id="compareTableOptionsToggle" type="button" aria-expanded="false" aria-controls="compareTableOptionsMenu">Ações <span>•••</span></button><div class="compare-table-options-menu" id="compareTableOptionsMenu" hidden><button type="button" data-app-view="workspace">Voltar à central</button><button id="compareReportDetailsToggle" type="button" aria-expanded="false" hidden>Detalhes dos relatórios</button><button id="compareAuditToggle" type="button" aria-expanded="false" hidden>Trilha de auditoria</button><button id="compareAddRow" type="button">Adicionar fonte</button><button id="compareExportXlsx" type="button">Exportar Excel</button><button id="compareExportPdf" type="button">Exportar PDF</button></div></div>
                 </div>
-                <div class="compare-table-wrap"><table class="compare-table compare-grid-table"><colgroup><col class="col-row-number"><col class="col-source"><col class="col-description"><col class="col-money"><col class="col-money"><col class="col-money"><col class="col-execution"><col class="col-status"><col class="col-actions"></colgroup><thead><tr><th class="sheet-corner">#</th><th><button class="sheet-sort-button" id="compareSortSource" type="button" aria-label="Classificar por fonte de recurso" aria-sort="ascending">Fonte de recurso <span id="compareSortSourceIcon">↑</span></button></th><th>Descrição</th><th class="num">Orçado</th><th class="num">Arrecadado</th><th class="num">Diferença</th><th class="num">Execução</th><th>Situação</th><th>Excluir</th></tr></thead><tbody id="compareTableBody"></tbody><tfoot><tr><th class="sheet-corner"></th><th colspan="2">Total das fontes</th><th class="num" id="compareTotalBudget">R$ 0,00</th><th class="num" id="compareTotalCollected">R$ 0,00</th><th class="num" id="compareTotalDifference">R$ 0,00</th><th class="num" id="compareTotalExecution">—</th><th colspan="2"></th></tr></tfoot></table></div>
+                <div class="sheet-commandbar">
+                  <span class="sheet-namebox" id="sheetNameBox">—</span>
+                  <span class="sheet-formula" id="sheetFormula">Selecione uma célula</span>
+                  <span class="sheet-commands">
+                    <button type="button" data-sheet-cmd="add" title="Inserir nova fonte (Ctrl+Shift+=)">＋ Linha</button>
+                    <button type="button" data-sheet-cmd="del" title="Excluir a linha da célula selecionada (Ctrl+-)" disabled>－ Linha</button>
+                    <button type="button" data-sheet-cmd="asc" title="Ordenar por fonte, crescente">A→Z</button>
+                    <button type="button" data-sheet-cmd="desc" title="Ordenar por fonte, decrescente">Z→A</button>
+                    <button type="button" data-sheet-cmd="clear" title="Limpar busca e filtros">Limpar filtros</button>
+                    <button type="button" data-sheet-cmd="xlsx" title="Exportar para Excel">Exportar</button>
+                  </span>
+                  <span class="sheet-hint">Setas navegam · Enter desce · Tab avança · Esc desfaz a célula</span>
+                </div>
+                <div class="compare-table-wrap"><table class="compare-table compare-grid-table"><colgroup><col class="col-row-number"><col class="col-source"><col class="col-description"><col class="col-money"><col class="col-money"><col class="col-money"><col class="col-execution"><col class="col-status"><col class="col-actions"></colgroup><thead><tr class="sheet-letters"><th class="sheet-corner"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th></tr><tr><th class="sheet-corner">#</th><th><button class="sheet-sort-button" id="compareSortSource" type="button" aria-label="Classificar por fonte de recurso" aria-sort="ascending">Fonte de recurso <span id="compareSortSourceIcon">↑</span></button></th><th>Descrição</th><th class="num">Orçado</th><th class="num">Arrecadado</th><th class="num">Diferença</th><th class="num">Execução</th><th>Situação</th><th>Excluir</th></tr></thead><tbody id="compareTableBody"></tbody><tfoot><tr><th class="sheet-corner"></th><th colspan="2">Total das fontes</th><th class="num" id="compareTotalBudget">R$ 0,00</th><th class="num" id="compareTotalCollected">R$ 0,00</th><th class="num" id="compareTotalDifference">R$ 0,00</th><th class="num" id="compareTotalExecution">—</th><th colspan="2"></th></tr></tfoot></table></div>
                 <div class="compare-table-footer"><span id="compareCount">0 fontes exibidas</span><span>Células claras são editáveis • Enter salva • Esc cancela</span><span>Valores em reais (R$)</span></div>
               </article>
 
@@ -2407,18 +2386,6 @@
               <button type="button" id="cmsDiscard" hidden>Descartar alterações</button>
             </div>
               <label class="cms-switch"><input id="cmsConstrucao" type="checkbox" checked><span><b>Manter a página "Site em construção" para os visitantes</b><small>Enquanto estiver marcado, quem abrir o endereço vê apenas o aviso de construção. Você continua entrando normalmente pelo botão Acesso restrito. Desmarque e publique quando quiser abrir o site ao público.</small></span></label>
-            <div class="cms-palette">
-              <h4>Cores do site</h4>
-              <p>Valem para a homepage e para este painel. A mudança aparece na hora e vai para o ar ao publicar.</p>
-              <div class="cms-palette-grid">
-                <label><input type="color" data-cms-var="--navy-950" value="#051521"><span>Cabeçalho, rodapé e painel</span></label>
-                <label><input type="color" data-cms-var="--navy-900" value="#071b2b"><span>Títulos e textos escuros</span></label>
-                <label><input type="color" data-cms-var="--gold-500" value="#c39a57"><span>Dourado principal</span></label>
-                <label><input type="color" data-cms-var="--gold-400" value="#d6b476"><span>Dourado claro</span></label>
-                <label><input type="color" data-cms-var="--red-mg" value="#b72d35"><span>Vermelho de Minas</span></label>
-                <label><input type="color" data-cms-var="--paper" value="#f5f3ef"><span>Fundo claro das seções</span></label>
-                <label><input type="color" data-cms-var="--ink" value="#102331"><span>Cor do texto corrido</span></label>
-              </div>
               <button type="button" id="cmsResetCores">Voltar às cores originais</button>
             </div>
           </div>
@@ -2431,7 +2398,6 @@
         </section>
       </main>
     </div>
-    <div class="app-toast" id="appToast" role="status"></div>
     <div class="compare-editor-backdrop" id="compareEditor" role="presentation">
       <section class="compare-editor" role="dialog" aria-modal="true" aria-labelledby="compareEditorTitle">
         <div class="compare-editor-head"><div><h3 id="compareEditorTitle">Corrigir fonte</h3><p id="compareEditorSubtitle">Toda alteração exige uma justificativa e ficará registrada.</p></div><button class="compare-editor-close" id="compareEditorClose" type="button" aria-label="Fechar">×</button></div>
@@ -2447,14 +2413,32 @@
     </div>
   </section>
 
+    <div class="app-toast" id="appToast" role="status"></div>
     <div class="cms-format-bar" id="cmsFormatBar" hidden><button type="button" id="cmsFmtBold" title="Negrito"><b>N</b></button><button type="button" id="cmsFmtItalic" title="Itálico"><i>I</i></button><button type="button" id="cmsFormatOn" title="Destaque na fonte do site">Destaque</button><span class="cms-cores"><button type="button" data-cor="cor-ouro" style="--c:#c39a57" title="Dourado" aria-label="Dourado"></button><button type="button" data-cor="cor-navy" style="--c:#0a2940" title="Azul escuro" aria-label="Azul escuro"></button><button type="button" data-cor="cor-vermelho" style="--c:#b72d35" title="Vermelho" aria-label="Vermelho"></button><button type="button" data-cor="cor-branco" style="--c:#ffffff" title="Branco" aria-label="Branco"></button></span><button type="button" id="cmsFormatOff" title="Remover formatação do trecho">Limpar</button></div>
     <div class="cms-edit-bar" id="cmsEditBar">
       <span class="cms-bar-title">Modo de edição</span>
       <span class="cms-bar-count" id="cmsBarCount">Nenhuma alteração</span>
+      <button type="button" id="cmsBarColors">🎨 Cores do site</button>
       <button type="button" class="cms-bar-save" id="cmsBarPublish" disabled>Publicar alterações</button>
       <button type="button" id="cmsBarExit">Sair sem publicar</button>
       <button type="button" class="cms-bar-drop" id="cmsBarDiscard" disabled>Descartar tudo</button>
+      <span class="cms-bar-status" id="cmsBarStatus" hidden></span>
     </div>
+    <div class="cms-color-panel" id="cmsColorPanel" hidden>
+      <div class="cms-palette">
+        <h4>Cores do site</h4>
+        <p>Valem para a homepage e para este painel. A mudança aparece na hora e vai para o ar ao publicar.</p>
+        <div class="cms-palette-grid">
+          <label><input type="color" data-cms-var="--navy-950" value="#051521"><span>Cabeçalho, rodapé e painel</span></label>
+          <label><input type="color" data-cms-var="--navy-900" value="#071b2b"><span>Títulos e textos escuros</span></label>
+          <label><input type="color" data-cms-var="--gold-500" value="#c39a57"><span>Dourado principal</span></label>
+          <label><input type="color" data-cms-var="--gold-400" value="#d6b476"><span>Dourado claro</span></label>
+          <label><input type="color" data-cms-var="--red-mg" value="#b72d35"><span>Vermelho de Minas</span></label>
+          <label><input type="color" data-cms-var="--paper" value="#f5f3ef"><span>Fundo claro das seções</span></label>
+          <label><input type="color" data-cms-var="--ink" value="#102331"><span>Cor do texto corrido</span></label>
+        </div>
+    </div>
+
     <button class="cms-img-btn" id="cmsImgBtn" type="button" hidden>⤒ Trocar imagem</button>
     <div class="site-preview-bar previa" id="previewPublicBar"><span>Pré-visualização — o site ainda não está aberto ao público</span><button type="button" id="endPreview">Encerrar</button></div>
     <div class="site-preview-bar" id="sitePreviewBar"><span>Pré-visualizando a homepage como visitante</span><button type="button" id="backToApp">Voltar ao sistema</button></div>
@@ -3673,6 +3657,118 @@
       restoreWfaState();
       window.addEventListener('pagehide', function () { clearTimeout(wfaSaveTimer); persistWfaNow(); });
 
+
+      /* ============ Comportamento de planilha na grade do comparador ============
+         Navegação por teclado entre células, indicador de célula ativa no padrão
+         de caixa de nome e comandos diretos sobre as linhas.                    */
+      (function () {
+        var LETRAS = ['A','B','C','D','E','F','G','H'];
+        var corpo = document.getElementById('compareTableBody');
+        if (!corpo) return;
+        var caixaNome = document.getElementById('sheetNameBox');
+        var barraFormula = document.getElementById('sheetFormula');
+        var botaoExcluir = document.querySelector('[data-sheet-cmd="del"]');
+
+        function celulaDe(elemento) { return elemento ? elemento.closest('td') : null; }
+        function coordenadas(celula) {
+          var linha = celula.parentElement;
+          var indiceColuna = Array.prototype.indexOf.call(linha.children, celula);
+          var indiceLinha = Array.prototype.indexOf.call(corpo.rows, linha);
+          return { coluna: indiceColuna, linha: indiceLinha };
+        }
+        function marcarAtiva(celula) {
+          corpo.querySelectorAll('td.celula-ativa').forEach(function (c) { c.classList.remove('celula-ativa'); });
+          corpo.querySelectorAll('tr.linha-ativa').forEach(function (l) { l.classList.remove('linha-ativa'); });
+          if (!celula) {
+            caixaNome.textContent = '—';
+            barraFormula.textContent = 'Selecione uma célula';
+            if (botaoExcluir) botaoExcluir.disabled = true;
+            return;
+          }
+          celula.classList.add('celula-ativa');
+          celula.parentElement.classList.add('linha-ativa');
+          var pos = coordenadas(celula);
+          caixaNome.textContent = (LETRAS[pos.coluna - 1] || '#') + (pos.linha + 1);
+          var campo = celula.querySelector('.cell-editor');
+          barraFormula.textContent = campo ? campo.value : celula.textContent.trim();
+          if (botaoExcluir) botaoExcluir.disabled = !celula.parentElement.querySelector('[data-compare-remove]');
+        }
+        function focarCelula(indiceLinha, indiceColuna) {
+          var linha = corpo.rows[indiceLinha];
+          if (!linha) return false;
+          var passo = indiceColuna > 0 ? 1 : -1;
+          for (var c = indiceColuna; c >= 0 && c < linha.children.length; c += passo) {
+            var campo = linha.children[c] && linha.children[c].querySelector('.cell-editor');
+            if (campo) { campo.focus(); campo.select(); return true; }
+          }
+          return false;
+        }
+
+        corpo.addEventListener('focusin', function (evento) {
+          var celula = celulaDe(evento.target);
+          if (celula) marcarAtiva(celula);
+        });
+        corpo.addEventListener('input', function (evento) {
+          if (evento.target.classList.contains('cell-editor')) barraFormula.textContent = evento.target.value;
+        });
+        corpo.addEventListener('keydown', function (evento) {
+          var campo = evento.target;
+          if (!campo.classList || !campo.classList.contains('cell-editor')) return;
+          var celula = celulaDe(campo);
+          if (!celula) return;
+          var pos = coordenadas(celula);
+          var tecla = evento.key;
+
+          if (tecla === 'Escape') { campo.value = campo.dataset.initialValue || campo.defaultValue; barraFormula.textContent = campo.value; campo.blur(); return; }
+          if (tecla === 'Enter') { evento.preventDefault(); campo.blur(); focarCelula(pos.linha + (evento.shiftKey ? -1 : 1), pos.coluna); return; }
+          if (tecla === 'Tab') { evento.preventDefault(); campo.blur(); if (!focarCelula(pos.linha, pos.coluna + (evento.shiftKey ? -1 : 1))) focarCelula(pos.linha + 1, 1); return; }
+          if (tecla === 'ArrowDown' || tecla === 'ArrowUp') {
+            evento.preventDefault();
+            campo.blur();
+            focarCelula(pos.linha + (tecla === 'ArrowDown' ? 1 : -1), pos.coluna);
+            return;
+          }
+          if (tecla === 'ArrowLeft' && campo.selectionStart === 0) {
+            evento.preventDefault(); campo.blur(); focarCelula(pos.linha, pos.coluna - 1); return;
+          }
+          if (tecla === 'ArrowRight' && campo.selectionStart === campo.value.length) {
+            evento.preventDefault(); campo.blur(); focarCelula(pos.linha, pos.coluna + 1); return;
+          }
+        });
+
+        document.addEventListener('keydown', function (evento) {
+          if (!evento.ctrlKey) return;
+          var ativa = corpo.querySelector('td.celula-ativa');
+          if (evento.shiftKey && (evento.key === '+' || evento.key === '=')) { evento.preventDefault(); acionar('add'); }
+          else if (evento.key === '-' && ativa) { evento.preventDefault(); acionar('del'); }
+        });
+
+        function acionar(comando) {
+          if (comando === 'add') { document.getElementById('compareAddRow').click(); return; }
+          if (comando === 'del') {
+            var ativa = corpo.querySelector('td.celula-ativa');
+            var botao = ativa && ativa.parentElement.querySelector('[data-compare-remove]');
+            if (botao) { botao.click(); marcarAtiva(null); }
+            return;
+          }
+          if (comando === 'asc' || comando === 'desc') {
+            var atual = document.getElementById('compareSortSource');
+            if (compareState.sourceSort !== comando) atual.click();
+            return;
+          }
+          if (comando === 'clear') {
+            compareDom.search.value = '';
+            compareDom.status.value = 'all';
+            renderCompareTable();
+            return;
+          }
+          if (comando === 'xlsx') { document.getElementById('compareExportXlsx').click(); return; }
+        }
+        document.querySelectorAll('[data-sheet-cmd]').forEach(function (botao) {
+          botao.addEventListener('click', function () { acionar(botao.dataset.sheetCmd); });
+        });
+      }());
+
       menuButton.addEventListener('click', function () { const isOpen = menu.classList.toggle('open'); menuButton.setAttribute('aria-expanded', String(isOpen)); });
       menu.querySelectorAll('a').forEach(function (link) { link.addEventListener('click', function () { menu.classList.remove('open'); menuButton.setAttribute('aria-expanded', 'false'); }); });
       document.getElementById('contactForm').addEventListener('submit', function (event) { event.preventDefault(); document.getElementById('formStatus').hidden = false; });
@@ -3740,9 +3836,17 @@
       }
       function setStatus(texto, tipo) {
         var el = document.getElementById('cmsStatus');
-        if (!el) return;
-        el.textContent = texto;
-        el.className = 'cms-status' + (tipo ? ' ' + tipo : '');
+        if (el) {
+          el.textContent = texto;
+          el.className = 'cms-status' + (tipo ? ' ' + tipo : '');
+        }
+        // durante a edição na página o painel está oculto: o retorno vai para a barra
+        var naBarra = document.getElementById('cmsBarStatus');
+        if (naBarra) {
+          naBarra.textContent = texto;
+          naBarra.className = 'cms-bar-status' + (tipo ? ' ' + tipo : '');
+          naBarra.hidden = !texto;
+        }
       }
 
       /* ---------------- limpeza do HTML editado ---------------- */
@@ -3949,6 +4053,10 @@
         if (vazio) vazio.removeAttribute('data-cms-inline-img');
         var botaoImagem = document.getElementById('cmsImgBtn');
         if (botaoImagem) botaoImagem.hidden = true;
+        var painelCores = document.getElementById('cmsColorPanel');
+        if (painelCores) painelCores.hidden = true;
+        var botaoCores = document.getElementById('cmsBarColors');
+        if (botaoCores) botaoCores.classList.remove('ativo');
         document.body.classList.remove('cms-editando');
         if (voltarAoPainel !== false) document.body.classList.add('app-active');
       }
@@ -4010,7 +4118,7 @@
       document.addEventListener('selectionchange', function () { if (editando) mostrarFormatacao(); });
       document.addEventListener('mousedown', function (evento) {
         if (!editando || !evento.target.closest) return;
-        if (evento.target.closest('.cms-format-bar')) return;   // clique nos próprios botões
+        if (evento.target.closest('.cms-format-bar, .cms-color-panel, .cms-edit-bar')) return;
         esconderFormatacao();
       }, true);
       document.addEventListener('focusout', function (evento) {
@@ -4331,6 +4439,11 @@
         });
         document.getElementById('cmsBarPublish').addEventListener('click', publicar);
         document.getElementById('cmsBarDiscard').addEventListener('click', descartar);
+        document.getElementById('cmsBarColors').addEventListener('click', function () {
+          var painel = document.getElementById('cmsColorPanel');
+          painel.hidden = !painel.hidden;
+          this.classList.toggle('ativo', !painel.hidden);
+        });
         document.getElementById('cmsFormatOn').addEventListener('mousedown', function (e) { e.preventDefault(); aplicarDestaque(); });
         document.getElementById('cmsFormatOff').addEventListener('mousedown', function (e) { e.preventDefault(); limparFormatacao(); });
         document.getElementById('cmsFmtBold').addEventListener('mousedown', function (e) { e.preventDefault(); alternarMarcacao('bold'); });
