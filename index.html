@@ -521,8 +521,8 @@
     body.app-active .compare-grid-table thead tr:nth-child(2) th { vertical-align: middle; }
     body.app-active .dica-coluna { margin-top: 0; font-size: 8px; }
     body.app-active .titulo-coluna { padding: 0 2px; }
-    body.app-active .sheet-sort-button { padding: 0 2px; font-size: 10px; }
-    body.app-active .menu-coluna { font-size: 10px; }
+    body.app-active .sheet-sort-button { width: 13px; padding: 0; font-size: 10px; }
+    body.app-active .menu-coluna { width: 13px; padding: 0; font-size: 9px; }
     body.app-active .compare-grid-table td { padding: 0; font-size: 11.5px; }
     body.app-active .compare-view.active .compare-grid-table .cell-editor { min-height: 28px; height: 28px; padding: 0 8px; font-size: 11.5px; }
     body.app-active .compare-grid-table .cell-stack small { padding: 0 8px 3px; font-size: 8.5px; }
@@ -532,10 +532,73 @@
     body.app-active .compare-summary-details summary { padding: 7px 11px; font-size: 12px; }
     body.app-active .compare-kpi { padding: 8px 10px; }
     body.app-active .compare-kpi strong { font-size: 17px; }
+    /* ================= barra lateral: densidade, ícones e recolhimento ================= */
+    body.app-active .app-sidebar svg { width: 16px; height: 16px; display: block; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    body.app-active .app-brand { min-height: 0; height: 48px; padding: 0 12px; gap: 9px; }
+    body.app-active .app-brand .brand-symbol { width: 30px; height: 30px; }
+    body.app-active .app-brand .brand-symbol .wf-letters { font-size: 11px; }
+    body.app-active .app-brand .brand-symbol .a-letter { width: 8px; height: 7px; }
+    body.app-active .app-brand-copy strong { font-size: 15px; }
+    body.app-active .app-brand-copy span { margin-top: 2px; font-size: 6.5px; }
+    .app-recolher { width: 24px; height: 24px; margin-left: auto; display: grid; place-items: center; border: 1px solid #cfdae0; border-radius: 2px; background: white; color: #5c7688; cursor: pointer; }
+    .app-recolher:hover { border-color: #205e8a; color: #205e8a; }
+    body.app-active .app-nav-label { padding: 12px 14px 5px; font-size: 8px; letter-spacing: .14em; }
+    body.app-active .app-nav { gap: 1px; padding: 0 8px; }
+    body.app-active .app-nav button { min-height: 32px; padding: 0 9px; gap: 9px; font-size: 12px; }
+    body.app-active .app-nav-icon { width: 22px; height: 22px; border: 0; background: transparent; }
+    body.app-active .app-nav-texto { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    body.app-active .sidebar-files-heading { min-height: 0; padding: 10px 10px 4px 14px; }
+    body.app-active .sidebar-upload-icon { width: 22px; height: 22px; display: grid; place-items: center; }
+    body.app-active .sidebar-library { padding: 0 8px 4px; }
+    body.app-active .sidebar-file { padding: 5px 8px; gap: 8px; }
+    body.app-active .sidebar-file b { font-size: 11px; }
+    body.app-active .sidebar-file small { font-size: 9.5px; }
+    body.app-active .app-sidebar-bottom { padding: 9px 12px 11px; }
+    body.app-active .app-user-mini { gap: 8px; }
+    body.app-active .app-avatar { width: 26px; height: 26px; font-size: 9px; }
+    body.app-active .app-user-mini strong { font-size: 11.5px; }
+    body.app-active .app-user-mini small { font-size: 10px; }
+    body.app-active .app-view-site, body.app-active .app-logout { display: flex; align-items: center; justify-content: center; gap: 7px; }
+    body.app-active .app-view-site { min-height: 30px; margin-top: 9px; padding: 0 10px; font-size: 11px; }
+    body.app-active .app-logout { min-height: 26px; margin-top: 7px; padding-top: 7px; font-size: 11px; }
+
+    /* recolhida: só os ícones */
+    body.app-active.sidebar-recolhida .wfa-app { grid-template-columns: 52px minmax(0,1fr) !important; }
+    body.sidebar-recolhida .app-brand-copy,
+    body.sidebar-recolhida .app-nav-texto,
+    body.sidebar-recolhida .app-nav-label,
+    body.sidebar-recolhida .app-nav-meta,
+    body.sidebar-recolhida .sidebar-library,
+    body.sidebar-recolhida .app-user-mini span,
+    body.sidebar-recolhida .sidebar-files-heading .app-nav-label { display: none; }
+    body.sidebar-recolhida .app-brand { justify-content: center; padding: 0; }
+    body.sidebar-recolhida .app-brand .brand-symbol { display: none; }
+    body.sidebar-recolhida .app-recolher { margin: 0; }
+    body.sidebar-recolhida .app-recolher svg { transform: rotate(180deg); }
+    body.sidebar-recolhida .app-nav { padding: 0 6px; }
+    body.sidebar-recolhida .app-nav button { justify-content: center; padding: 0; }
+    body.sidebar-recolhida .sidebar-files-heading { justify-content: center; padding: 10px 0 4px; }
+    body.sidebar-recolhida .app-sidebar-bottom { padding: 9px 6px; }
+    body.sidebar-recolhida .app-user-mini { justify-content: center; }
+    body.sidebar-recolhida .app-view-site, body.sidebar-recolhida .app-logout { padding: 0; }
+    /* ---- resumo em faixa única ---- */
+    .resumo-faixa { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 7px 12px; background: white; border: 1px solid #ccd8e0; border-left: 3px solid #205e8a; font-family: Arial, sans-serif; }
+    .resumo-item { display: inline-flex; align-items: baseline; gap: 5px; color: #6b8290; font-size: 11px; white-space: nowrap; }
+    .resumo-item b { color: #12293b; font-size: 15px; font-variant-numeric: tabular-nums; }
+    .resumo-item.ok b { color: #1c6b46; }
+    .resumo-item.alerta b { color: #96591f; }
+    .resumo-item.perigo b { color: #b0393a; }
+    .resumo-sep { width: 1px; height: 16px; background: #dce4ea; }
+    .resumo-push { flex: 1 1 auto; }
+    .resumo-validacao { display: inline-flex; gap: 6px; }
+    .validacao-etiqueta { padding: 2px 8px; background: #eaf5ef; border: 1px solid #c3e0d1; color: #1c6b46; font-size: 10.5px; font-weight: 700; white-space: nowrap; cursor: help; }
+    .validacao-etiqueta.alerta { background: #fdf3e6; border-color: #ecd5b0; color: #96591f; }
+    .resumo-oculto { display: none; }
     /* ---- cabeçalho em uma linha, fórmula abaixo ---- */
     .cabecalho-topo { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
     .compare-grid-table th.num .cabecalho-topo { justify-content: flex-end; }
-    .compare-grid-table th .titulo-coluna { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; }
+    .compare-grid-table th .titulo-coluna { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .compare-grid-table th.num .titulo-coluna { flex: 0 1 auto; }
     .compare-grid-table th .menu-coluna { flex: none; margin-left: 0; }
     .compare-grid-table th .sheet-sort-button { flex: none; }
     .compare-grid-table th .dica-coluna { display: block; margin-top: 1px; text-align: inherit; }
@@ -2502,20 +2565,20 @@
 
   <section class="wfa-app" id="wfaApp" aria-label="Sistema WFA" aria-hidden="true">
     <header class="app-sidebar" id="appSidebar">
-      <div class="app-brand"><span class="brand-symbol" aria-hidden="true"><span class="wf-letters">WF</span><span class="a-letter"></span></span><span class="app-brand-copy"><strong>WFA</strong><span>Gestão Pública</span></span></div>
+      <div class="app-brand"><span class="brand-symbol" aria-hidden="true"><span class="wf-letters">WF</span><span class="a-letter"></span></span><span class="app-brand-copy"><strong>WFA</strong><span>Gestão Pública</span></span><button class="app-recolher" id="appRecolher" type="button" title="Recolher a barra lateral" aria-label="Recolher a barra lateral"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M12.5 5 7.5 10l5 5"/></svg></button></div>
       <p class="app-nav-label">Scripts</p>
       <nav class="app-nav" id="appScriptNav" aria-label="Scripts disponíveis">
-        <button type="button" data-app-view="comparador-fontes" data-script="comparador"><span class="app-nav-icon">CF</span>Comparador de fontes<span class="app-nav-meta" id="scriptCompareMeta">0/3</span></button>
+        <button type="button" data-app-view="comparador-fontes" data-script="comparador" title="Comparador de fontes"><span class="app-nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><rect x="3" y="2.5" width="14" height="15" rx="1.5"/><path d="M6 7h8M6 10.5h8M6 14h5"/></svg></span><span class="app-nav-texto">Comparador de fontes</span><span class="app-nav-meta" id="scriptCompareMeta">0/3</span></button>
       </nav>
 
-      <div class="sidebar-files-heading"><p class="app-nav-label">Documentos</p><button class="sidebar-upload-icon" id="workspaceUploadTrigger" type="button" title="Carregar arquivos PDF" aria-label="Carregar arquivos PDF">↥</button><input id="workspaceUploadInput" type="file" accept="application/pdf,.pdf" multiple hidden></div>
+      <div class="sidebar-files-heading"><p class="app-nav-label">Documentos</p><button class="sidebar-upload-icon" id="workspaceUploadTrigger" type="button" title="Adicionar documentos" aria-label="Adicionar documentos"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 4.5v11M4.5 10h11"/></svg></button><input id="workspaceUploadInput" type="file" accept="application/pdf,.pdf" multiple hidden></div>
       <div class="sidebar-library" id="workspaceSidebarFiles" aria-label="Seleção rápida de arquivos"><p class="sidebar-library-empty">Os PDFs enviados aparecerão aqui para seleção rápida.</p></div>
       <nav class="app-nav sidebar-admin-nav" aria-label="Preferências">
-        <button class="active" type="button" data-app-view="workspace"><span class="app-nav-icon">▤</span>Central de documentos</button>
-        <button type="button" data-app-view="personalizar"><span class="app-nav-icon">Aa</span>Personalizar</button>
-        <button type="button" data-app-view="configuracoes"><span class="app-nav-icon">⚙</span>Configurações</button>
+        <button class="active" type="button" data-app-view="workspace" title="Central de documentos"><span class="app-nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M2.5 6.5 4 4h5l1.4 2.2H17a.5.5 0 0 1 .5.5v8.8a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5z"/></svg></span><span class="app-nav-texto">Central de documentos</span></button>
+        <button type="button" data-app-view="personalizar" title="Personalizar"><span class="app-nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 16.5c0-2 1.2-2.6 2.4-3.3M13.6 3.6l2.8 2.8-8 8-3.6.8.8-3.6z"/></svg></span><span class="app-nav-texto">Personalizar</span></button>
+        <button type="button" data-app-view="configuracoes" title="Configurações"><span class="app-nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="2.6"/><path d="M10 2.5v2M10 15.5v2M17.5 10h-2M4.5 10h-2M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4M15.3 15.3l-1.4-1.4M6.1 6.1 4.7 4.7"/></svg></span><span class="app-nav-texto">Configurações</span></button>
       </nav>
-      <div class="app-sidebar-bottom"><div class="app-user-mini"><span class="app-avatar">AD</span><span><strong>Administrador</strong><small id="appUserEmail">Usuário autenticado</small></span></div><button class="app-view-site" id="appViewSite" type="button">Ver a homepage ↗</button><button class="app-logout" id="appLogout" type="button">Sair do sistema →</button></div>
+      <div class="app-sidebar-bottom"><div class="app-user-mini"><span class="app-avatar">AD</span><span><strong>Administrador</strong><small id="appUserEmail">Usuário autenticado</small></span></div><button class="app-view-site" id="appViewSite" type="button" title="Ver a homepage"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3c1.8 2 2.8 4.4 2.8 7s-1 5-2.8 7c-1.8-2-2.8-4.4-2.8-7s1-5 2.8-7z"/></svg><span class="app-nav-texto">Ver a homepage</span></button><button class="app-logout" id="appLogout" type="button" title="Sair do sistema"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M8 17H4.5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1H8M13 13.5 16.5 10 13 6.5M16.5 10H8"/></svg><span class="app-nav-texto">Sair do sistema</span></button></div>
     </header>
 
     <div class="app-main">
@@ -2588,7 +2651,17 @@
                 <article class="file-meta-card"><small>Detalhes do relatório</small><h4 id="budgetMetaTitle">Receitas orçadas</h4><div class="file-meta-list" id="budgetMeta"></div></article>
                 <article class="file-meta-card"><small>Detalhes do relatório</small><h4 id="collectedMetaTitle">Receitas arrecadadas</h4><div class="file-meta-list" id="collectedMeta"></div></article>
               </div>
-              <details class="compare-summary-details" id="compareSummaryDetails"><summary><span><b>Resumo da comparação</b><small id="compareSummaryLabel">Indicadores e validações dos relatórios</small></span><i aria-hidden="true">⌄</i></summary><div class="compare-summary-body"><div class="compare-validation-grid" id="compareValidations"></div><div class="compare-kpis"><article class="compare-kpi"><span>Fontes consolidadas</span><strong id="kpiSources">0</strong></article><article class="compare-kpi"><span>Presentes em todos</span><strong id="kpiMatched">0</strong></article><article class="compare-kpi warning"><span>Ausentes em algum relatório</span><strong id="kpiOnlyBudget">0</strong></article><article class="compare-kpi warning"><span>Empenhado acima do orçado</span><strong id="kpiOnlyCollected">0</strong></article><article class="compare-kpi danger"><span>Arrecadado acima do orçado</span><strong id="kpiAbove">0</strong></article></div></div></details>
+              <div class="resumo-faixa" id="compareSummaryDetails">
+                <span class="resumo-item"><b id="kpiSources">0</b>fontes</span>
+                <span class="resumo-sep"></span>
+                <span class="resumo-item ok"><b id="kpiMatched">0</b>em todos</span>
+                <span class="resumo-item alerta"><b id="kpiOnlyBudget">0</b>ausentes</span>
+                <span class="resumo-item alerta"><b id="kpiOnlyCollected">0</b>empenhado &gt; orçado</span>
+                <span class="resumo-item perigo"><b id="kpiAbove">0</b>arrecadado &gt; orçado</span>
+                <span class="resumo-push"></span>
+                <span class="resumo-validacao" id="compareValidations"></span>
+                <span class="resumo-oculto" id="compareSummaryLabel"></span>
+              </div>
 
               <article class="compare-table-card">
                 <div class="compare-toolbar">
@@ -3097,7 +3170,6 @@
         compareDom.auditToggle.hidden = true;
         compareDom.auditToggle.setAttribute('aria-expanded', 'false');
         compareDom.auditToggle.textContent = 'Trilha de auditoria';
-        compareDom.summary.open = false;
         setCompareAlert('');
       }
       function clearCompareRole(role) {
@@ -3583,12 +3655,18 @@
         document.getElementById(targetId).innerHTML = '<span>Município<br><b>' + escapeHtml(report.municipality) + '</b></span><span>Exercício<br><b>' + escapeHtml(report.exercise) + '</b></span><span>Páginas do quadro<br><b>' + escapeHtml(report.sectionPages) + '</b></span><span>Arquivo<br><b title="' + escapeHtml(report.fileName) + '">' + escapeHtml(report.fileName) + '</b></span><span>Total informado<br><b>' + formatBrl(report.reportedTotal) + '</b></span><span>SHA-256<br><b title="' + escapeHtml(report.hash) + '">' + escapeHtml(report.hash.slice(0,16)) + '…</b></span>';
       }
       function renderCompareValidations() {
-        const reports = papeisComRelatorio().map(function (papel) { return compareState.reports[papel]; });
-        document.getElementById('compareValidations').innerHTML = reports.map(function (report) {
-          const difference = Number.isFinite(report.reportedTotal) ? report.extractedTotal - report.reportedTotal : NaN;
-          return '<article class="validation-card' + (report.reconciled ? '' : ' warning') + '"><span class="validation-mark">' + (report.reconciled ? '✓' : '!') + '</span><div><strong>' + escapeHtml(report.title) + ': ' + (report.reconciled ? 'total conferido' : 'revisão necessária') + '</strong><span>Extraído ' + formatBrl(report.extractedTotal) + ' • Informado ' + formatBrl(report.reportedTotal) + (report.reconciled ? ' • diferença R$ 0,00' : ' • diferença ' + formatBrl(difference)) + '</span></div></article>';
+        const alvo = document.getElementById('compareValidations');
+        if (!alvo) return;
+        alvo.innerHTML = papeisComRelatorio().map(function (papel) {
+          const relatorio = compareState.reports[papel];
+          const diferenca = Number.isFinite(relatorio.reportedTotal) ? relatorio.extractedTotal - relatorio.reportedTotal : NaN;
+          const titulo = relatorio.title + ': extraído ' + formatBrl(relatorio.extractedTotal) + ' • informado ' + formatBrl(relatorio.reportedTotal) +
+            (relatorio.reconciled ? ' • confere' : ' • diferença ' + formatBrl(diferenca));
+          return '<span class="validacao-etiqueta' + (relatorio.reconciled ? '' : ' alerta') + '" title="' + escapeHtml(titulo) + '">' +
+            (relatorio.reconciled ? '✓' : '!') + ' ' + escapeHtml(ROLE_INFO[papel].curto) + '</span>';
         }).join('');
       }
+
       function renderCompareKpis() {
         const rows = activeCompareRows();
         const papeis = papeisComRelatorio();
@@ -3602,14 +3680,14 @@
         document.getElementById('kpiOnlyBudget').textContent = onlyBudget;
         document.getElementById('kpiOnlyCollected').textContent = onlyCollected;
         document.getElementById('kpiAbove').textContent = above;
-        compareDom.summaryLabel.textContent = rows.length + ' fontes • ' + matched + ' em todos os relatórios • ' + above + ' arrecadadas acima do orçado';
+        if (compareDom.summaryLabel) compareDom.summaryLabel.textContent = rows.length + ' fontes • ' + matched + ' em todos os relatórios • ' + above + ' arrecadadas acima do orçado';
       }
       const LETRAS_COLUNA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
       // Estrutura da planilha: colunas de dados são editáveis, as calculadas não.
       function colunasDaTabela() {
         const colunas = [
-          { id:'key', tipo:'texto', titulo:'Fonte de recurso', largura:150, classe:'cell-code' },
+          { id:'key', tipo:'texto', titulo:'Fonte de recurso', largura:186, classe:'cell-code' },
           { id:'description', tipo:'texto', titulo:'Descrição', largura:300, classe:'' }
         ];
         papeisComRelatorio().forEach(function (papel) {
@@ -4144,7 +4222,6 @@
           compareDom.auditToggle.hidden = false;
           compareDom.auditToggle.setAttribute('aria-expanded', 'false');
           compareDom.auditToggle.textContent = 'Trilha de auditoria';
-          compareDom.summary.open = false;
           compareDom.view.classList.add('results-ready');
           compareDom.view.classList.remove('show-setup');
           compareDom.setup.classList.remove('expanded');
@@ -5477,6 +5554,24 @@
         showToast('Escolha os documentos e execute para criar uma nova aba.');
       });
       renderExecucoes();
+
+      // barra lateral recolhida fica guardada entre sessões
+      (function () {
+        const botao = document.getElementById('appRecolher');
+        if (!botao) return;
+        const CHAVE = 'wfaSidebarRecolhida';
+        function aplicar(recolhida) {
+          document.body.classList.toggle('sidebar-recolhida', recolhida);
+          botao.title = recolhida ? 'Expandir a barra lateral' : 'Recolher a barra lateral';
+          botao.setAttribute('aria-label', botao.title);
+        }
+        try { aplicar(localStorage.getItem(CHAVE) === '1'); } catch (erro) { /* sem armazenamento */ }
+        botao.addEventListener('click', function () {
+          const recolhida = !document.body.classList.contains('sidebar-recolhida');
+          aplicar(recolhida);
+          try { localStorage.setItem(CHAVE, recolhida ? '1' : '0'); } catch (erro) { /* ignora */ }
+        });
+      }());
 
       menuButton.addEventListener('click', function () { const isOpen = menu.classList.toggle('open'); menuButton.setAttribute('aria-expanded', String(isOpen)); });
       menu.querySelectorAll('a').forEach(function (link) { link.addEventListener('click', function () { menu.classList.remove('open'); menuButton.setAttribute('aria-expanded', 'false'); }); });
