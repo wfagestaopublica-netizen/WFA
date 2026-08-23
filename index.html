@@ -287,6 +287,7 @@
     .app-view-site:hover { border-color: var(--gold-500); color: white; }
     .site-preview-bar { position: fixed; z-index: 95; left: 50%; bottom: 22px; transform: translateX(-50%); display: none; align-items: center; gap: 14px; padding: 11px 18px; background: var(--navy-950); color: white; box-shadow: 0 12px 32px rgba(3,16,26,.35); }
     body.sessao-ativa:not(.app-active) .site-preview-bar { display: flex; }
+    body.cms-editando .site-preview-bar { display: none !important; }
     body.previa-ativa:not(.app-active) .site-preview-bar.previa { display: flex; }
     .site-preview-bar.previa { background: #7a5a12; }
 
@@ -2373,11 +2374,11 @@
           <div class="cms-card" id="cmsCard">
             <h3>Editor da homepage <span class="cms-tag">publicação global</span></h3>
             <p>O que você altera aqui é salvo no servidor e passa a valer para todos os visitantes do site, cerca de um minuto depois.</p>
-            <label class="cms-token">Chave de publicação <small>necessária para salvar as alterações no servidor. Fica guardada apenas neste navegador.</small><input id="cmsToken" type="password" autocomplete="off" spellcheck="false" placeholder="Cole a chave aqui"></label>
+            <label class="cms-token">Token de publicação <small>necessário para salvar as alterações no servidor. Fica guardado apenas neste navegador.</small><input id="cmsToken" type="password" autocomplete="off" spellcheck="false" placeholder="Cole o token aqui"></label>
             <div class="cms-actions">
-              <button type="button" id="cmsTokenSave">Salvar chave neste navegador</button>
-              <button type="button" id="cmsTokenClear">Remover chave</button>
-              <a class="cms-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Gerar nova chave ↗</a>
+              <button type="button" id="cmsTokenSave">Salvar token neste navegador</button>
+              <button type="button" id="cmsTokenClear">Remover token</button>
+              <a class="cms-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Gerar novo token ↗</a>
             </div>
             <p class="cms-status" id="cmsStatus">Verificando…</p>
             <div class="cms-actions">
@@ -2437,8 +2438,9 @@
           <label><input type="color" data-cms-var="--paper" value="#f5f3ef"><span>Fundo claro das seções</span></label>
           <label><input type="color" data-cms-var="--ink" value="#102331"><span>Cor do texto corrido</span></label>
         </div>
+        <button type="button" id="cmsResetCores">Voltar às cores originais</button>
+      </div>
     </div>
-
     <button class="cms-img-btn" id="cmsImgBtn" type="button" hidden>⤒ Trocar imagem</button>
     <div class="site-preview-bar previa" id="previewPublicBar"><span>Pré-visualização — o site ainda não está aberto ao público</span><button type="button" id="endPreview">Encerrar</button></div>
     <div class="site-preview-bar" id="sitePreviewBar"><span>Pré-visualizando a homepage como visitante</span><button type="button" id="backToApp">Voltar ao sistema</button></div>
@@ -4116,6 +4118,12 @@
         }
       }
       document.addEventListener('selectionchange', function () { if (editando) mostrarFormatacao(); });
+      window.addEventListener('scroll', function () { if (editando) esconderFormatacao(); }, { passive:true });
+      document.addEventListener('mouseup', function () {
+        if (!editando) return;
+        var sel = window.getSelection();
+        if (!sel || sel.isCollapsed) esconderFormatacao();
+      });
       document.addEventListener('mousedown', function (evento) {
         if (!editando || !evento.target.closest) return;
         if (evento.target.closest('.cms-format-bar, .cms-color-panel, .cms-edit-bar')) return;
@@ -4155,7 +4163,8 @@
         try { document.execCommand('styleWithCSS', false, false); } catch (error) { /* navegador antigo */ }
         document.execCommand(comando);
         registrarAlteracao(bloco.dataset.cmsInline, bloco.innerHTML, true);
-        mostrarFormatacao();
+        var viva = window.getSelection();
+        if (viva && !viva.isCollapsed) mostrarFormatacao(); else esconderFormatacao();
       }
       function limparFormatacao() {
         var bloco = blocoDaSelecao();
@@ -4331,9 +4340,9 @@
       function cabecalhos() { return { 'Authorization':'Bearer ' + token(), 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' }; }
       function urlConteudo(caminho) { return 'https://api.github.com/repos/' + DESTINO.owner + '/' + DESTINO.repo + '/contents/' + caminho; }
       function mensagemErro(status) {
-        if (status === 401) return 'A chave de publicação está inválida ou venceu. Gere uma nova e salve novamente.';
-        if (status === 403) return 'A chave de publicação não tem permissão para salvar alterações.';
-        if (status === 404) return 'Não foi possível alcançar o destino das alterações. Verifique a chave de publicação.';
+        if (status === 401) return 'O token de publicação está inválido ou venceu. Gere um novo e salve novamente.';
+        if (status === 403) return 'O token de publicação não tem permissão para salvar alterações.';
+        if (status === 404) return 'Não foi possível alcançar o destino das alterações. Verifique o token de publicação.';
         if (status === 409) return 'O conteúdo foi alterado em outra sessão. Recarregue a página e salve novamente.';
         return 'O servidor não aceitou a gravação no momento. Tente de novo em instantes.';
       }
@@ -4362,7 +4371,7 @@
         return btoa(saida);
       }
       function publicar() {
-        if (!token()) { setStatus('Configure a chave de publicação antes de salvar.', 'erro'); toast('Chave de publicação não configurada.'); return; }
+        if (!token()) { setStatus('Configure o token de publicação antes de salvar.', 'erro'); toast('Token de publicação não configurado.'); return; }
         var botoes = [document.getElementById('cmsPublish'), document.getElementById('cmsBarPublish')].filter(Boolean);
         botoes.forEach(function (b) { b.disabled = true; });
         setStatus('Salvando as alterações…', '');
@@ -4417,20 +4426,20 @@
       function ligarInterface() {
         var entradaToken = document.getElementById('cmsToken');
         if (!entradaToken) return;
-        if (token()) { entradaToken.value = '••••••••••••'; setStatus('Chave de publicação configurada neste navegador.', 'ok'); }
-        else setStatus('Sem a chave de publicação, as alterações ficam apenas neste navegador.', '');
+        if (token()) { entradaToken.value = '••••••••••••'; setStatus('Token de publicação configurado neste navegador.', 'ok'); }
+        else setStatus('Sem o token de publicação, as alterações ficam apenas neste navegador.', '');
 
         document.getElementById('cmsTokenSave').addEventListener('click', function () {
           var valor = entradaToken.value.trim();
-          if (!valor || /^•+$/.test(valor)) { setStatus('Cole a chave de publicação no campo acima.', 'erro'); return; }
+          if (!valor || /^•+$/.test(valor)) { setStatus('Cole o token de publicação no campo acima.', 'erro'); return; }
           localStorage.setItem(TOKEN_KEY, valor);
           entradaToken.value = '••••••••••••';
-          setStatus('Chave salva neste navegador.', 'ok');
+          setStatus('Token salvo neste navegador.', 'ok');
         });
         document.getElementById('cmsTokenClear').addEventListener('click', function () {
           localStorage.removeItem(TOKEN_KEY);
           entradaToken.value = '';
-          setStatus('Chave removida deste navegador.', '');
+          setStatus('Token removido deste navegador.', '');
         });
         document.getElementById('cmsInline').addEventListener('click', entrarEdicao);
         document.getElementById('cmsBarExit').addEventListener('click', function () {
