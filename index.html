@@ -419,6 +419,22 @@
     .cms-img-btn:hover { background: var(--gold-500); color: var(--navy-950); }
     body.cms-editando [data-cms-inline-img] { outline: 2px dashed rgba(195,154,87,.75); outline-offset: -4px; }
     header b, header strong, main b, main strong, footer b, footer strong { font-weight: 700; font-synthesis-weight: none; }
+    .cms-palette { margin-top: 18px; padding: 18px; background: #fbfcfc; border: 1px solid var(--line); }
+    .cms-palette h4 { margin: 0 0 6px; color: var(--navy-900); font: 700 16px/1.2 Cambria, Georgia, serif; }
+    .cms-palette > p { margin: 0 0 14px; color: var(--slate); font-size: 13px; line-height: 1.55; }
+    .cms-palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 10px; }
+    .cms-palette-grid label { display: flex; gap: 10px; align-items: center; padding: 8px 10px; background: white; border: 1px solid var(--line); font-size: 13px; color: var(--navy-900); }
+    .cms-palette-grid input { width: 40px; height: 28px; flex: none; padding: 2px; border: 1px solid var(--line); background: white; cursor: pointer; }
+    #cmsResetCores { margin-top: 12px; padding: 8px 14px; background: white; border: 1px solid var(--line); color: var(--navy-900); font: inherit; font-size: 13px; cursor: pointer; }
+    #cmsResetCores:hover { border-color: var(--gold-500); }
+    /* aproxima o painel interno da identidade da homepage */
+    body.app-active { background: var(--paper); }
+    .app-topbar { background: rgba(255,255,255,.94); border-bottom: 1px solid var(--line); }
+    .app-kpi, .settings-card, .cms-card, .workspace-panel, .app-card { border-color: var(--line); }
+    .app-view-site { border-color: var(--gold-500); color: var(--gold-400); font-weight: 700; }
+    .app-view-site:hover { background: var(--gold-500); color: var(--navy-950); }
+    .view-heading h2 { font-family: Cambria, Georgia, serif; }
+    .app-content { background: var(--paper); }
     .cor-ouro { color: var(--gold-500) !important; }
     .cor-navy { color: var(--navy-900) !important; }
     .cor-vermelho { color: var(--red-mg) !important; }
@@ -1867,6 +1883,54 @@
     .compare-workspace-heading .compare-files-button { display: none; }
     #compareSetup, #compareFilesBackdrop { display: none !important; }
 
+
+    /* Identidade da homepage aplicada ao painel interno */
+    .app-sidebar { color: rgba(255,255,255,.72); background: var(--navy-950); border-right: 1px solid rgba(255,255,255,.08); box-shadow: none; }
+    .app-sidebar::before { display: block; height: 5px; background: linear-gradient(90deg,var(--gold-500) 0 76%,var(--red-mg) 76% 100%); }
+    .app-brand { background: transparent; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .app-brand-copy strong { color: white; }
+    .app-brand-copy span { color: var(--gold-400); }
+    .app-nav-label { color: rgba(255,255,255,.35); }
+    .app-nav button { color: rgba(255,255,255,.66); }
+    .app-nav button:hover { color: white; background: rgba(255,255,255,.06); }
+    .app-nav button.active { color: white; background: rgba(195,154,87,.14); border-left-color: var(--gold-500); }
+    .app-nav button[disabled] { color: rgba(255,255,255,.28); }
+    .app-nav-icon { color: var(--gold-400); background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.16); }
+    .app-nav-meta { color: rgba(255,255,255,.4); }
+    .sidebar-files-heading { border-color: rgba(255,255,255,.1); }
+    .sidebar-upload-icon { color: var(--gold-400); background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.18); }
+    .sidebar-upload-icon:hover { color: var(--navy-950); background: var(--gold-500); border-color: var(--gold-500); }
+    .sidebar-library { border-top-color: rgba(255,255,255,.1); }
+    .sidebar-library-empty { color: rgba(255,255,255,.4); }
+    .sidebar-file:hover { background: rgba(255,255,255,.06); }
+    .sidebar-file input { accent-color: var(--gold-500); }
+    .sidebar-file b { color: rgba(255,255,255,.9); }
+    .sidebar-file small { color: rgba(255,255,255,.45); }
+    .sidebar-admin-nav { border-top-color: rgba(255,255,255,.1); }
+    .app-sidebar-bottom { background: transparent; border-top-color: rgba(255,255,255,.1); }
+    .app-user-mini strong { color: white; }
+    .app-user-mini small { color: rgba(255,255,255,.5); }
+    .app-avatar { color: var(--navy-950); background: var(--gold-500); }
+    .app-logout { color: rgba(255,255,255,.5); }
+    .app-logout:hover { color: var(--gold-400); }
+    .app-topbar { color: var(--ink); background: rgba(255,255,255,.94); border-bottom: 1px solid var(--line); }
+    .app-title small { color: var(--slate); }
+    .app-title h1 { color: var(--navy-900); font-family: Cambria, Georgia, serif; }
+    .app-search { color: var(--ink); background: var(--white); border-color: var(--line); }
+    .app-search:focus { border-color: var(--gold-500); }
+    .app-notification, .app-menu-toggle { color: var(--navy-900); background: var(--white); border-color: var(--line); }
+    .workspace-banner { color: white; background: var(--navy-900); }
+    .workspace-eyebrow { color: var(--gold-400); }
+    .workspace-banner h2 { color: white; font-family: Cambria, Georgia, serif; }
+    .workspace-banner p { color: rgba(255,255,255,.72); }
+    .workspace-tool-trigger { color: var(--navy-950); background: var(--gold-500); border-color: var(--gold-500); }
+    .workspace-tool-trigger:hover { background: var(--gold-400); border-color: var(--gold-400); }
+    .workspace-stat strong { color: var(--navy-900); font-family: Cambria, Georgia, serif; }
+    .workspace-table th { color: var(--slate); background: #eef1f2; }
+    .workspace-file-name > span { color: var(--navy-800); background: #e9eef1; border-color: var(--line); }
+    .workspace-empty-mark { color: var(--navy-800); background: #e9eef1; border-color: var(--line); }
+    .workspace-empty p strong { color: var(--navy-900); }
+
     /* Comparador: menu único e grade editável no padrão de planilha */
     .compare-menu-only { min-height: 38px; margin: 0 0 8px; padding: 0; justify-content: flex-end; }
     .compare-menu-only .view-heading-actions { width: 100%; justify-content: flex-end; }
@@ -2327,18 +2391,9 @@
         <section class="app-view" data-view-panel="personalizar">
           <div class="view-heading"><div><p>Identidade do ambiente</p><h2>Personalizar página</h2></div></div>
           <div class="custom-grid">
-            <form class="custom-form" id="customForm">
-              <h3>Aparência do sistema</h3><p>Estas preferências ficam salvas somente neste navegador e não alteram o site público.</p>
-              <label>Nome exibido no painel<input id="customSystemName" maxlength="32" value="WFA Gestão Pública"></label>
-              <fieldset><legend>Cor de destaque</legend><div class="color-options"><label><input type="radio" name="accent" value="#c39a57" checked><span style="--choice:#c39a57"></span>Dourado</label><label><input type="radio" name="accent" value="#b72d35"><span style="--choice:#b72d35"></span>Vermelho</label><label><input type="radio" name="accent" value="#1d617c"><span style="--choice:#1d617c"></span>Azul</label></div></fieldset>
-              <label>Densidade das informações<select id="customDensity"><option value="comfortable">Confortável</option><option value="compact">Compacta</option></select></label>
-              <label class="switch-row"><input id="customWelcome" type="checkbox" checked><span>Exibir faixa de boas-vindas na visão geral</span></label>
-              <button type="submit">Salvar personalização</button>
-            </form>
-            <aside class="custom-preview"><small>Prévia</small><div class="preview-window"><div class="preview-side"></div><div class="preview-body"><i></i><h3 id="customPreviewName">WFA Gestão Pública</h3><p>Painel de gestão contábil</p><div><span></span><span></span><span></span></div></div></div><p>As opções poderão ser ampliadas quando o sistema tiver usuários, perfis e identidade por município.</p></aside>
           <div class="cms-card" id="cmsCard">
             <h3>Editor da homepage <span class="cms-tag">publicação global</span></h3>
-            <p>Diferente das preferências ao lado, o que você altera aqui é salvo no servidor e passa a valer para todos os visitantes do site, cerca de um minuto depois.</p>
+            <p>O que você altera aqui é salvo no servidor e passa a valer para todos os visitantes do site, cerca de um minuto depois.</p>
             <label class="cms-token">Chave de publicação <small>necessária para salvar as alterações no servidor. Fica guardada apenas neste navegador.</small><input id="cmsToken" type="password" autocomplete="off" spellcheck="false" placeholder="Cole a chave aqui"></label>
             <div class="cms-actions">
               <button type="button" id="cmsTokenSave">Salvar chave neste navegador</button>
@@ -2348,17 +2403,24 @@
             <p class="cms-status" id="cmsStatus">Verificando…</p>
             <div class="cms-actions">
               <button type="button" class="cms-primary" id="cmsInline">✎ Editar direto na página</button>
-              <button type="button" id="cmsOpen">Ver lista de campos</button>
-              <button type="button" id="cmsPublish" hidden>Salvar alterações</button>
+              <button type="button" id="cmsPublish" hidden>Publicar alterações</button>
               <button type="button" id="cmsDiscard" hidden>Descartar alterações</button>
             </div>
-            <div class="cms-editor" id="cmsEditor" hidden>
               <label class="cms-switch"><input id="cmsConstrucao" type="checkbox" checked><span><b>Manter a página "Site em construção" para os visitantes</b><small>Enquanto estiver marcado, quem abrir o endereço vê apenas o aviso de construção. Você continua entrando normalmente pelo botão Acesso restrito. Desmarque e publique quando quiser abrir o site ao público.</small></span></label>
-              <label class="cms-accent">Cor de destaque do site público <input id="cmsAccent" type="color" value="#c39a57"></label>
-              <p class="cms-hint">Cada campo abaixo é um bloco inteiro da página inicial — um título, um parágrafo, um item de lista. Serve para ajustes precisos; no dia a dia prefira <b>Editar direto na página</b>. As marcações de destaque aparecem aqui como etiquetas e devem ser preservadas.</p>
-              <div id="cmsFields"></div>
+            <div class="cms-palette">
+              <h4>Cores do site</h4>
+              <p>Valem para a homepage e para este painel. A mudança aparece na hora e vai para o ar ao publicar.</p>
+              <div class="cms-palette-grid">
+                <label><input type="color" data-cms-var="--navy-950" value="#051521"><span>Cabeçalho, rodapé e painel</span></label>
+                <label><input type="color" data-cms-var="--navy-900" value="#071b2b"><span>Títulos e textos escuros</span></label>
+                <label><input type="color" data-cms-var="--gold-500" value="#c39a57"><span>Dourado principal</span></label>
+                <label><input type="color" data-cms-var="--gold-400" value="#d6b476"><span>Dourado claro</span></label>
+                <label><input type="color" data-cms-var="--red-mg" value="#b72d35"><span>Vermelho de Minas</span></label>
+                <label><input type="color" data-cms-var="--paper" value="#f5f3ef"><span>Fundo claro das seções</span></label>
+                <label><input type="color" data-cms-var="--ink" value="#102331"><span>Cor do texto corrido</span></label>
+              </div>
+              <button type="button" id="cmsResetCores">Voltar às cores originais</button>
             </div>
-          </div>
           </div>
         </section>
 
@@ -3611,29 +3673,6 @@
       restoreWfaState();
       window.addEventListener('pagehide', function () { clearTimeout(wfaSaveTimer); persistWfaNow(); });
 
-      function applyPreferences(prefs) {
-        const accent = prefs.accent || '#c39a57';
-        document.documentElement.style.setProperty('--gold-500', accent);
-        document.body.classList.toggle('app-compact', prefs.density === 'compact');
-        document.body.classList.toggle('app-hide-welcome', prefs.welcome === false);
-        document.getElementById('customPreviewName').textContent = prefs.name || 'WFA Gestão Pública';
-        document.querySelector('.app-brand-copy strong').textContent = (prefs.name || 'WFA Gestão Pública').replace(' Gestão Pública','');
-      }
-      let savedPreferences = {};
-      try { savedPreferences = JSON.parse(localStorage.getItem('wfaUiPreferences') || '{}'); } catch (error) { savedPreferences = {}; }
-      applyPreferences(savedPreferences);
-      if (savedPreferences.name) document.getElementById('customSystemName').value = savedPreferences.name;
-      if (savedPreferences.density) document.getElementById('customDensity').value = savedPreferences.density;
-      if (savedPreferences.welcome === false) document.getElementById('customWelcome').checked = false;
-      if (savedPreferences.accent) { const choice = document.querySelector('input[name="accent"][value="' + savedPreferences.accent + '"]'); if (choice) choice.checked = true; }
-      document.getElementById('customForm').addEventListener('submit', function (event) {
-        event.preventDefault();
-        const prefs = { name: document.getElementById('customSystemName').value.trim() || 'WFA Gestão Pública', accent: document.querySelector('input[name="accent"]:checked').value, density: document.getElementById('customDensity').value, welcome: document.getElementById('customWelcome').checked };
-        localStorage.setItem('wfaUiPreferences', JSON.stringify(prefs));
-        applyPreferences(prefs);
-        showToast('Personalização salva neste navegador.');
-      });
-
       menuButton.addEventListener('click', function () { const isOpen = menu.classList.toggle('open'); menuButton.setAttribute('aria-expanded', String(isOpen)); });
       menu.querySelectorAll('a').forEach(function (link) { link.addEventListener('click', function () { menu.classList.remove('open'); menuButton.setAttribute('aria-expanded', 'false'); }); });
       document.getElementById('contactForm').addEventListener('submit', function (event) { event.preventDefault(); document.getElementById('formStatus').hidden = false; });
@@ -3688,7 +3727,6 @@
       var publicado = null;
       var alteracoes = {};
       var imagensPendentes = {};
-      var listaMontada = false;
       var editando = false;
       var seletorImagem = null;
 
@@ -3809,10 +3847,10 @@
           var liberado = document.body.classList.contains('app-active') || document.body.classList.contains('previa-ativa');
           document.body.classList.toggle('em-construcao', dados.emConstrucao && !liberado);
         }
-        if (dados.cores && dados.cores.destaque) {
-          var local = {};
-          try { local = JSON.parse(localStorage.getItem('wfaUiPreferences') || '{}'); } catch (error) { local = {}; }
-          if (!local.accent) document.documentElement.style.setProperty('--gold-500', dados.cores.destaque);
+        if (dados.cores) {
+          var cores = dados.cores;
+          if (cores.destaque) cores = { '--gold-500': cores.destaque };   // formato antigo
+          aplicarCores(cores);
         }
       }
 
@@ -3825,8 +3863,28 @@
         if (!jaNoDom) aplicarBloco(campo, limpo);
         gravarRascunho();
       }
-      function totalAlteracoes() { return Object.keys(alteracoes).length + Object.keys(imagensPendentes).length; }
-      function corAtual() { var el = document.getElementById('cmsAccent'); return el ? el.value : '#c39a57'; }
+      function totalAlteracoes() {
+        var total = Object.keys(alteracoes).length + Object.keys(imagensPendentes).length + Object.keys(coresAtuais()).length;
+        var construcaoPublicada = publicado && typeof publicado.emConstrucao === 'boolean' ? publicado.emConstrucao : true;
+        if (construcaoAtual() !== construcaoPublicada) total += 1;
+        return total;
+      }
+      var CORES_PADRAO = { '--navy-950':'#051521', '--navy-900':'#071b2b', '--gold-500':'#c39a57', '--gold-400':'#d6b476', '--red-mg':'#b72d35', '--paper':'#f5f3ef', '--ink':'#102331' };
+      function coresAtuais() {
+        var cores = {};
+        document.querySelectorAll('[data-cms-var]').forEach(function (entrada) {
+          if (entrada.value.toLowerCase() !== String(CORES_PADRAO[entrada.dataset.cmsVar]).toLowerCase()) cores[entrada.dataset.cmsVar] = entrada.value;
+        });
+        return cores;
+      }
+      function aplicarCores(cores) {
+        Object.keys(CORES_PADRAO).forEach(function (nome) {
+          var valor = cores && cores[nome] ? cores[nome] : CORES_PADRAO[nome];
+          document.documentElement.style.setProperty(nome, valor);
+          var entrada = document.querySelector('[data-cms-var="' + nome + '"]');
+          if (entrada) entrada.value = valor;
+        });
+      }
       function construcaoAtual() { var el = document.getElementById('cmsConstrucao'); return el ? el.checked : document.body.dataset.construcao !== 'off'; }
       function gravarRascunho() {
         var blocos = {};
@@ -3834,7 +3892,7 @@
           var campo = mapa.blocos[chave];
           if (campo) blocos[chave] = { v:alteracoes[chave], o:campo.orig };
         });
-        try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ blocos:blocos, cores:{ destaque:corAtual() }, emConstrucao:construcaoAtual() })); }
+        try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ blocos:blocos, cores:coresAtuais(), emConstrucao:construcaoAtual() })); }
         catch (error) { /* sem espaço */ }
         atualizarBotoes();
         return blocos;
@@ -3893,7 +3951,6 @@
         if (botaoImagem) botaoImagem.hidden = true;
         document.body.classList.remove('cms-editando');
         if (voltarAoPainel !== false) document.body.classList.add('app-active');
-        if (listaMontada) montarLista();
       }
 
       function blocoDaSelecao() {
@@ -3951,6 +4008,15 @@
         }
       }
       document.addEventListener('selectionchange', function () { if (editando) mostrarFormatacao(); });
+      document.addEventListener('mousedown', function (evento) {
+        if (!editando || !evento.target.closest) return;
+        if (evento.target.closest('.cms-format-bar')) return;   // clique nos próprios botões
+        esconderFormatacao();
+      }, true);
+      document.addEventListener('focusout', function (evento) {
+        if (!editando || !evento.target.closest) return;
+        if (evento.target.closest('[data-cms-inline]')) esconderFormatacao();
+      });
 
       function tagDeDestaque(bloco) {
         return bloco && bloco.closest('.hero') && bloco.tagName === 'H1' ? 'span' : 'em';
@@ -4107,8 +4173,6 @@
           imagensPendentes[chave] = { blob:resultado.blob, extensao:resultado.extensao, url:url };
           var campo = mapa.imagens[chave];
           if (campo) aplicarImagem(campo, url);
-          var entrada = document.querySelector('[data-cms-img-key="' + chave + '"]');
-          if (entrada) entrada.closest('.cms-image').querySelector('img').src = url;
           var vazio = document.querySelector('.profile-photo-placeholder[data-cms-inline-img]');
           if (vazio) vazio.removeAttribute('data-cms-inline-img');
           atualizarBotoes();
@@ -4152,40 +4216,6 @@
           img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Arquivo de imagem inválido.')); };
           img.src = url;
         });
-      }
-
-      /* ---------------- lista de campos ---------------- */
-      function montarLista() {
-        var alvo = document.getElementById('cmsFields');
-        if (!alvo) return;
-        var porEscopo = {};
-        Object.keys(mapa.blocos).forEach(function (chave) {
-          var campo = mapa.blocos[chave];
-          (porEscopo[campo.escopo] = porEscopo[campo.escopo] || { blocos:[], imagens:[] }).blocos.push(campo);
-        });
-        Object.keys(mapa.imagens).forEach(function (chave) {
-          var campo = mapa.imagens[chave];
-          (porEscopo[campo.escopo] = porEscopo[campo.escopo] || { blocos:[], imagens:[] }).imagens.push(campo);
-        });
-        var escopos = Object.keys(porEscopo).sort(function (a, b) {
-          var ia = SCOPE_ORDER.indexOf(a), ib = SCOPE_ORDER.indexOf(b);
-          return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-        });
-        function escapar(t) { return t.replace(/[&<>]/g, function (c) { return { '&':'&amp;','<':'&lt;','>':'&gt;' }[c]; }); }
-        alvo.innerHTML = escopos.map(function (escopo) {
-          var grupo = porEscopo[escopo];
-          var linhas = grupo.blocos.map(function (campo) {
-            var valor = sanitizar(campo.el.innerHTML);
-            var mudou = typeof alteracoes[campo.chave] === 'string';
-            return '<label class="cms-field' + (mudou ? ' alterado' : '') + '"><small>' + campo.rotulo + '</small><textarea rows="' + (valor.length > 90 ? 3 : 1) + '" data-cms-key="' + campo.chave + '">' + escapar(valor) + '</textarea></label>';
-          }).join('');
-          var imagens = grupo.imagens.map(function (campo) {
-            return '<div class="cms-image"><img alt="" src="' + (campo.el.currentSrc || '') + '"><div><b>' + campo.rotulo + '</b><input type="file" accept="image/*" data-cms-img-key="' + campo.chave + '"><small>Reduzida automaticamente antes do envio.</small></div></div>';
-          }).join('');
-          return '<details class="cms-group"><summary>' + (SCOPE_LABEL[escopo] || escopo) + ' <i>' + grupo.blocos.length + ' blocos' + (grupo.imagens.length ? ' • ' + grupo.imagens.length + ' imagens' : '') + '</i></summary>' + linhas + imagens + '</details>';
-        }).join('');
-        listaMontada = true;
-        atualizarBotoes();
       }
 
       /* ---------------- gravação ---------------- */
@@ -4235,7 +4265,7 @@
           atualizadoEm: new Date().toISOString(),
           blocos: Object.assign({}, (publicado && publicado.blocos) || {}, blocos),
           imagens: Object.assign({}, (publicado && publicado.imagens) || {}),
-          cores: { destaque: corAtual() },
+          cores: coresAtuais(),
           emConstrucao: construcaoAtual()
         };
         var fila = Promise.resolve();
@@ -4329,34 +4359,24 @@
           agendarOcultarBotaoImagem();
         });
         window.addEventListener('scroll', function () { if (editando) botaoImagem.hidden = true; }, { passive:true });
-        document.getElementById('cmsOpen').addEventListener('click', function () {
-          montarLista();
-          document.getElementById('cmsEditor').hidden = false;
-          this.textContent = 'Recarregar lista de campos';
-        });
         document.getElementById('cmsPublish').addEventListener('click', publicar);
         document.getElementById('cmsDiscard').addEventListener('click', descartar);
-        document.getElementById('cmsFields').addEventListener('input', function (evento) {
-          var campo = evento.target.closest('[data-cms-key]');
-          if (!campo) return;
-          registrarAlteracao(campo.dataset.cmsKey, campo.value);
-          var referencia = mapa.blocos[campo.dataset.cmsKey];
-          campo.closest('.cms-field').classList.toggle('alterado', referencia && sanitizar(campo.value) !== referencia.orig);
+        document.querySelectorAll('[data-cms-var]').forEach(function (entrada) {
+          entrada.addEventListener('input', function () {
+            document.documentElement.style.setProperty(entrada.dataset.cmsVar, entrada.value);
+            gravarRascunho();
+          });
         });
-        document.getElementById('cmsFields').addEventListener('change', function (evento) {
-          var entrada = evento.target.closest('[data-cms-img-key]');
-          if (entrada && entrada.files && entrada.files[0]) trocarImagem(entrada.dataset.cmsImgKey, entrada.files[0]);
+        document.getElementById('cmsResetCores').addEventListener('click', function () {
+          aplicarCores(null);
+          gravarRascunho();
+          toast('Cores originais restauradas. Publique para valer no site.');
         });
         var construcao = document.getElementById('cmsConstrucao');
         construcao.addEventListener('change', function () {
           document.body.dataset.construcao = construcao.checked ? 'on' : 'off';
           gravarRascunho();
           setStatus(construcao.checked ? 'Ao publicar, os visitantes continuarão vendo o aviso de construção.' : 'Ao publicar, o site ficará aberto ao público.', '');
-        });
-        var accent = document.getElementById('cmsAccent');
-        accent.addEventListener('input', function () {
-          document.documentElement.style.setProperty('--gold-500', accent.value);
-          gravarRascunho();
         });
         atualizarBotoes();
       }
@@ -4372,8 +4392,7 @@
             alteracoes = {};
             var rascunho = lerRascunho();
             if (rascunho) aplicarConteudo(rascunho);
-            var accent = document.getElementById('cmsAccent');
-            if (accent) accent.value = (rascunho && rascunho.cores && rascunho.cores.destaque) || (dados && dados.cores && dados.cores.destaque) || '#c39a57';
+            if (rascunho && rascunho.cores) aplicarCores(rascunho.cores);
             var interruptor = document.getElementById('cmsConstrucao');
             if (interruptor) interruptor.checked = document.body.dataset.construcao !== 'off';
             ligarInterface();
