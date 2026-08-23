@@ -501,10 +501,7 @@
     body.app-active .firebase-note { margin-top: 12px; padding: 12px; font-size: 12px; }
     /* ---- planilha editável ---- */
     .compare-grid-table .sheet-row-number { position: relative; cursor: default; }
-    .compare-grid-table .sheet-row-number .excluir-linha { position: absolute; inset: 0; display: none; place-items: center; color: #c9403f; font-size: 15px; font-weight: 700; cursor: pointer; }
     .compare-grid-table tbody tr:hover .sheet-row-number .numero { visibility: hidden; }
-    .compare-grid-table tbody tr:hover .sheet-row-number .excluir-linha { display: grid; }
-    .compare-grid-table .sheet-row-number .excluir-linha:hover { background: #c9403f; color: white; }
     .titulo-coluna { display: inline-block; min-width: 24px; padding: 1px 3px; border-radius: 2px; outline: 0; cursor: text; }
     .titulo-coluna:hover { background: rgba(255,255,255,.16); }
     .titulo-coluna:focus { background: white; color: #12293b; box-shadow: 0 0 0 2px var(--gold-500); }
@@ -535,6 +532,21 @@
     body.app-active .compare-summary-details summary { padding: 7px 11px; font-size: 12px; }
     body.app-active .compare-kpi { padding: 8px 10px; }
     body.app-active .compare-kpi strong { font-size: 17px; }
+    /* ---- cabeçalho em uma linha, fórmula abaixo ---- */
+    .cabecalho-topo { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .compare-grid-table th.num .cabecalho-topo { justify-content: flex-end; }
+    .compare-grid-table th .titulo-coluna { flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; }
+    .compare-grid-table th .menu-coluna { flex: none; margin-left: 0; }
+    .compare-grid-table th .sheet-sort-button { flex: none; }
+    .compare-grid-table th .dica-coluna { display: block; margin-top: 1px; text-align: inherit; }
+    .compare-grid-table th.num .dica-coluna { text-align: right; }
+
+    /* ---- menu na coluna do número da linha ---- */
+    .compare-grid-table .sheet-row-number { position: relative; }
+    .menu-linha { position: absolute; inset: 0; width: 100%; display: none; border: 0; background: transparent; color: #205e8a; font: inherit; font-size: 12px; line-height: 1; cursor: pointer; }
+    .compare-grid-table tbody tr:hover .sheet-row-number .numero { visibility: hidden; }
+    .compare-grid-table tbody tr:hover .menu-linha { display: block; }
+    .menu-linha:hover { background: #205e8a; color: white; }
     /* ---- arrastar a fórmula para baixo ---- */
     .alca-preenchimento { position: fixed; z-index: 40; width: 9px; height: 9px; background: #157a63; border: 1px solid white; cursor: crosshair; }
     .alca-preenchimento[hidden] { display: none; }
@@ -3815,9 +3827,11 @@
             const seta = coluna.id === 'key' ? '<button class="sheet-sort-button" id="compareSortSource" type="button" title="' + (compareState.sourceSort === 'manual' ? 'Ordem manual — clique para ordenar pelo código' : 'Classificar por fonte de recurso') + '"><span id="compareSortSourceIcon">' + simbolo + '</span></button>' : '';
             const numerica = coluna.tipo === 'moeda' || coluna.id === 'diferenca' || coluna.id === 'execucao';
             return '<th class="' + (numerica ? 'num ' : '') + 'col-' + escapeHtml(coluna.id) + (coluna.tipo === 'calculada' ? ' coluna-calculada' : '') + '">' +
-              '<span class="titulo-coluna" contenteditable="true" spellcheck="false" data-coluna="' + escapeHtml(coluna.id) + '" title="' + escapeHtml(coluna.dica ? coluna.dica : 'Clique para renomear') + '">' + escapeHtml(coluna.titulo) + '</span>' +
-              (coluna.dica ? '<small class="dica-coluna">' + escapeHtml(coluna.dica) + '</small>' : '') + seta +
-              '<button class="menu-coluna" type="button" data-menu-coluna="' + escapeHtml(coluna.id) + '" title="Opções da coluna" aria-label="Opções da coluna">▾</button>' +
+              '<span class="cabecalho-topo">' +
+                '<span class="titulo-coluna" contenteditable="true" spellcheck="false" data-coluna="' + escapeHtml(coluna.id) + '" title="' + escapeHtml(coluna.dica ? coluna.dica : 'Clique para renomear') + '">' + escapeHtml(coluna.titulo) + '</span>' + seta +
+                '<button class="menu-coluna" type="button" data-menu-coluna="' + escapeHtml(coluna.id) + '" title="Opções da coluna" aria-label="Opções da coluna">▾</button>' +
+              '</span>' +
+              (coluna.dica ? '<small class="dica-coluna">' + escapeHtml(coluna.dica) + '</small>' : '') +
               (coluna.tipo === 'livre' ? '<button class="remover-coluna" type="button" data-remover-coluna="' + escapeHtml(coluna.id) + '" title="Remover coluna">×</button>' : '') +
               '</th>';
           }).join('') + '</tr>';
@@ -3865,7 +3879,7 @@
             const entrada = '<input class="cell-editor ' + coluna.classe + '" data-compare-cell="' + campo + '" data-row-key="' + escapeHtml(row.key) + '" value="' + escapeHtml(String(valor)) + '"' + (coluna.tipo === 'moeda' ? ' inputmode="decimal"' : '') + ' aria-label="' + escapeHtml(coluna.titulo) + '">';
             return '<td class="' + (coluna.tipo === 'moeda' ? 'num ' : '') + 'editable-cell col-' + escapeHtml(coluna.id) + '">' + (co ? '<div class="cell-stack">' + entrada + co + '</div>' : entrada) + '</td>';
           }).join('');
-          return '<tr><td class="sheet-row-number" data-menu-linha="' + escapeHtml(row.key) + '" title="Clique com o botão direito para inserir ou excluir"><span class="numero">' + (rowIndex + 1) + '</span><span class="excluir-linha" data-compare-remove="' + escapeHtml(row.key) + '" title="Excluir esta fonte">×</span></td>' + celulas + '</tr>';
+          return '<tr><td class="sheet-row-number" data-menu-linha="' + escapeHtml(row.key) + '" title="Opções da linha"><span class="numero">' + (rowIndex + 1) + '</span><button class="menu-linha" type="button" data-abrir-menu-linha="' + escapeHtml(row.key) + '" title="Opções da linha" aria-label="Opções da linha">▾</button></td>' + celulas + '</tr>';
         }).join('');
 
         // rodapé de totais
@@ -3938,6 +3952,24 @@
           if (campo) { campo.focus(); campo.select(); }
         }, 60);
       }
+      function duplicarLinha(chave) {
+        const original = findCompareRow(chave);
+        if (!original) return;
+        garantirOrdem();
+        const copia = JSON.parse(JSON.stringify(Object.assign({}, original, { extras: original.extras || {} })));
+        copia.key = proximaChaveLivre();
+        copia.manual = true;
+        copia.edited = true;
+        copia.ordem = (original.ordem || 0) + 0.5;
+        compareState.sourceSort = 'manual';
+        compareState.rows.push(copia);
+        activeCompareRows().slice().sort(function (a, b) { return (a.ordem || 0) - (b.ordem || 0); })
+          .forEach(function (row, indice) { row.ordem = indice; });
+        renderCompareTable();
+        addAudit('Linha duplicada', 'Cópia de ' + original.key + ' criada como ' + copia.key + '.', copia.key);
+        regravarExecucaoAberta();
+      }
+
       async function excluirLinha(chave) {
         const row = findCompareRow(chave);
         if (!row) return;
@@ -3980,6 +4012,7 @@
         abrirMenuPlanilha(evento, [
           { rotulo:'Inserir linha acima', acao:function () { inserirLinha(chave, 'antes'); } },
           { rotulo:'Inserir linha abaixo', acao:function () { inserirLinha(chave, 'depois'); } },
+          { rotulo:'Duplicar esta linha', acao:function () { duplicarLinha(chave); } },
           { separador:true },
           { rotulo:'Excluir esta linha', perigo:true, acao:function () { excluirLinha(chave); } }
         ]);
@@ -4244,6 +4277,13 @@
       compareDom.tableBody.addEventListener('contextmenu', function (evento) {
         const numero = evento.target.closest('[data-menu-linha]');
         if (numero) abrirMenuLinha(evento, numero.dataset.menuLinha);
+      });
+      compareDom.tableBody.addEventListener('click', function (evento) {
+        const gatilho = evento.target.closest('[data-abrir-menu-linha]');
+        if (!gatilho) return;
+        evento.preventDefault();
+        evento.stopPropagation();
+        abrirMenuLinha(evento, gatilho.dataset.abrirMenuLinha);
       });
       document.getElementById('compareHead').addEventListener('contextmenu', function (evento) {
         const celula = evento.target.closest('th');
