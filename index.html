@@ -437,6 +437,28 @@
     /* botão de pré-visualização legível sobre o rodapé claro da barra lateral */
     .app-view-site { background: white; border: 1px solid #24699a; color: #1c5278; font-weight: 700; }
     .app-view-site:hover { background: #24699a; border-color: #24699a; color: white; }
+    .script-brief { max-width: 720px; padding: 26px 28px; background: white; border: 1px solid #c9d5dc; }
+    .script-brief-head { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid #e2e9ed; }
+    .script-brief-mark { width: 44px; height: 44px; flex: none; display: grid; place-items: center; background: #205e8a; color: white; font: 700 15px Cambria, Georgia, serif; }
+    .script-brief-head small { display: block; color: #6b8290; font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .script-brief-head h3 { margin: 4px 0 0; color: #12293b; font: 700 21px/1.15 Cambria, Georgia, serif; }
+    .script-brief-state { margin-left: auto; padding: 5px 11px; background: #eef2f5; border: 1px solid #c9d5dc; color: #4a6377; font-size: 11px; font-weight: 800; letter-spacing: .05em; }
+    .script-brief-state.pronto { background: #205e8a; border-color: #205e8a; color: white; }
+    .script-brief-text { margin: 16px 0 18px; color: #56707f; font-size: 14px; line-height: 1.6; }
+    .script-brief-text b { color: #12293b; }
+    .script-brief-inputs { margin: 0 0 20px; padding: 0; list-style: none; display: grid; gap: 8px; }
+    .script-brief-inputs li { display: flex; align-items: center; gap: 11px; padding: 11px 13px; background: #f7f9fb; border: 1px solid #e2e9ed; }
+    .script-brief-inputs .marca { width: 20px; height: 20px; flex: none; display: grid; place-items: center; border: 1px solid #bcccd6; border-radius: 50%; color: #8ea3af; font-size: 11px; font-weight: 700; }
+    .script-brief-inputs li.tem { background: #eef5fa; border-color: #b7d0e2; }
+    .script-brief-inputs li.tem .marca { background: #205e8a; border-color: #205e8a; color: white; }
+    .script-brief-inputs b { display: block; color: #12293b; font-size: 13px; }
+    .script-brief-inputs small { display: block; margin-top: 2px; color: #7b8f9c; font-size: 11.5px; }
+    .script-brief-inputs .opcional { margin-left: auto; color: #8ea3af; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .script-brief-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .script-brief-actions button { padding: 11px 20px; background: white; border: 1px solid #c9d5dc; color: #24455c; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .script-brief-actions button:hover:not(:disabled) { border-color: #205e8a; }
+    .script-brief-run { background: #205e8a !important; border-color: #205e8a !important; color: white !important; }
+    .script-brief-run:disabled { opacity: .45; cursor: not-allowed; }
     .cor-ouro { color: var(--gold-500) !important; }
     .cor-navy { color: var(--navy-900) !important; }
     .cor-vermelho { color: var(--red-mg) !important; }
@@ -1834,7 +1856,8 @@
     .app-nav button[disabled] { color: #8c949a; }
     .app-nav button[disabled]:hover { background: transparent; }
     .app-nav-icon { color: #346181; background: rgba(255,255,255,.62); border-color: #c8d0d6; }
-    .app-nav-meta { color: #858e95; }
+    .app-nav-meta { padding: 2px 7px; border: 1px solid #b9c6ce; color: #5b7180; font-size: 9px; font-weight: 800; letter-spacing: .05em; }
+    .app-nav-meta.pronto { color: white; background: #205e8a; border-color: #205e8a; }
     .sidebar-files-heading { min-height: 46px; padding: 9px 14px 5px 17px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid #d5dade; }
     .sidebar-files-heading .app-nav-label { margin: 0; }
     .sidebar-upload-icon { width: 30px; height: 30px; flex: 0 0 30px; display: grid; place-items: center; color: #285b7f; background: transparent; border: 1px solid #bdc6cc; font-size: 17px; line-height: 1; cursor: pointer; }
@@ -2205,17 +2228,14 @@
   <section class="wfa-app" id="wfaApp" aria-label="Sistema WFA" aria-hidden="true">
     <header class="app-sidebar" id="appSidebar">
       <div class="app-brand"><span class="brand-symbol" aria-hidden="true"><span class="wf-letters">WF</span><span class="a-letter"></span></span><span class="app-brand-copy"><strong>WFA</strong><span>Gestão Pública</span></span></div>
-      <p class="app-nav-label">Área de trabalho</p>
-      <nav class="app-nav" aria-label="Navegação principal">
-        <button class="active" type="button" data-app-view="workspace"><span class="app-nav-icon">▤</span>Central de documentos</button>
+      <p class="app-nav-label">Áreas de trabalho</p>
+      <nav class="app-nav" id="appScriptNav" aria-label="Scripts disponíveis">
+        <button type="button" data-app-view="comparador-fontes" data-script="comparador"><span class="app-nav-icon">CF</span>Comparador de fontes<span class="app-nav-meta" id="scriptCompareMeta">0/3</span></button>
       </nav>
-      <p class="app-nav-label">Ferramentas</p>
-      <nav class="app-nav" aria-label="Ferramentas contábeis">
-        <button type="button" data-workspace-tool="compare"><span class="app-nav-icon">CF</span>Comparador de fontes<span class="app-nav-meta">Ativo</span></button>
-      </nav>
-      <div class="sidebar-files-heading"><p class="app-nav-label">Arquivos carregados</p><button class="sidebar-upload-icon" id="workspaceUploadTrigger" type="button" title="Carregar arquivos PDF" aria-label="Carregar arquivos PDF">↥</button><input id="workspaceUploadInput" type="file" accept="application/pdf,.pdf" multiple hidden></div>
+      <div class="sidebar-files-heading"><p class="app-nav-label">Documentos</p><button class="sidebar-upload-icon" id="workspaceUploadTrigger" type="button" title="Carregar arquivos PDF" aria-label="Carregar arquivos PDF">↥</button><input id="workspaceUploadInput" type="file" accept="application/pdf,.pdf" multiple hidden></div>
       <div class="sidebar-library" id="workspaceSidebarFiles" aria-label="Seleção rápida de arquivos"><p class="sidebar-library-empty">Os PDFs enviados aparecerão aqui para seleção rápida.</p></div>
       <nav class="app-nav sidebar-admin-nav" aria-label="Preferências">
+        <button class="active" type="button" data-app-view="workspace"><span class="app-nav-icon">▤</span>Central de documentos</button>
         <button type="button" data-app-view="personalizar"><span class="app-nav-icon">Aa</span>Personalizar</button>
         <button type="button" data-app-view="configuracoes"><span class="app-nav-icon">⚙</span>Configurações</button>
       </nav>
@@ -2248,69 +2268,22 @@
           </article>
         </section>
 
-        <section class="app-view" data-view-panel="overview">
-          <div class="app-welcome"><div><p>Painel administrativo</p><h2>Controle técnico para uma gestão pública com <em>clareza.</em></h2></div><button class="app-primary-action" type="button" data-demo-action="Nova atividade">Registrar atividade +</button></div>
-          <div class="app-kpis">
-            <article class="app-kpi"><div class="app-kpi-head"><span>Municípios ativos</span><i></i></div><strong>12</strong><small>3 acompanhamentos atualizados hoje</small></article>
-            <article class="app-kpi alert"><div class="app-kpi-head"><span>Prazos próximos</span><i></i></div><strong>07</strong><small>2 exigem atenção nesta semana</small></article>
-            <article class="app-kpi"><div class="app-kpi-head"><span>Documentos</span><i></i></div><strong>284</strong><small>18 arquivos adicionados no mês</small></article>
-            <article class="app-kpi"><div class="app-kpi-head"><span>Conformidade</span><i></i></div><strong>96%</strong><small>Indicador geral das obrigações</small></article>
-          </div>
-          <div class="app-grid">
-            <article class="app-card"><div class="app-card-head"><h3>Próximos prazos</h3><button type="button" data-app-view="obrigacoes">Ver calendário →</button></div><div class="deadline-list">
-              <div class="deadline-row"><span class="deadline-date">20<small>AGO</small></span><div><b>Envio mensal do SICOM</b><p>Iguatama • Competência julho/2026</p></div><span class="status-pill warning">Em revisão</span></div>
-              <div class="deadline-row"><span class="deadline-date">25<small>AGO</small></span><div><b>Conciliação contábil mensal</b><p>Carteira de municípios • Fechamento</p></div><span class="status-pill">No prazo</span></div>
-              <div class="deadline-row"><span class="deadline-date">30<small>AGO</small></span><div><b>Relatório de gestão fiscal</b><p>Validação técnica antes da publicação</p></div><span class="status-pill danger">Prioridade</span></div>
-            </div></article>
-            <article class="app-card"><div class="app-card-head"><h3>Atividade recente</h3><button type="button" data-demo-action="Histórico">Ver histórico →</button></div><div class="activity-list">
-              <div class="activity-item"><i class="activity-dot"></i><div><b>Documento revisado</b><p>Balancete de Iguatama marcado como conferido há 18 minutos.</p></div></div>
-              <div class="activity-item"><i class="activity-dot"></i><div><b>Nova pendência</b><p>Solicitação de comprovante adicionada à prestação de contas.</p></div></div>
-              <div class="activity-item"><i class="activity-dot"></i><div><b>Prazo concluído</b><p>Rotina mensal de conferência encerrada por Administrador.</p></div></div>
-            </div></article>
-          </div>
-        </section>
-
-        <section class="app-view" data-view-panel="municipios">
-          <div class="view-heading"><div><p>Carteira atendida</p><h2>Municípios</h2></div><button type="button" data-demo-action="Novo município">Adicionar município +</button></div>
-          <div class="data-grid">
-            <article class="data-card"><span class="tag">Oeste de Minas • Ativo</span><h3>Iguatama</h3><p>Acompanhamento contábil, orçamentário e rotinas mensais de prestação de contas.</p><div class="data-card-footer"><span>8 obrigações</span><strong>94% em dia</strong></div></article>
-            <article class="data-card"><span class="tag">Região Metropolitana • Ativo</span><h3>Contagem</h3><p>Ambiente demonstrativo preparado para o cadastro de responsáveis e unidades gestoras.</p><div class="data-card-footer"><span>12 obrigações</span><strong>98% em dia</strong></div></article>
-            <article class="data-card"><span class="tag">Zona da Mata • Ativo</span><h3>Juiz de Fora</h3><p>Visão consolidada de documentos, prazos e responsáveis técnicos do município.</p><div class="data-card-footer"><span>10 obrigações</span><strong>96% em dia</strong></div></article>
-          </div>
-        </section>
-
-        <section class="app-view" data-view-panel="obrigacoes">
-          <div class="view-heading"><div><p>Calendário técnico</p><h2>Obrigações</h2></div><button type="button" data-demo-action="Nova obrigação">Nova obrigação +</button></div>
-          <div class="table-card"><table class="app-table"><thead><tr><th>Obrigação</th><th>Município</th><th>Competência</th><th>Vencimento</th><th>Situação</th></tr></thead><tbody>
-            <tr><td><strong>SICOM mensal</strong></td><td>Iguatama</td><td>Julho/2026</td><td>20/08/2026</td><td><span class="status-pill warning">Em revisão</span></td></tr>
-            <tr><td><strong>RREO - 4º bimestre</strong></td><td>Contagem</td><td>Julho/Agosto</td><td>30/09/2026</td><td><span class="status-pill">No prazo</span></td></tr>
-            <tr><td><strong>RGF - 2º quadrimestre</strong></td><td>Juiz de Fora</td><td>Mai/Agosto</td><td>30/09/2026</td><td><span class="status-pill danger">Planejar</span></td></tr>
-            <tr><td><strong>Fechamento contábil</strong></td><td>Iguatama</td><td>Agosto/2026</td><td>05/09/2026</td><td><span class="status-pill">No prazo</span></td></tr>
-          </tbody></table></div>
-        </section>
-
-        <section class="app-view" data-view-panel="documentos">
-          <div class="view-heading"><div><p>Central de arquivos</p><h2>Documentos</h2></div><button type="button" data-demo-action="Enviar arquivo">Enviar documento +</button></div>
-          <div class="table-card"><table class="app-table"><thead><tr><th>Documento</th><th>Categoria</th><th>Município</th><th>Atualização</th><th>Status</th></tr></thead><tbody>
-            <tr><td><strong>Balancete contábil - julho</strong></td><td>Contabilidade</td><td>Iguatama</td><td>Hoje, 09:42</td><td><span class="status-pill">Revisado</span></td></tr>
-            <tr><td><strong>Relatório de execução orçamentária</strong></td><td>Orçamento</td><td>Contagem</td><td>Ontem, 16:18</td><td><span class="status-pill warning">Conferir</span></td></tr>
-            <tr><td><strong>Demonstrativo da despesa com pessoal</strong></td><td>Fiscal</td><td>Juiz de Fora</td><td>17/08/2026</td><td><span class="status-pill">Revisado</span></td></tr>
-          </tbody></table></div>
-        </section>
-
-        <section class="app-view" data-view-panel="relatorios">
-          <div class="view-heading"><div><p>Inteligência gerencial</p><h2>Relatórios</h2></div><button type="button" data-demo-action="Novo relatório">Criar relatório +</button></div>
-          <div class="data-grid">
-            <article class="data-card"><span class="tag">Consolidado</span><h3>Execução orçamentária</h3><p>Receitas, despesas, resultado e comparação entre períodos para apoio à tomada de decisão.</p><div class="data-card-footer"><span>Atualizado hoje</span><strong>Gerar →</strong></div></article>
-            <article class="data-card"><span class="tag">Responsabilidade fiscal</span><h3>Limites da LRF</h3><p>Acompanhamento demonstrativo de pessoal, dívida, operações e disponibilidade financeira.</p><div class="data-card-footer"><span>3 municípios</span><strong>Gerar →</strong></div></article>
-            <article class="data-card"><span class="tag">Conformidade</span><h3>Pendências por município</h3><p>Visão executiva dos itens abertos, responsáveis, prioridades e prazos de regularização.</p><div class="data-card-footer"><span>7 pendências</span><strong>Gerar →</strong></div></article>
-          </div>
-        </section>
-
         <section class="app-view compare-view" id="compareView" data-view-panel="comparador-fontes">
           <div class="view-heading compare-workspace-heading compare-menu-only" hidden><button class="compare-files-button" id="compareFilesToggle" type="button" hidden aria-expanded="false" aria-controls="compareSetup"><b id="compareFilesButtonLabel">Documentos</b><span id="compareFilesButtonCount">0/2</span></button><button id="compareOptionsToggle" type="button" hidden aria-expanded="false" aria-controls="compareOptionsMenu">Menu</button><div id="compareOptionsMenu" hidden></div></div>
           <div class="compare-shell">
-            <article class="compare-empty-state" id="compareEmptyState"><span class="compare-empty-icon" aria-hidden="true">PDF</span><div><small>Comparação por fonte de recurso</small><h3 id="compareEmptyTitle">Nenhuma conferência iniciada</h3><p id="compareEmptyText">Selecione os relatórios na Central de documentos para gerar a tabela.</p></div><button type="button" data-app-view="workspace">Voltar à central</button></article>
+            <article class="script-brief" id="compareEmptyState">
+              <header class="script-brief-head">
+                <span class="script-brief-mark" aria-hidden="true">CF</span>
+                <div><small>Script de conferência</small><h3 id="compareEmptyTitle">Comparador de fontes</h3></div>
+                <span class="script-brief-state" id="scriptBriefState">0 de 3</span>
+              </header>
+              <p class="script-brief-text" id="compareEmptyText">Lê o quadro <b>Total por fonte de recurso</b> no fim de cada relatório e cruza os valores fonte a fonte. Dois relatórios já bastam; o terceiro entra como coluna extra.</p>
+              <ul class="script-brief-inputs" id="scriptBriefInputs"></ul>
+              <div class="script-brief-actions">
+                <button class="script-brief-run" id="scriptBriefRun" type="button" disabled>Executar comparação</button>
+                <button type="button" data-app-view="workspace">Carregar documentos</button>
+              </div>
+            </article>
             <div class="compare-files-backdrop" id="compareFilesBackdrop" hidden></div>
             <section class="compare-setup expanded" id="compareSetup" aria-label="Preparação da comparação" aria-hidden="true" inert hidden>
               <button id="compareFilesClose" type="button" hidden aria-label="Fechar painel de documentos">×</button>
@@ -2398,7 +2371,7 @@
         <section class="app-view" data-view-panel="configuracoes">
           <div class="view-heading"><div><p>Administração</p><h2>Configurações</h2></div></div>
           <div class="settings-card"><h3>Acesso ao sistema</h3><p>O acesso é individual, feito por e-mail e senha, e administrado fora desta página. Nenhuma credencial fica gravada no site.</p></div>
-          <div class="settings-card"><h3>Dados salvos neste navegador</h3><p>Os PDFs carregados, a tabela do comparador com as correções, a trilha de auditoria e a última tela aberta ficam guardados no armazenamento local (IndexedDB) deste computador. Nada é enviado para servidores e os dados não acompanham outro navegador ou outra máquina.</p><p id="storageSummary" class="storage-summary">Verificando armazenamento…</p><button class="ghost-button" id="storageClear" type="button">Apagar dados salvos deste navegador</button></div>
+          <div class="settings-card"><h3>Dados salvos neste navegador</h3><p>Os PDFs carregados, a tabela do comparador com as correções, a trilha de auditoria e a última tela aberta ficam guardados no armazenamento local (IndexedDB) deste computador. Nada é enviado para servidores e os dados não acompanham outro navegador ou outra máquina.</p><p id="storageSummary" class="storage-summary">Verificando armazenamento…</p><button class="ghost-button" id="layoutReset" type="button">Restaurar layout inicial</button> <button class="ghost-button" id="storageClear" type="button">Apagar dados salvos deste navegador</button></div>
         </section>
       </main>
     </div>
@@ -2559,12 +2532,51 @@
       });
       document.getElementById('appLogout').addEventListener('click', async function () { if (authAdapter) await authAdapter.signOut(); leaveApp(); });
 
-      const viewTitles = { workspace:'Central de documentos', overview:'Visão geral', municipios:'Municípios', obrigacoes:'Obrigações', documentos:'Documentos', relatorios:'Relatórios', ferramentas:'Ferramentas contábeis', 'comparador-fontes':'Comparador de fontes', personalizar:'Personalizar página', configuracoes:'Configurações' };
+      const viewTitles = { workspace:'Central de documentos', 'comparador-fontes':'Comparador de fontes', personalizar:'Personalizar página', configuracoes:'Configurações' };
+      // painel do script: lista o que ele aceita e o que já está carregado
+      function renderScriptBrief() {
+        const lista = document.getElementById('scriptBriefInputs');
+        if (!lista || typeof workspaceState === 'undefined') return;
+        const prontos = {};
+        workspaceState.files.forEach(function (item) {
+          if (item.status === 'ready' && ROLE_INFO[item.role] && !prontos[item.role]) prontos[item.role] = item;
+        });
+        lista.innerHTML = COMPARE_ROLES.map(function (papel) {
+          const item = prontos[papel];
+          const info = ROLE_INFO[papel];
+          return '<li class="' + (item ? 'tem' : '') + '"><span class="marca">' + (item ? '✓' : '·') + '</span><span><b>' + escapeHtml(info.nome) + '</b><small>' + (item ? escapeHtml(item.file.name) : 'Nenhum arquivo deste tipo carregado') + '</small></span><span class="opcional">' + (item ? 'pronto' : 'ausente') + '</span></li>';
+        }).join('');
+        const total = Object.keys(prontos).length;
+        const marcador = document.getElementById('scriptBriefState');
+        if (marcador) {
+          marcador.textContent = total + ' de 3';
+          marcador.classList.toggle('pronto', total >= 2);
+        }
+        const botao = document.getElementById('scriptBriefRun');
+        if (botao) {
+          botao.disabled = total < 2;
+          botao.textContent = total >= 2 ? 'Executar com ' + total + ' documentos' : 'Carregue ao menos dois documentos';
+        }
+      }
+      // mostra na barra lateral quantos documentos o script já tem prontos
+      function atualizarResumoDosScripts() {
+        const marcador = document.getElementById('scriptCompareMeta');
+        if (!marcador || typeof workspaceState === 'undefined') return;
+        const tipos = [];
+        workspaceState.files.forEach(function (item) {
+          if (item.status === 'ready' && ROLE_INFO[item.role] && tipos.indexOf(item.role) === -1) tipos.push(item.role);
+        });
+        marcador.textContent = tipos.length + '/3';
+        marcador.title = tipos.length >= 2 ? 'Pronto para executar' : 'Carregue ao menos dois relatórios';
+        marcador.classList.toggle('pronto', tipos.length >= 2);
+        renderScriptBrief();
+      }
       function selectView(view) {
         wfaCurrentView = view;
         document.querySelectorAll('[data-view-panel]').forEach(function (panel) { panel.classList.toggle('active', panel.dataset.viewPanel === view); });
         document.querySelectorAll('.app-nav [data-app-view]').forEach(function (button) { button.classList.toggle('active', button.dataset.appView === view); });
         document.querySelectorAll('.app-nav [data-workspace-tool]').forEach(function (button) { button.classList.toggle('active', view === 'comparador-fontes' && button.dataset.workspaceTool === 'compare'); });
+        atualizarResumoDosScripts();
         pageTitle.textContent = viewTitles[view] || 'Sistema WFA';
         appSidebar.classList.remove('open');
         if (typeof closeCompareFilesSheet === 'function') closeCompareFilesSheet();
@@ -2670,16 +2682,13 @@
         const nomesCarregados = carregados.map(function (papel) { return ROLE_INFO[papel].curto.toLowerCase(); }).join(', ');
         if (ready) {
           compareDom.processHint.textContent = 'Pronto para processar: ' + nomesCarregados + '.';
-          compareDom.emptyTitle.textContent = identified + ' documentos prontos';
-          compareDom.emptyText.textContent = 'Processe no painel de documentos para gerar a tabela. Dois relatórios já bastam; o terceiro entra como coluna extra.';
+          renderScriptBrief();
         } else if (identified === 1) {
           compareDom.processHint.textContent = 'Carregue mais um relatório para comparar.';
-          compareDom.emptyTitle.textContent = '1 documento carregado';
-          compareDom.emptyText.textContent = 'Falta pelo menos mais um relatório. Qualquer combinação de dois serve.';
+          renderScriptBrief();
         } else {
           compareDom.processHint.textContent = 'Selecione ao menos dois relatórios em PDF.';
-          compareDom.emptyTitle.textContent = 'Nenhuma conferência iniciada';
-          compareDom.emptyText.textContent = 'Carregue orçadas, empenhadas ou arrecadadas — dois já bastam para comparar.';
+          renderScriptBrief();
         }
       }
       function resetCompareOutput() {
@@ -2943,6 +2952,7 @@
         document.getElementById('workspaceSelectedCount').textContent = selectedItems.length;
         document.getElementById('workspaceReadyCount').textContent = workspaceState.files.filter(function (item) { return item.status === 'ready'; }).length;
         document.getElementById('workspacePendingCount').textContent = workspaceState.files.filter(function (item) { return item.status !== 'ready'; }).length;
+        atualizarResumoDosScripts();
         const visibleSelectable = visible.filter(function (item) { return item.status !== 'processing'; });
         const visibleSelected = visibleSelectable.filter(function (item) { return workspaceState.selected.has(item.id); });
         workspaceDom.selectAll.checked = Boolean(visibleSelectable.length && visibleSelected.length === visibleSelectable.length);
@@ -3040,6 +3050,16 @@
       });
       workspaceDom.rows.addEventListener('click', function (event) { const button = event.target.closest('[data-workspace-remove]'); if (button) removeWorkspaceFile(button.dataset.workspaceRemove); });
       document.querySelectorAll('[data-workspace-tool="compare"]').forEach(function (button) { button.addEventListener('click', launchWorkspaceComparator); });
+      document.getElementById('scriptBriefRun').addEventListener('click', function () {
+        // marca automaticamente um documento de cada tipo disponível e executa
+        const porTipo = {};
+        workspaceState.files.forEach(function (item) {
+          if (item.status === 'ready' && ROLE_INFO[item.role] && !porTipo[item.role]) porTipo[item.role] = item;
+        });
+        workspaceState.selected = new Set(Object.keys(porTipo).map(function (papel) { return porTipo[papel].id; }));
+        renderWorkspaceFiles();
+        launchWorkspaceComparator();
+      });
       workspaceDom.run.addEventListener('click', launchWorkspaceComparator);
       renderWorkspaceFiles();
 
@@ -3734,6 +3754,9 @@
           var compare = await stores.state.getItem('compare');
           if (compare) { compare.search = ''; compare.status = 'all'; compare.sourceSort = 'asc'; await stores.state.setItem('compare', compare); }
         } catch (error) { /* segue mesmo sem armazenamento */ }
+        // impede que a gravação de saída devolva o estado antigo por cima do reset
+        wfaReady = false;
+        clearTimeout(wfaSaveTimer);
         showToast('Layout restaurado. Recarregando…');
         window.setTimeout(function () { window.location.reload(); }, 800);
       });
