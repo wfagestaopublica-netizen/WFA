@@ -210,7 +210,7 @@
       <div class="app-brand"><span class="brand-symbol" aria-hidden="true"><span class="wf-letters">WF</span><span class="a-letter"></span></span><span class="app-brand-copy"><strong>WFA</strong><span>Gestão Pública</span></span><button class="app-recolher" id="appRecolher" type="button" title="Recolher a barra lateral" aria-label="Recolher a barra lateral"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M11.8 5.5 7.3 10l4.5 4.5"/></svg></button></div>
       <p class="app-nav-label">Scripts</p>
       <nav class="app-nav" id="appScriptNav" aria-label="Scripts disponíveis">
-        <button type="button" data-app-view="comparador-fontes" data-script="comparador" title="Scripts disponíveis"><span class="app-nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6.5 3.5h7a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1z"/><path d="M8 7h4M8 10h4M8 13h2.5"/></svg></span><span class="app-nav-texto">Scripts</span><span class="app-nav-meta" id="scriptCompareMeta">0/3</span></button>
+        <button type="button" data-app-view="comparador-fontes" data-script="comparador" title="Área de trabalho"><span class="app-nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6.5 3.5h7a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1z"/><path d="M8 7h4M8 10h4M8 13h2.5"/></svg></span><span class="app-nav-texto">Área de trabalho</span><span class="app-nav-meta" id="scriptCompareMeta">0/3</span></button>
       </nav>
 
       <div class="sidebar-files-heading"><p class="app-nav-label">Documentos</p><button class="sidebar-upload-icon" id="workspaceUploadTrigger" type="button" title="Adicionar documentos" aria-label="Adicionar documentos"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 4.8v10.4M4.8 10h10.4"/></svg></button><input id="workspaceUploadInput" type="file" accept="application/pdf,.pdf" multiple hidden></div>
@@ -252,17 +252,11 @@
         <section class="app-view compare-view" id="compareView" data-view-panel="comparador-fontes">
           <div class="view-heading compare-workspace-heading compare-menu-only" hidden><button class="compare-files-button" id="compareFilesToggle" type="button" hidden aria-expanded="false" aria-controls="compareSetup"><b id="compareFilesButtonLabel">Documentos</b><span id="compareFilesButtonCount">0/2</span></button><button id="compareOptionsToggle" type="button" hidden aria-expanded="false" aria-controls="compareOptionsMenu">Menu</button><div id="compareOptionsMenu" hidden></div></div>
           <div class="compare-shell">
-            <section class="galeria" id="compareEmptyState">
-              <p class="galeria-intro" id="galeriaIntro">Marque os documentos na barra lateral e clique no script que quer rodar.</p>
-              <div class="galeria-grade" id="galeriaScripts"></div>
-              <h3 id="compareEmptyTitle" hidden></h3>
-              <span id="compareEmptyText" hidden></span>
-              <span id="scriptBriefState" hidden></span>
-              <span id="scriptBriefDica" hidden></span>
-              <ul id="scriptBriefInputs" hidden></ul>
-              <ul id="scriptBriefTipos" hidden></ul>
-              <button id="scriptBriefRun" type="button" hidden></button>
-              <button id="scriptBriefUpload" type="button" hidden></button>
+            <section class="area-vazia" id="compareEmptyState">
+              <p class="area-vazia-titulo">Nenhuma planilha aberta</p>
+              <p class="area-vazia-texto">Crie uma planilha em branco e use <b>Automação</b>, dentro dela, para preenchê-la a partir dos documentos marcados na barra lateral.</p>
+              <button type="button" class="area-vazia-botao" id="novaPlanilhaBotao">Nova planilha</button>
+              <span id="compareEmptyTitle" hidden></span><span id="compareEmptyText" hidden></span>
             </section>
             <div class="compare-files-backdrop" id="compareFilesBackdrop" hidden></div>
             <section class="compare-setup expanded" id="compareSetup" aria-label="Preparação da comparação" aria-hidden="true" inert hidden>
@@ -305,6 +299,7 @@
                   <span class="sheet-commands">
                     <button type="button" data-sheet-cmd="add" title="Inserir nova fonte (Ctrl+Shift+=)">＋ Linha</button>
                     <button type="button" data-sheet-cmd="col" title="Criar uma coluna livre para anotações">＋ Coluna</button>
+                    <button type="button" id="sheetAutomacao" class="sheet-cmd-automacao" title="Automações desta planilha">Automação ▾</button>
                     <button type="button" data-sheet-cmd="guia" title="Guia de fórmulas">ƒx Fórmulas</button>
                     <button type="button" data-sheet-cmd="del" title="Excluir a linha da célula selecionada (Ctrl+-)" disabled>－ Linha</button>
                     <button type="button" data-sheet-cmd="asc" title="Ordenar por fonte, crescente">A→Z</button>

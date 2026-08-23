@@ -137,20 +137,69 @@
       });
       document.getElementById('appLogout').addEventListener('click', async function () { if (authAdapter) await authAdapter.signOut(); leaveApp(); });
 
-      const viewTitles = { workspace:'Central de documentos', 'comparador-fontes':'Scripts', personalizar:'Personalizar página', configuracoes:'Configurações' };
-      /* ============ Galeria de scripts ============
-         Cada script declara o que aceita e o mínimo que precisa. A seleção vem
-         da lista de documentos da barra lateral — a mesma para todos.        */
-      const SCRIPTS = [
+      const viewTitles = { workspace:'Central de documentos', 'comparador-fontes':'Área de trabalho', personalizar:'Personalizar página', configuracoes:'Configurações' };
+      /* ============ Planilhas e automações ============
+         A planilha nasce vazia e é sua. As automações são acionadas de dentro
+         dela e a preenchem com os documentos marcados na barra lateral.      */
+      const AUTOMACOES = [
         {
-          id: 'comparador',
-          sigla: 'CF',
-          nome: 'Comparador de fontes',
-          descricao: 'Lê o quadro Total por fonte de recurso no fim de cada relatório e cruza os valores fonte a fonte.',
-          minimo: 2,
+          id: 'comparacao-fontes',
+          nome: 'Comparação de fontes de relatório',
+          situacao: function () {
+            const marcados = documentosSelecionados();
+            const tipos = tiposSelecionados();
+            if (!workspaceState.files.length) return { ok:false, texto:'nenhum documento carregado' };
+            if (!marcados.length) return { ok:false, texto:'marque documentos na barra lateral' };
+            if (tipos.length < 2) return { ok:false, texto:'marque dois tipos diferentes' };
+            if (marcados.length > tipos.length) return { ok:false, texto:'há dois documentos do mesmo tipo' };
+            return { ok:true, texto:tipos.length + ' documentos marcados' };
+          },
           executar: function () { launchWorkspaceComparator(); }
         }
       ];
+
+      function filtrarLinhasLivres(todas, busca) {
+        if (!busca) return todas.slice();
+        return todas.filter(function (row) {
+          const extras = row.extras || {};
+          const texto = Object.keys(extras).map(function (chave) { return extras[chave]; }).join(' ');
+          return normalizeSearch(texto).includes(busca);
+        });
+      }
+      function novaColunaLivre(largura) {
+        return { id:'col-' + Math.random().toString(36).slice(2, 8) + Date.now().toString(36), titulo:'', ancora:null, lado:null, largura:largura || 150 };
+      }
+      function novaPlanilha() {
+        execucaoAberta = null;
+        clearTimeout(regravarTimer);
+        compareState.modo = 'livre';
+        compareState.reports = {};
+        compareState.audit = [];
+        compareState.titulos = {};
+        compareState.formulas = {};
+        compareState.sourceSort = 'manual';
+        compareState.editorMode = null;
+        compareState.editorKey = null;
+        COMPARE_ROLES.forEach(function (papel) { compareState.files[papel] = null; });
+        compareState.colunasExtras = [novaColunaLivre(220), novaColunaLivre(), novaColunaLivre(), novaColunaLivre(), novaColunaLivre()];
+        compareState.rows = [];
+        for (let n = 0; n < 18; n += 1) {
+          compareState.rows.push({ key:'L' + (n + 1), description:'', co:[], extras:{}, ordem:n, edited:false, manual:true, deleted:false });
+        }
+        compareDom.empty.hidden = true;
+        compareDom.results.hidden = false;
+        compareDom.view.classList.add('results-ready');
+        compareDom.view.classList.remove('show-setup');
+        compareDom.detailsToggle.hidden = true;
+        compareDom.auditToggle.hidden = true;
+        setCompareAlert('');
+        addAudit('Planilha criada', 'Planilha em branco aberta na área de trabalho.', 'Estrutura');
+        renderCompareTable();
+        renderAudit();
+        selectView('comparador-fontes');
+        salvarExecucao();
+        showToast('Planilha criada. Use Automação para preenchê-la com os documentos.');
+      }
 
       function documentosSelecionados() {
         return workspaceState.files.filter(function (item) {
@@ -162,34 +211,7 @@
         documentosSelecionados().forEach(function (item) { if (tipos.indexOf(item.role) === -1) tipos.push(item.role); });
         return tipos;
       }
-      function situacaoDoScript(script) {
-        const selecionados = documentosSelecionados();
-        const tipos = tiposSelecionados();
-        if (!workspaceState.files.length) return { ok:false, texto:'Nenhum documento carregado' };
-        if (!selecionados.length) return { ok:false, texto:'Nenhum documento marcado' };
-        if (tipos.length < script.minimo) return { ok:false, texto:'Marque ' + script.minimo + ' tipos diferentes' };
-        if (selecionados.length > tipos.length) return { ok:false, texto:'Há dois documentos do mesmo tipo' };
-        return { ok:true, texto:tipos.length + ' documentos marcados' };
-      }
-      function renderScriptBrief() {
-        const grade = document.getElementById('galeriaScripts');
-        if (!grade || typeof workspaceState === 'undefined') return;
-        grade.innerHTML = SCRIPTS.map(function (script) {
-          const situacao = situacaoDoScript(script);
-          return '<button class="script-banner' + (situacao.ok ? ' pronto' : '') + '" type="button" data-script-run="' + escapeHtml(script.id) + '"' + (situacao.ok ? '' : ' disabled') + '>' +
-            '<span class="script-banner-topo"><span class="script-banner-sigla">' + escapeHtml(script.sigla) + '</span><span class="script-banner-nome">' + escapeHtml(script.nome) + '</span></span>' +
-            '<span class="script-banner-desc">' + escapeHtml(script.descricao) + '</span>' +
-            '<span class="script-banner-pe"><span class="script-banner-estado"><span class="ponto"></span>' + escapeHtml(situacao.texto) + '</span><span class="script-banner-acao">' + (situacao.ok ? 'Executar →' : 'Indisponível') + '</span></span>' +
-            '</button>';
-        }).join('');
-        const intro = document.getElementById('galeriaIntro');
-        if (intro) {
-          intro.textContent = workspaceState.files.length
-            ? 'Marque os documentos na barra lateral e clique no script que quer rodar.'
-            : 'Carregue relatórios em PDF pelo + da barra lateral para liberar os scripts.';
-        }
-        atualizarResumoDoBrief();
-      }
+      function renderScriptBrief() { atualizarResumoDoBrief(); }
       function atualizarResumoDoBrief() {
         const marcador = document.getElementById('scriptCompareMeta');
         if (!marcador) return;
@@ -203,7 +225,7 @@
       /* ============ Endereços das telas ============
          Cada tela tem um endereço próprio, para poder ser guardada, compartilhada
          e navegada com os botões voltar e avançar do navegador.               */
-      var ROTAS = { workspace:'documentos', 'comparador-fontes':'scripts', personalizar:'personalizar', configuracoes:'configuracoes' };
+      var ROTAS = { workspace:'documentos', 'comparador-fontes':'planilhas', personalizar:'personalizar', configuracoes:'configuracoes' };
       var TELAS_POR_ROTA = Object.keys(ROTAS).reduce(function (mapa, tela) { mapa[ROTAS[tela]] = tela; return mapa; }, {});
       var navegandoPelaRota = false;
 
@@ -262,7 +284,7 @@
       };
       function papeisCarregados() { return COMPARE_ROLES.filter(function (papel) { return Boolean(compareState.files[papel]); }); }
       function papeisComRelatorio() { return COMPARE_ROLES.filter(function (papel) { return Boolean(compareState.reports[papel]); }); }
-      const compareState = { files: { budget: null, committed: null, collected: null }, reports: {}, rows: [], audit: [], editorMode: null, editorKey: null, sourceSort: 'asc', colunasExtras: [], titulos: {}, formulas: {} };
+      const compareState = { files: { budget: null, committed: null, collected: null }, reports: {}, rows: [], audit: [], editorMode: null, editorKey: null, sourceSort: 'asc', colunasExtras: [], titulos: {}, formulas: {}, modo: 'livre' };
       const compareDom = {
         run: document.getElementById('compareRun'), progress: document.getElementById('compareProgress'), alert: document.getElementById('compareAlert'), results: document.getElementById('compareResults'),
         processHint: document.getElementById('compareProcessHint'), tableBody: document.getElementById('compareTableBody'), search: document.getElementById('compareSearch'), status: document.getElementById('compareStatusFilter'),
@@ -681,6 +703,19 @@
         }
         showToast('Arquivo removido da central.');
       }
+      // Ao preencher uma planilha em branco, as colunas do rascunho que ficaram
+      // sem nome e sem conteúdo saem de cena; as que você nomeou permanecem.
+      function limparColunasVaziasDoRascunho() {
+        if (compareState.modo !== 'livre') return;
+        compareState.colunasExtras = (compareState.colunasExtras || []).filter(function (extra) {
+          const titulo = (compareState.titulos && compareState.titulos[extra.id]) || extra.titulo || '';
+          if (titulo.trim()) return true;
+          return compareState.rows.some(function (row) {
+            return row.extras && String(row.extras[extra.id] || '').trim();
+          });
+        });
+      }
+
       function launchWorkspaceComparator() {
         const selected = workspaceState.files.filter(function (item) { return workspaceState.selected.has(item.id) && item.status === 'ready'; });
         const escolhidos = {};
@@ -694,6 +729,7 @@
           selectView('workspace');
           return;
         }
+        limparColunasVaziasDoRascunho();
         COMPARE_ROLES.forEach(function (papel) { if (!escolhidos[papel]) clearCompareRole(papel); });
         papeis.forEach(function (papel) {
           const item = escolhidos[papel];
@@ -730,11 +766,18 @@
       });
       workspaceDom.rows.addEventListener('click', function (event) { const button = event.target.closest('[data-workspace-remove]'); if (button) removeWorkspaceFile(button.dataset.workspaceRemove); });
       document.querySelectorAll('[data-workspace-tool="compare"]').forEach(function (button) { button.addEventListener('click', launchWorkspaceComparator); });
-      document.getElementById('galeriaScripts').addEventListener('click', function (evento) {
-        const banner = evento.target.closest('[data-script-run]');
-        if (!banner || banner.disabled) return;
-        const script = SCRIPTS.find(function (item) { return item.id === banner.dataset.scriptRun; });
-        if (script) script.executar();
+      document.getElementById('novaPlanilhaBotao').addEventListener('click', function () { novaPlanilha(); });
+      // As automações moram dentro da planilha, na barra de comandos.
+      document.getElementById('sheetAutomacao').addEventListener('click', function (evento) {
+        abrirMenuPlanilha(evento, AUTOMACOES.map(function (automacao) {
+          const situacao = automacao.situacao();
+          return {
+            rotulo: automacao.nome + (situacao.ok ? '' : '   (' + situacao.texto + ')'),
+            acao: situacao.ok
+              ? function () { automacao.executar(); }
+              : function () { showToast('Para rodar esta automação: ' + situacao.texto + '.'); }
+          };
+        }));
       });
       workspaceDom.run.addEventListener('click', launchWorkspaceComparator);
       renderWorkspaceFiles();
@@ -876,10 +919,11 @@
 
       // Estrutura da planilha: colunas de dados são editáveis, as calculadas não.
       function colunasDaTabela() {
-        const colunas = [
-          { id:'key', tipo:'texto', titulo:'Fonte de recurso', largura:186, classe:'cell-code' },
-          { id:'description', tipo:'texto', titulo:'Descrição', largura:300, classe:'' }
-        ];
+        const colunas = [];
+        // Planilha em branco: existem só as colunas que você criou.
+        if (compareState.modo !== 'livre') {
+        colunas.push({ id:'key', tipo:'texto', titulo:'Fonte de recurso', largura:186, classe:'cell-code' });
+        colunas.push({ id:'description', tipo:'texto', titulo:'Descrição', largura:300, classe:'' });
         papeisComRelatorio().forEach(function (papel) {
           colunas.push({ id:papel, tipo:'moeda', titulo:ROLE_INFO[papel].curto, largura:118, classe:'cell-money' });
         });
@@ -894,8 +938,9 @@
         colunas.push({ id:'diferenca', tipo:'formula', formato:'moeda', titulo:'Diferença', largura:130, padrao:padraoDiferenca });
         colunas.push({ id:'execucao', tipo:'formula', formato:'percentual', titulo:'Execução', largura:96, padrao:padraoExecucao });
         colunas.push({ id:'situacao', tipo:'calculada', titulo:'Situação', largura:170, formula:'comparação entre os relatórios' });
+        }
         (compareState.colunasExtras || []).forEach(function (extra) {
-          const definicao = { id:extra.id, tipo:'livre', titulo:extra.titulo, largura:150, classe:'' };
+          const definicao = { id:extra.id, tipo:'livre', titulo:extra.titulo || '', largura:extra.largura || 150, classe:'' };
           const alvo = extra.ancora ? colunas.findIndex(function (coluna) { return coluna.id === extra.ancora; }) : -1;
           if (alvo >= 0) colunas.splice(extra.lado === 'antes' ? alvo : alvo + 1, 0, definicao);
           else colunas.push(definicao);
@@ -1065,7 +1110,7 @@
         const allRows = activeCompareRows();
         const colunas = colunasDaTabela();
 
-        const rows = allRows.filter(function (row) {
+        const rows = compareState.modo === 'livre' ? filtrarLinhasLivres(allRows, query) : allRows.filter(function (row) {
           const status = compareStatus(row);
           const matchesSearch = !query || normalizeSearch(row.key + ' ' + row.description).includes(query);
           let matchesStatus = filter === 'all' || status.code === filter;
@@ -1167,12 +1212,16 @@
             const alvo = parTotal ? somar(parTotal.alvo) : 0;
             return '<th class="num">' + formatPercent(base ? (alvo / base) * 100 : NaN) + '</th>';
           }
+          if (compareState.modo === 'livre') return '<th></th>';
           if (coluna.id === 'key') return '<th>' + (filtrado ? 'Total exibido (' + rows.length + ' de ' + allRows.length + ')' : 'Total das fontes') + '</th>';
           return '<th></th>';
         }).join('');
         document.getElementById('compareFoot').innerHTML = '<tr><th class="sheet-corner"></th>' + totais + '</tr>';
 
-        document.getElementById('compareCount').textContent = rows.length + (rows.length === 1 ? ' fonte exibida' : ' fontes exibidas');
+        compareDom.view.classList.toggle('planilha-livre', compareState.modo === 'livre');
+        document.getElementById('compareCount').textContent = compareState.modo === 'livre'
+          ? rows.length + (rows.length === 1 ? ' linha' : ' linhas') + ' • ' + colunas.length + (colunas.length === 1 ? ' coluna' : ' colunas')
+          : rows.length + (rows.length === 1 ? ' fonte exibida' : ' fontes exibidas');
         const cartao = document.querySelector('.compare-table-card');
         if (cartao) COMPARE_ROLES.forEach(function (papel) { cartao.classList.toggle('tem-' + papel, Boolean(compareState.reports[papel])); });
         renderCompareKpis();
@@ -1388,6 +1437,7 @@
           const municipios = lidos.map(function (r) { return normalizeSearch(r.municipality); }).filter(function (m) { return m !== normalizeSearch('Não identificado'); });
           if (new Set(municipios).size > 1) throw new Error('Os relatórios parecem pertencer a municípios diferentes. Revise os arquivos antes de comparar.');
 
+          compareState.modo = 'comparador';
           compareState.reports = relatorios;
           // planilha nova: não herda colunas nem títulos da execução anterior
           if (!execucaoAberta) {
@@ -2486,13 +2536,14 @@
           const temResultado = !compareDom.results.hidden;
           const prontos = tipoDoScriptPronto().length;
           const base = [
-            { icone:'CF', titulo:'Comparador de fontes', detalhe:prontos >= 2 ? prontos + ' documentos prontos' : 'faltam documentos', grupo:'Área', acao:function () { selectView('comparador-fontes'); } },
+            { icone:'▦', titulo:'Área de trabalho', detalhe:'planilhas e automações', grupo:'Área', acao:function () { selectView('comparador-fontes'); } },
             { icone:'▤', titulo:'Central de documentos', detalhe:workspaceState.files.length + ' arquivos', grupo:'Área', acao:function () { selectView('workspace'); } },
             { icone:'Aa', titulo:'Personalizar página', detalhe:'editor da homepage e cores', grupo:'Área', acao:function () { selectView('personalizar'); } },
             { icone:'⚙', titulo:'Configurações', detalhe:'acesso e dados salvos', grupo:'Área', acao:function () { selectView('configuracoes'); } },
             { icone:'↥', titulo:'Carregar documentos', detalhe:'selecionar PDFs do computador', grupo:'Ação', acao:function () { workspaceDom.upload.click(); } }
           ];
-          if (prontos >= 2) base.push({ icone:'▶', titulo:'Executar comparação', detalhe:'usa um documento de cada tipo disponível', grupo:'Ação', acao:function () { document.getElementById('scriptBriefRun').click(); } });
+          base.push({ icone:'＋', titulo:'Nova planilha', detalhe:'planilha em branco na área de trabalho', grupo:'Ação', acao:function () { novaPlanilha(); } });
+          if (prontos >= 2) base.push({ icone:'⚙', titulo:'Automação: comparação de fontes', detalhe:'usa os documentos marcados na barra lateral', grupo:'Ação', acao:function () { launchWorkspaceComparator(); } });
           if (temResultado) {
             base.push({ icone:'XLS', titulo:'Exportar para Excel', detalhe:'planilha com comparação e auditoria', grupo:'Ação', acao:function () { document.getElementById('compareExportXlsx').click(); } });
             base.push({ icone:'PDF', titulo:'Exportar para PDF', detalhe:'relatório com trilha de auditoria', grupo:'Ação', acao:function () { document.getElementById('compareExportPdf').click(); } });
@@ -2635,22 +2686,23 @@
         try {
           const stores = await getWfaStores();
           const papeis = papeisComRelatorio();
-          const id = 'exec-' + Date.now();
+          const livre = compareState.modo === 'livre' || !papeis.length;
+          const id = execucaoAberta || 'exec-' + Date.now();
           const resumo = {
             id: id,
-            script: 'Comparador de fontes',
+            script: livre ? 'Planilha' : 'Comparador de fontes',
             criadoEm: Date.now(),
             papeis: papeis,
             arquivos: papeis.map(function (papel) { return compareState.reports[papel].fileName; }),
-            municipio: compareState.reports[papeis[0]].municipality,
-            exercicio: compareState.reports[papeis[0]].exercise,
+            municipio: livre ? 'Planilha em branco' : compareState.reports[papeis[0]].municipality,
+            exercicio: livre ? '' : compareState.reports[papeis[0]].exercise,
             fontes: compareState.rows.filter(function (row) { return !row.deleted; }).length,
             totais: papeis.reduce(function (acc, papel) {
               acc[papel] = compareState.rows.reduce(function (soma, row) { return soma + row[papel]; }, 0);
               return acc;
             }, {})
           };
-          await stores.state.setItem(PREFIXO_EXEC + id, { resumo: resumo, reports: compareState.reports, rows: compareState.rows, audit: compareState.audit, colunasExtras: compareState.colunasExtras, titulos: compareState.titulos, formulas: compareState.formulas });
+          await stores.state.setItem(PREFIXO_EXEC + id, { resumo: resumo, modo: compareState.modo, reports: compareState.reports, rows: compareState.rows, audit: compareState.audit, colunasExtras: compareState.colunasExtras, titulos: compareState.titulos, formulas: compareState.formulas });
           execucaoAberta = id;
           renderExecucoes();
         } catch (error) { /* sem armazenamento: a execução segue apenas na tela */ }
@@ -2666,6 +2718,7 @@
       }
 
       function nomeDaExecucao(resumo) {
+        if (!resumo.papeis || !resumo.papeis.length) return 'Planilha';
         return resumo.papeis.map(function (papel) { return ROLE_INFO[papel] ? ROLE_INFO[papel].curto : papel; }).join('×');
       }
 
@@ -2722,6 +2775,7 @@
             if (!registro) return;
             registro.rows = compareState.rows;
             registro.audit = compareState.audit;
+            registro.modo = compareState.modo;
             registro.colunasExtras = compareState.colunasExtras;
             registro.titulos = compareState.titulos;
             registro.formulas = compareState.formulas;
@@ -2758,6 +2812,7 @@
           const stores = await getWfaStores();
           const registro = await stores.state.getItem(PREFIXO_EXEC + id);
           if (!registro) return;
+          compareState.modo = registro.modo || 'comparador';
           compareState.reports = registro.reports;
           compareState.rows = registro.rows;
           compareState.audit = registro.audit || [];
@@ -2769,13 +2824,15 @@
             const relatorio = compareState.reports[papel];
             if (relatorio) fileState(papel, 'ready', relatorio.fileName, relatorio.sources.size + ' fontes • total ' + formatBrl(relatorio.reportedTotal), 'Validado');
           });
+          const livre = compareState.modo === 'livre';
           renderCompareResults();
           compareDom.results.hidden = false;
           compareDom.empty.hidden = true;
-          compareDom.detailsToggle.hidden = false;
-          compareDom.auditToggle.hidden = false;
+          compareDom.detailsToggle.hidden = livre;
+          compareDom.auditToggle.hidden = livre;
           compareDom.view.classList.add('results-ready');
-          setCompareAlert('Execução de ' + new Date(registro.resumo.criadoEm).toLocaleString('pt-BR') + ' reaberta.');
+          compareDom.view.classList.remove('show-setup');
+          setCompareAlert(livre ? '' : 'Execução de ' + new Date(registro.resumo.criadoEm).toLocaleString('pt-BR') + ' reaberta.');
           selectView('comparador-fontes');
           renderExecucoes();
         } catch (error) { showToast('Não foi possível reabrir esta execução.'); }
@@ -2792,14 +2849,7 @@
         const aba = evento.target.closest('[data-exec]');
         if (aba) abrirExecucao(aba.dataset.exec);
       });
-      document.getElementById('sheetTabNew').addEventListener('click', async function () {
-        execucaoAberta = null;
-        clearTimeout(regravarTimer);
-        await limparComparacaoAtual();
-        renderExecucoes();
-        selectView('comparador-fontes');
-        showToast('Escolha os documentos e execute para criar uma nova aba.');
-      });
+      document.getElementById('sheetTabNew').addEventListener('click', function () { novaPlanilha(); });
       renderExecucoes();
 
       // barra lateral recolhida fica guardada entre sessões

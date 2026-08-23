@@ -428,6 +428,20 @@
     /* botão de pré-visualização legível sobre o rodapé claro da barra lateral */
     .app-view-site { background: white; border: 1px solid #24699a; color: #1c5278; font-weight: 700; }
     .app-view-site:hover { background: #24699a; border-color: #24699a; color: white; }
+    /* ---- área de trabalho sem planilha aberta ---- */
+    .area-vazia { max-width: 470px; margin: 44px auto; padding: 26px 28px; background: white; border: 1px solid #cdd8e0; text-align: center; }
+    .area-vazia-titulo { margin: 0 0 7px; color: #12293b; font: 700 17px/1.2 Cambria, Georgia, serif; }
+    .area-vazia-texto { margin: 0 0 18px; color: #5b7688; font-size: 12.5px; line-height: 1.55; }
+    .area-vazia-texto b { color: #12293b; }
+    .area-vazia-botao { padding: 9px 22px; background: #205e8a; border: 1px solid #205e8a; color: white; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .area-vazia-botao:hover { background: #1a4e73; }
+    .sheet-cmd-automacao { font-weight: 700; color: #205e8a; }
+    /* numa planilha em branco não há situação nem fonte para ordenar */
+    .planilha-livre #compareStatusFilter,
+    .planilha-livre [data-sheet-cmd="asc"],
+    .planilha-livre [data-sheet-cmd="desc"],
+    .planilha-livre [data-sheet-cmd="clear"] { display: none; }
+
     /* ================= galeria de scripts ================= */
     .galeria-intro { margin: 0 0 12px; color: #6b8290; font-size: 12.5px; }
     .galeria-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 12px; }
