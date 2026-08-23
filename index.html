@@ -535,6 +535,10 @@
     body.app-active .compare-summary-details summary { padding: 7px 11px; font-size: 12px; }
     body.app-active .compare-kpi { padding: 8px 10px; }
     body.app-active .compare-kpi strong { font-size: 17px; }
+    /* ---- arrastar a fórmula para baixo ---- */
+    .alca-preenchimento { position: fixed; z-index: 40; width: 9px; height: 9px; background: #157a63; border: 1px solid white; cursor: crosshair; }
+    .alca-preenchimento[hidden] { display: none; }
+    .compare-grid-table td.alvo-preenchimento { box-shadow: inset 0 0 0 1px #157a63; background: #eaf5f0 !important; }
     /* ---- guia de fórmulas ---- */
     .guia-formulas { position: fixed; z-index: 128; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(6,20,30,.55); }
     .guia-formulas[hidden] { display: none; }
@@ -2668,6 +2672,7 @@
   </section>
 
     <div class="app-toast" id="appToast" role="status"></div>
+    <div class="alca-preenchimento" id="alcaPreenchimento" hidden></div>
     <div class="sheet-menu" id="sheetMenu" hidden></div>
     <div class="guia-formulas" id="guiaFormulas" hidden>
       <div class="guia-box" role="dialog" aria-modal="true" aria-labelledby="guiaTitulo">
@@ -2972,7 +2977,7 @@
       };
       function papeisCarregados() { return COMPARE_ROLES.filter(function (papel) { return Boolean(compareState.files[papel]); }); }
       function papeisComRelatorio() { return COMPARE_ROLES.filter(function (papel) { return Boolean(compareState.reports[papel]); }); }
-      const compareState = { files: { budget: null, committed: null, collected: null }, reports: {}, rows: [], audit: [], editorMode: null, editorKey: null, sourceSort: 'asc', colunasExtras: [], titulos: {} };
+      const compareState = { files: { budget: null, committed: null, collected: null }, reports: {}, rows: [], audit: [], editorMode: null, editorKey: null, sourceSort: 'asc', colunasExtras: [], titulos: {}, formulas: {} };
       const compareDom = {
         run: document.getElementById('compareRun'), progress: document.getElementById('compareProgress'), alert: document.getElementById('compareAlert'), results: document.getElementById('compareResults'),
         processHint: document.getElementById('compareProcessHint'), tableBody: document.getElementById('compareTableBody'), search: document.getElementById('compareSearch'), status: document.getElementById('compareStatusFilter'),
@@ -3598,11 +3603,16 @@
         papeisComRelatorio().forEach(function (papel) {
           colunas.push({ id:papel, tipo:'moeda', titulo:ROLE_INFO[papel].curto, largura:118, classe:'cell-money' });
         });
+        // letras das colunas de valor, para montar a fórmula padrão de cada coluna calculada
         const par = parDeComparacao();
-        const rotuloPar = par ? ROLE_INFO[par.alvo].curto + ' − ' + ROLE_INFO[par.base].curto : '';
-        colunas.push({ id:'diferenca', tipo:'calculada', titulo:'Diferença', largura:130, formula:descricaoDoPar(), dica:rotuloPar });
-        const rotuloDivisao = par ? ROLE_INFO[par.alvo].curto + ' ÷ ' + ROLE_INFO[par.base].curto : '';
-        colunas.push({ id:'execucao', tipo:'calculada', titulo:'Execução', largura:96, formula:par ? ROLE_INFO[par.alvo].curto + ' dividido por ' + ROLE_INFO[par.base].curto : 'os relatórios carregados', dica:rotuloDivisao });
+        const letraDe = function (papel) {
+          const indice = colunas.findIndex(function (coluna) { return coluna.id === papel; });
+          return indice >= 0 ? LETRAS_COLUNA[indice] : '';
+        };
+        const padraoDiferenca = par ? '=' + letraDe(par.alvo) + '-' + letraDe(par.base) : '=0';
+        const padraoExecucao = par ? '=' + letraDe(par.alvo) + '/' + letraDe(par.base) + '*100' : '=0';
+        colunas.push({ id:'diferenca', tipo:'formula', formato:'moeda', titulo:'Diferença', largura:130, padrao:padraoDiferenca });
+        colunas.push({ id:'execucao', tipo:'formula', formato:'percentual', titulo:'Execução', largura:96, padrao:padraoExecucao });
         colunas.push({ id:'situacao', tipo:'calculada', titulo:'Situação', largura:170, formula:'comparação entre os relatórios' });
         (compareState.colunasExtras || []).forEach(function (extra) {
           const definicao = { id:extra.id, tipo:'livre', titulo:extra.titulo, largura:150, classe:'' };
@@ -3613,6 +3623,7 @@
         return colunas.map(function (coluna) {
           const personalizado = compareState.titulos && compareState.titulos[coluna.id];
           if (personalizado) coluna.titulo = personalizado;
+          if (coluna.tipo === 'formula') coluna.dica = formulaDaColuna(coluna);
           return coluna;
         });
       }
@@ -3817,6 +3828,17 @@
         compareDom.tableBody.innerHTML = rows.map(function (row, rowIndex) {
           const status = compareStatus(row);
           const celulas = colunas.map(function (coluna) {
+            if (coluna.tipo === 'formula') {
+              const formula = formulaDaColuna(coluna);
+              const resultado = avaliarFormula(formula, contextoFormula, rowIndex + 1);
+              let exibido = '#ERRO';
+              let classeValor = ' celula-erro';
+              if (!resultado.erro) {
+                exibido = coluna.formato === 'percentual' ? formatPercent(resultado.valor) : formatBrl(resultado.valor);
+                classeValor = coluna.formato === 'moeda' ? (resultado.valor < 0 ? ' value-negative' : resultado.valor > 0 ? ' value-positive' : '') : '';
+              }
+              return '<td class="num editable-cell col-' + escapeHtml(coluna.id) + classeValor + '"><input class="cell-editor cell-money" data-formula-col="' + escapeHtml(coluna.id) + '" data-bruto="' + escapeHtml(formula) + '" value="' + escapeHtml(exibido) + '" title="Fórmula da coluna: ' + escapeHtml(formula) + ' — editar aqui altera a coluna inteira" aria-label="' + escapeHtml(coluna.titulo) + '"></td>';
+            }
             if (coluna.tipo === 'calculada') {
               let extraClasse = '';
               if (coluna.id === 'diferenca') {
@@ -3982,6 +4004,18 @@
             selecao.addRange(faixa);
           } }
         ];
+        const definicao = colunasDaTabela().find(function (coluna) { return coluna.id === id; });
+        if (definicao && definicao.tipo === 'formula') {
+          itens.push({ rotulo:'Editar fórmula da coluna', acao:function () { editarFormulaDeColuna(id); } });
+          if (compareState.formulas && compareState.formulas[id]) {
+            itens.push({ rotulo:'Restaurar fórmula padrão', acao:function () {
+              delete compareState.formulas[id];
+              renderCompareTable();
+              regravarExecucaoAberta();
+              showToast('Fórmula padrão restaurada.');
+            } });
+          }
+        }
         if (ehLivre) itens.push({ rotulo:'Aplicar fórmula a toda a coluna', acao:function () { aplicarFormulaNaColuna(id); } });
         if (ehLivre) itens.push({ rotulo:'Limpar conteúdo da coluna', acao:function () {
           compareState.rows.forEach(function (row) { if (row.extras) delete row.extras[id]; });
@@ -4058,6 +4092,7 @@
           if (!execucaoAberta) {
             compareState.colunasExtras = [];
             compareState.titulos = {};
+            compareState.formulas = {};
             compareState.sourceSort = 'asc';
           }
           compareState.rows = mergeCompareReports();
@@ -4157,6 +4192,31 @@
       });
       // extras livres
       compareDom.tableBody.addEventListener('focusin', function (evento) {
+        const campoColuna = evento.target.closest('[data-formula-col]');
+        if (campoColuna) campoColuna.value = campoColuna.dataset.bruto;
+      });
+      compareDom.tableBody.addEventListener('focusout', function (evento) {
+        const campoColuna = evento.target.closest('[data-formula-col]');
+        if (campoColuna && document.contains(campoColuna) && campoColuna.value === campoColuna.dataset.bruto) renderCompareTable();
+      });
+      compareDom.tableBody.addEventListener('change', function (evento) {
+        const campoColuna = evento.target.closest('[data-formula-col]');
+        if (!campoColuna) return;
+        const id = campoColuna.dataset.formulaCol;
+        const formula = campoColuna.value.trim();
+        if (!ehFormula(formula)) { showToast('A fórmula precisa começar com o sinal de igual.'); renderCompareTable(); return; }
+        const colunas = colunasDaTabela();
+        const teste = avaliarFormula(formula, { colunas: colunas, letras: colunas.map(function (c, i) { return LETRAS_COLUNA[i]; }), linhas: activeCompareRows() }, 1);
+        if (teste.erro) { showToast(teste.detalhe); renderCompareTable(); return; }
+        compareState.formulas = compareState.formulas || {};
+        compareState.formulas[id] = formula;
+        renderCompareTable();
+        addAudit('Fórmula da coluna alterada', id + ' passou a usar ' + formula + '.', 'Estrutura');
+        regravarExecucaoAberta();
+        showToast('Fórmula aplicada à coluna inteira.');
+      });
+
+      compareDom.tableBody.addEventListener('focusin', function (evento) {
         const campo = evento.target.closest('[data-compare-extra]');
         if (campo && campo.dataset.bruto) campo.value = campo.dataset.bruto;
       });
@@ -4195,6 +4255,21 @@
       document.addEventListener('keydown', function (evento) { if (evento.key === 'Escape') fecharMenuPlanilha(); });
       window.addEventListener('scroll', fecharMenuPlanilha, { passive:true });
 
+      function formulaDaColuna(coluna) {
+        return (compareState.formulas && compareState.formulas[coluna.id]) || coluna.padrao;
+      }
+      function editarFormulaDeColuna(id) {
+        const coluna = colunasDaTabela().find(function (item) { return item.id === id; });
+        if (!coluna) return;
+        colunaDaFormula = id;
+        const entrada = document.getElementById('campoFormulaEntrada');
+        entrada.value = formulaDaColuna(coluna);
+        document.getElementById('campoFormulaTitulo').textContent = 'Fórmula de “' + coluna.titulo + '”';
+        document.getElementById('campoFormulaErro').hidden = true;
+        document.getElementById('campoFormula').hidden = false;
+        setTimeout(function () { entrada.focus(); entrada.select(); }, 20);
+      }
+
       // ---------- guia de fórmulas ----------
       const GUIA_FORMULAS = [
         { grupo:'Referências', itens:[
@@ -4221,6 +4296,10 @@
         { grupo:'Aninhadas', itens:[
           ['<code>=ABS(SOMA(C1;-D1))</code>', 'funções podem conter outras funções'],
           ['<code>=ARRED(MEDIA(C;D);0)</code>', 'sem limite de profundidade']
+        ]},
+        { grupo:'Preencher', itens:[
+          ['arrastar a alça', 'o quadrado verde no canto da célula copia a fórmula para baixo, ajustando as linhas'],
+          ['<code>Ctrl</code> + <code>D</code>', 'repete a célula de cima na célula atual']
         ]},
         { grupo:'Erros', itens:[
           ['<code>#NOME?</code>', 'a função não existe — passe o mouse para ver as disponíveis'],
@@ -4267,11 +4346,17 @@
           aviso.hidden = false;
           return;
         }
-        compareState.rows.forEach(function (row) {
-          if (row.deleted) return;
-          row.extras = row.extras || {};
-          row.extras[colunaDaFormula] = formula;
-        });
+        const definicao = colunasDaTabela().find(function (coluna) { return coluna.id === colunaDaFormula; });
+        if (definicao && definicao.tipo === 'formula') {
+          compareState.formulas = compareState.formulas || {};
+          compareState.formulas[colunaDaFormula] = formula;
+        } else {
+          compareState.rows.forEach(function (row) {
+            if (row.deleted) return;
+            row.extras = row.extras || {};
+            row.extras[colunaDaFormula] = formula;
+          });
+        }
         document.getElementById('campoFormula').hidden = true;
         renderCompareTable();
         addAudit('Fórmula aplicada à coluna', formula + ' — vale para todas as linhas.', 'Estrutura');
@@ -4293,6 +4378,131 @@
         const guia = document.getElementById('guiaFormulas');
         if (guia && !guia.hidden) guia.hidden = true;
       });
+
+      /* ============ Preenchimento arrastando para baixo ============
+         Como no Excel: as referências com número de linha acompanham o
+         deslocamento; as sem número já são relativas e ficam como estão. */
+      function deslocarReferencias(formula, deslocamento) {
+        return formula.replace(/([A-Z])(\d+)/g, function (todo, letra, numero) {
+          const destino = Number(numero) + deslocamento;
+          return destino >= 1 ? letra + destino : todo;
+        });
+      }
+
+      (function () {
+        const alca = document.getElementById('alcaPreenchimento');
+        if (!alca) return;
+        let origem = null;      // { chave, coluna, formula, indice }
+        let arrastando = false;
+        let ultimoAlvo = -1;
+
+        function celulaDaAlca() {
+          const ativo = document.activeElement;
+          if (!ativo || !ativo.dataset || !ativo.dataset.compareExtra) return null;
+          return ativo.closest('td');
+        }
+        function posicionar() {
+          const celula = celulaDaAlca();
+          if (!celula || arrastando) { if (!arrastando) alca.hidden = true; return; }
+          const caixa = celula.getBoundingClientRect();
+          const area = document.querySelector('.compare-table-wrap').getBoundingClientRect();
+          if (caixa.bottom < area.top || caixa.top > area.bottom) { alca.hidden = true; return; }
+          alca.style.left = (caixa.right - 5) + 'px';
+          alca.style.top = (caixa.bottom - 5) + 'px';
+          alca.hidden = false;
+        }
+        compareDom.tableBody.addEventListener('focusin', function () { setTimeout(posicionar, 0); });
+        compareDom.tableBody.addEventListener('focusout', function () { setTimeout(function () { if (!arrastando) posicionar(); }, 0); });
+        window.addEventListener('scroll', function () { if (!arrastando) alca.hidden = true; }, { passive:true });
+        const area = document.querySelector('.compare-table-wrap');
+        if (area) area.addEventListener('scroll', function () { if (!arrastando) alca.hidden = true; }, { passive:true });
+
+        function limparRealce() {
+          compareDom.tableBody.querySelectorAll('td.alvo-preenchimento').forEach(function (td) { td.classList.remove('alvo-preenchimento'); });
+        }
+
+        alca.addEventListener('mousedown', function (evento) {
+          const celula = celulaDaAlca();
+          if (!celula) return;
+          evento.preventDefault();
+          const campo = celula.querySelector('[data-compare-extra]');
+          const linha = celula.parentElement;
+          origem = {
+            chave: campo.dataset.rowKey,
+            coluna: campo.dataset.compareExtra,
+            indice: Array.prototype.indexOf.call(compareDom.tableBody.rows, linha)
+          };
+          const row = findCompareRow(origem.chave);
+          origem.conteudo = (row && row.extras && row.extras[origem.coluna]) || '';
+          arrastando = true;
+          ultimoAlvo = origem.indice;
+        });
+
+        document.addEventListener('mousemove', function (evento) {
+          if (!arrastando) return;
+          const alvo = document.elementFromPoint(evento.clientX, evento.clientY);
+          const linha = alvo && alvo.closest ? alvo.closest('#compareTableBody tr') : null;
+          if (!linha) return;
+          const indice = Array.prototype.indexOf.call(compareDom.tableBody.rows, linha);
+          if (indice === ultimoAlvo) return;
+          ultimoAlvo = indice;
+          limparRealce();
+          const inicio = Math.min(origem.indice, indice);
+          const fim = Math.max(origem.indice, indice);
+          for (let n = inicio; n <= fim; n += 1) {
+            const celula = compareDom.tableBody.rows[n].querySelector('[data-compare-extra="' + origem.coluna + '"]');
+            if (celula) celula.closest('td').classList.add('alvo-preenchimento');
+          }
+        });
+
+        document.addEventListener('mouseup', function () {
+          if (!arrastando) return;
+          arrastando = false;
+          limparRealce();
+          alca.hidden = true;
+          if (ultimoAlvo === origem.indice) return;
+          const inicio = Math.min(origem.indice, ultimoAlvo);
+          const fim = Math.max(origem.indice, ultimoAlvo);
+          let preenchidas = 0;
+          for (let n = inicio; n <= fim; n += 1) {
+            if (n === origem.indice) continue;
+            const celula = compareDom.tableBody.rows[n].querySelector('[data-compare-extra="' + origem.coluna + '"]');
+            if (!celula) continue;
+            const row = findCompareRow(celula.dataset.rowKey);
+            if (!row) continue;
+            row.extras = row.extras || {};
+            row.extras[origem.coluna] = ehFormula(origem.conteudo)
+              ? deslocarReferencias(origem.conteudo, n - origem.indice)
+              : origem.conteudo;
+            preenchidas += 1;
+          }
+          renderCompareTable();
+          regravarExecucaoAberta();
+          showToast(preenchidas + (preenchidas === 1 ? ' célula preenchida.' : ' células preenchidas.'));
+        });
+
+        // Ctrl+D repete a célula de cima, como no Excel
+        document.addEventListener('keydown', function (evento) {
+          if (!evento.ctrlKey || evento.key.toLowerCase() !== 'd') return;
+          const ativo = document.activeElement;
+          if (!ativo || !ativo.dataset || !ativo.dataset.compareExtra) return;
+          evento.preventDefault();
+          const linha = ativo.closest('tr');
+          const indice = Array.prototype.indexOf.call(compareDom.tableBody.rows, linha);
+          if (indice < 1) return;
+          const acima = compareDom.tableBody.rows[indice - 1].querySelector('[data-compare-extra="' + ativo.dataset.compareExtra + '"]');
+          if (!acima) return;
+          const rowAcima = findCompareRow(acima.dataset.rowKey);
+          const rowAtual = findCompareRow(ativo.dataset.rowKey);
+          if (!rowAcima || !rowAtual) return;
+          const conteudo = (rowAcima.extras && rowAcima.extras[ativo.dataset.compareExtra]) || '';
+          rowAtual.extras = rowAtual.extras || {};
+          rowAtual.extras[ativo.dataset.compareExtra] = ehFormula(conteudo) ? deslocarReferencias(conteudo, 1) : conteudo;
+          renderCompareTable();
+          regravarExecucaoAberta();
+          showToast('Célula preenchida a partir da linha de cima.');
+        });
+      }());
 
       function findCompareRow(key) { return compareState.rows.find(function (row) { return row.key === key && !row.deleted; }); }
       function commitCompareCell(input) {
@@ -4623,6 +4833,7 @@
             sourceSort: compareState.sourceSort,
             colunasExtras: compareState.colunasExtras,
             titulos: compareState.titulos,
+            formulas: compareState.formulas,
             execucaoAberta: typeof execucaoAberta === 'string' ? execucaoAberta : null,
             hasResults: compareDom.results.hidden === false,
             search: compareDom.search.value,
@@ -4666,6 +4877,7 @@
             compareState.sourceSort = savedCompare.sourceSort || 'asc';
             compareState.colunasExtras = savedCompare.colunasExtras || [];
             compareState.titulos = savedCompare.titulos || {};
+            compareState.formulas = savedCompare.formulas || {};
             if (savedCompare.execucaoAberta) execucaoAberta = savedCompare.execucaoAberta;
             [['budget', savedCompare.budgetId], ['committed', savedCompare.committedId], ['collected', savedCompare.collectedId]].forEach(function (entry) {
               const item = entry[1] ? findWorkspaceFile(entry[1]) : null;
@@ -5074,7 +5286,7 @@
               return acc;
             }, {})
           };
-          await stores.state.setItem(PREFIXO_EXEC + id, { resumo: resumo, reports: compareState.reports, rows: compareState.rows, audit: compareState.audit, colunasExtras: compareState.colunasExtras, titulos: compareState.titulos });
+          await stores.state.setItem(PREFIXO_EXEC + id, { resumo: resumo, reports: compareState.reports, rows: compareState.rows, audit: compareState.audit, colunasExtras: compareState.colunasExtras, titulos: compareState.titulos, formulas: compareState.formulas });
           execucaoAberta = id;
           renderExecucoes();
         } catch (error) { /* sem armazenamento: a execução segue apenas na tela */ }
@@ -5121,6 +5333,7 @@
         // colunas e títulos pertencem à planilha que foi encerrada
         compareState.colunasExtras = [];
         compareState.titulos = {};
+        compareState.formulas = {};
         compareState.sourceSort = 'asc';
         COMPARE_ROLES.forEach(function (papel) { compareState.files[papel] = null; });
         resetCompareOutput();
@@ -5147,6 +5360,7 @@
             registro.audit = compareState.audit;
             registro.colunasExtras = compareState.colunasExtras;
             registro.titulos = compareState.titulos;
+            registro.formulas = compareState.formulas;
             registro.resumo.fontes = compareState.rows.filter(function (row) { return !row.deleted; }).length;
             await stores.state.setItem(PREFIXO_EXEC + execucaoAberta, registro);
             renderExecucoes();
@@ -5185,6 +5399,7 @@
           compareState.audit = registro.audit || [];
           compareState.colunasExtras = registro.colunasExtras || [];
           compareState.titulos = registro.titulos || {};
+          compareState.formulas = registro.formulas || {};
           execucaoAberta = id;
           COMPARE_ROLES.forEach(function (papel) {
             const relatorio = compareState.reports[papel];
