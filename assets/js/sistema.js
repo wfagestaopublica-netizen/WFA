@@ -211,6 +211,13 @@
           return normalizeSearch(texto).includes(busca);
         });
       }
+      // O rascunho de uma planilha nova: uma coluna larga para nomes e as demais
+      // no tamanho de um valor, como numa folha de cálculo qualquer.
+      function colunasDoRascunho() {
+        const colunas = [novaColunaLivre(210)];
+        for (let c = 0; c < 11; c += 1) colunas.push(novaColunaLivre(128));
+        return colunas;
+      }
       function novaColunaLivre(largura) {
         return { id:'col-' + Math.random().toString(36).slice(2, 8) + Date.now().toString(36), titulo:'', ancora:null, lado:null, largura:largura || 150 };
       }
@@ -226,7 +233,7 @@
         compareState.editorMode = null;
         compareState.editorKey = null;
         COMPARE_ROLES.forEach(function (papel) { compareState.files[papel] = null; });
-        compareState.colunasExtras = [novaColunaLivre(220), novaColunaLivre(), novaColunaLivre(), novaColunaLivre(), novaColunaLivre()];
+        compareState.colunasExtras = colunasDoRascunho();
         compareState.rows = [];
         for (let n = 0; n < 18; n += 1) {
           compareState.rows.push({ key:'L' + (n + 1), description:'', co:[], extras:{}, ordem:n, edited:false, manual:true, deleted:false });
@@ -984,7 +991,7 @@
         const colunas = [];
         // Uma planilha em branco sem coluna nenhuma não serve para nada: devolve o rascunho.
         if (compareState.modo === 'livre' && !(compareState.colunasExtras || []).length && compareState.rows.length) {
-          compareState.colunasExtras = [novaColunaLivre(220), novaColunaLivre(), novaColunaLivre(), novaColunaLivre(), novaColunaLivre()];
+          compareState.colunasExtras = colunasDoRascunho();
         }
         // Planilha em branco: existem só as colunas que você criou.
         if (compareState.modo !== 'livre') {
@@ -1211,7 +1218,6 @@
                 '<button class="menu-coluna" type="button" data-menu-coluna="' + escapeHtml(coluna.id) + '" title="Opções da coluna" aria-label="Opções da coluna">▾</button>' +
               '</span>' +
               (coluna.dica ? '<small class="dica-coluna">' + escapeHtml(coluna.dica) + '</small>' : '') +
-              (coluna.tipo === 'livre' ? '<button class="remover-coluna" type="button" data-remover-coluna="' + escapeHtml(coluna.id) + '" title="Remover coluna">×</button>' : '') +
               '</th>';
           }).join('') + '</tr>';
         document.getElementById('compareHead').innerHTML = letras + titulos;
@@ -1562,19 +1568,6 @@
           evento.stopPropagation();
           abrirMenuColuna(evento, gatilhoMenu.closest('th'));
           return;
-        }
-        const remover = evento.target.closest('[data-remover-coluna]');
-        if (remover) {
-          const id = remover.dataset.removerColuna;
-          window.wfaConfirmar('A coluna e o que foi digitado nela serão removidos da tabela.', 'Remover coluna', 'Remover')
-            .then(function (sim) {
-              if (!sim) return;
-              compareState.colunasExtras = (compareState.colunasExtras || []).filter(function (coluna) { return coluna.id !== id; });
-              compareState.rows.forEach(function (row) { if (row.extras) delete row.extras[id]; });
-              renderCompareTable();
-              addAudit('Coluna removida', 'A coluna personalizada foi excluída da tabela.', 'Estrutura');
-              regravarExecucaoAberta();
-            });
         }
       });
       // renomear título: confirma ao sair do campo ou com Enter

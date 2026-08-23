@@ -603,8 +603,6 @@
     .titulo-coluna { display: inline-block; min-width: 24px; padding: 1px 3px; border-radius: 2px; outline: 0; cursor: text; }
     .titulo-coluna:hover { background: rgba(255,255,255,.16); }
     .titulo-coluna:focus { background: white; color: #12293b; box-shadow: 0 0 0 2px var(--gold-500); }
-    .remover-coluna { margin-left: 6px; padding: 0 4px; border: 0; border-radius: 2px; background: transparent; color: rgba(255,255,255,.6); font: inherit; font-size: 13px; line-height: 1; cursor: pointer; }
-    .remover-coluna:hover { background: #c9403f; color: white; }
     .compare-grid-table td.coluna-calculada { cursor: help; }
 
     /* ---- densidade da tela do comparador ---- */
