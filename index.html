@@ -2568,7 +2568,7 @@
                     <button type="button" data-sheet-cmd="clear" title="Limpar busca e filtros">Limpar filtros</button>
                     <button type="button" data-sheet-cmd="xlsx" title="Exportar para Excel">Exportar</button>
                   </span>
-                  <span class="sheet-hint">Setas navegam · Enter desce · Tab avança · Esc desfaz a célula · Nas colunas criadas por você: <b>=C2-D2</b>, <b>=SOMA(C2:C9)</b>, <b>=MEDIA(E2:E9)</b></span>
+                  <span class="sheet-hint">Setas navegam · Enter desce · Tab avança · Esc desfaz a célula · Nas colunas criadas por você: <b>=C2-D2</b>, <b>=SOMA(C2:C9)</b>, <b>=SOMA(C1;D1)</b>, <b>=ABS(E2)</b>, <b>=ARRED(C2/D2;2)</b></span>
                 </div>
                 <div class="compare-table-wrap"><table class="compare-table compare-grid-table" id="compareTable"><colgroup id="compareCols"></colgroup><thead id="compareHead"></thead><tbody id="compareTableBody"></tbody><tfoot id="compareFoot"></tfoot></table></div>
                 <div class="compare-table-footer"><span id="compareCount">0 fontes exibidas</span><span>Células claras são editáveis • Enter salva • Esc cancela</span><span>Valores em reais (R$)</span></div>
@@ -3609,7 +3609,10 @@
         MEDIA: function (valores) { return valores.length ? valores.reduce(function (a, b) { return a + b; }, 0) / valores.length : 0; },
         MIN: function (valores) { return valores.length ? Math.min.apply(null, valores) : 0; },
         MAX: function (valores) { return valores.length ? Math.max.apply(null, valores) : 0; },
-        CONT: function (valores) { return valores.length; }
+        CONT: function (valores) { return valores.length; },
+        ABS: function (valores) { return Math.abs(valores[0] || 0); },
+        ARRED: function (valores) { const casas = valores.length > 1 ? valores[1] : 2; const fator = Math.pow(10, casas); return Math.round((valores[0] || 0) * fator) / fator; },
+        SE: function (valores) { return valores[0] ? (valores.length > 1 ? valores[1] : 1) : (valores.length > 2 ? valores[2] : 0); }
       };
 
       function ehFormula(texto) { return typeof texto === 'string' && texto.trim().charAt(0) === '='; }
@@ -3632,36 +3635,72 @@
         return 0;
       }
 
+      // aritmética pura: troca referências por números e resolve a conta
+      function avaliarAritmetica(expressao, contexto) {
+        // resultados de funções já resolvidas voltam como marcadores, sem parênteses,
+        // para não atrapalhar o reconhecimento de uma função externa
+        let conta = expressao.replace(/#(\d+)#/g, function (todo, indice) {
+          return '(' + String(contexto.parciais[Number(indice)]) + ')';
+        });
+        conta = conta.replace(/([A-Z])(\d+)/g, function (todo, letra, numero) {
+          return '(' + String(valorDaCelula(letra, Number(numero), contexto)) + ')';
+        });
+        conta = conta.replace(/(\d),(\d)/g, '$1.$2');   // vírgula decimal
+        if (/[^0-9+\-*/().\s]/.test(conta)) throw new Error('sintaxe');
+        const resultado = Function('"use strict";return (' + conta + ')')();
+        if (!Number.isFinite(resultado)) throw new Error('resultado');
+        return resultado;
+      }
+
+      // separa argumentos por ; ou por vírgula que não seja decimal
+      function separarArgumentos(texto) {
+        return texto.split(/;|,(?!\d)/).map(function (parte) { return parte.trim(); }).filter(function (parte) { return parte.length; });
+      }
+
+      function semAcento(texto) {
+        return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      }
+
       function avaliarFormula(texto, contexto) {
         try {
-          let expressao = texto.trim().slice(1).toUpperCase();
-          // funções sobre intervalo: SOMA(C2:C9)
-          expressao = expressao.replace(/([A-Z]+)\(\s*([A-Z])(\d+)\s*:\s*([A-Z])(\d+)\s*\)/g, function (todo, nome, colunaA, linhaA, colunaB, linhaB) {
-            const funcao = FUNCOES_PLANILHA[nome];
-            if (!funcao) return 'ERRO';
-            const inicio = Math.min(Number(linhaA), Number(linhaB));
-            const fim = Math.max(Number(linhaA), Number(linhaB));
-            const valores = [];
-            for (let n = inicio; n <= fim; n += 1) valores.push(valorDaCelula(colunaA, n, contexto));
-            return String(funcao(valores));
-          });
-          // referências simples: C2
-          expressao = expressao.replace(/([A-Z])(\d+)/g, function (todo, letra, numero) {
-            return String(valorDaCelula(letra, Number(numero), contexto));
-          });
-          if (/[^0-9+\-*/().,\s]/.test(expressao)) return { erro: true };
-          expressao = expressao.replace(/,/g, '.');
-          const resultado = Function('"use strict";return (' + expressao + ')')();
-          if (!Number.isFinite(resultado)) return { erro: true };
-          return { valor: resultado };
-        } catch (erro) { return { erro: true }; }
+          let expressao = semAcento(texto.trim().slice(1)).toUpperCase();
+          contexto.parciais = [];
+          let voltas = 0;
+          // resolve as funções de dentro para fora
+          const chamada = /([A-Z]{2,})\(([^()]*)\)/;
+          while (chamada.test(expressao)) {
+            if (voltas += 1, voltas > 50) throw new Error('complexa');
+            expressao = expressao.replace(chamada, function (todo, nome, argumentos) {
+              const funcao = FUNCOES_PLANILHA[nome];
+              if (!funcao) throw new Error('nome:' + nome);
+              const valores = [];
+              separarArgumentos(argumentos).forEach(function (parte) {
+                const intervalo = parte.match(/^([A-Z])(\d+)\s*:\s*([A-Z])(\d+)$/);
+                if (intervalo) {
+                  const inicio = Math.min(Number(intervalo[2]), Number(intervalo[4]));
+                  const fim = Math.max(Number(intervalo[2]), Number(intervalo[4]));
+                  for (let n = inicio; n <= fim; n += 1) valores.push(valorDaCelula(intervalo[1], n, contexto));
+                  return;
+                }
+                valores.push(avaliarAritmetica(parte, contexto));
+              });
+              contexto.parciais.push(funcao(valores));
+              return '#' + (contexto.parciais.length - 1) + '#';
+            });
+          }
+          return { valor: avaliarAritmetica(expressao, contexto) };
+        } catch (erro) {
+          const motivo = String(erro.message || '');
+          if (motivo.indexOf('nome:') === 0) return { erro: true, rotulo: '#NOME?', detalhe: 'A função ' + motivo.slice(5) + ' não existe. Disponíveis: ' + Object.keys(FUNCOES_PLANILHA).join(', ') + '.' };
+          return { erro: true, rotulo: '#ERRO', detalhe: 'Confira a fórmula: parênteses, referências como C1 e o separador ; entre argumentos.' };
+        }
       }
 
       function textoDaCelulaLivre(row, coluna, contexto) {
         const bruto = (row.extras && row.extras[coluna.id]) || '';
         if (!ehFormula(bruto)) return { exibido: bruto, formula: false };
         const resultado = avaliarFormula(bruto, contexto);
-        if (resultado.erro) return { exibido: '#ERRO', formula: true, erro: true };
+        if (resultado.erro) return { exibido: resultado.rotulo, formula: true, erro: true, detalhe: resultado.detalhe };
         return { exibido: formatBrl(resultado.valor), formula: true };
       }
 
@@ -3736,7 +3775,7 @@
               const bruto = (row.extras && row.extras[coluna.id]) || '';
               const saida = textoDaCelulaLivre(row, coluna, contextoFormula);
               const classes = 'editable-cell col-' + escapeHtml(coluna.id) + (saida.formula ? ' celula-formula' : '') + (saida.erro ? ' celula-erro' : '');
-              return '<td class="' + classes + (saida.formula ? ' num' : '') + '"><input class="cell-editor" data-compare-extra="' + escapeHtml(coluna.id) + '" data-row-key="' + escapeHtml(row.key) + '" data-bruto="' + escapeHtml(bruto) + '" value="' + escapeHtml(saida.exibido) + '" title="' + escapeHtml(saida.formula ? bruto : 'Aceita texto ou fórmula começando com =') + '" aria-label="' + escapeHtml(coluna.titulo) + '"></td>';
+              return '<td class="' + classes + (saida.formula ? ' num' : '') + '"><input class="cell-editor" data-compare-extra="' + escapeHtml(coluna.id) + '" data-row-key="' + escapeHtml(row.key) + '" data-bruto="' + escapeHtml(bruto) + '" value="' + escapeHtml(saida.exibido) + '" title="' + escapeHtml(saida.erro ? saida.detalhe : saida.formula ? bruto : 'Aceita texto ou fórmula começando com =') + '" aria-label="' + escapeHtml(coluna.titulo) + '"></td>';
             }
             const campo = coluna.id === 'key' ? 'code' : coluna.id;
             let valor = row[coluna.id];
@@ -3951,6 +3990,12 @@
           if (new Set(municipios).size > 1) throw new Error('Os relatórios parecem pertencer a municípios diferentes. Revise os arquivos antes de comparar.');
 
           compareState.reports = relatorios;
+          // planilha nova: não herda colunas nem títulos da execução anterior
+          if (!execucaoAberta) {
+            compareState.colunasExtras = [];
+            compareState.titulos = {};
+            compareState.sourceSort = 'asc';
+          }
           compareState.rows = mergeCompareReports();
           papeis.forEach(function (papel) {
             const relatorio = relatorios[papel];
@@ -4406,6 +4451,7 @@
             sourceSort: compareState.sourceSort,
             colunasExtras: compareState.colunasExtras,
             titulos: compareState.titulos,
+            execucaoAberta: typeof execucaoAberta === 'string' ? execucaoAberta : null,
             hasResults: compareDom.results.hidden === false,
             search: compareDom.search.value,
             status: compareDom.status.value
@@ -4448,6 +4494,7 @@
             compareState.sourceSort = savedCompare.sourceSort || 'asc';
             compareState.colunasExtras = savedCompare.colunasExtras || [];
             compareState.titulos = savedCompare.titulos || {};
+            if (savedCompare.execucaoAberta) execucaoAberta = savedCompare.execucaoAberta;
             [['budget', savedCompare.budgetId], ['committed', savedCompare.committedId], ['collected', savedCompare.collectedId]].forEach(function (entry) {
               const item = entry[1] ? findWorkspaceFile(entry[1]) : null;
               if (!item) return;
@@ -4877,6 +4924,9 @@
         const faixa = document.getElementById('sheetTabsList');
         if (!faixa) return;
         const registros = await lerExecucoes();
+        if (registros.length && !execucaoAberta && !compareDom.results.hidden) {
+          execucaoAberta = registros[registros.length - 1].resumo.id;
+        }
         if (!registros.length) {
           faixa.innerHTML = '<span class="sheet-tabs-vazio">Nenhuma execução salva — rode um script para criar a primeira aba.</span>';
           return;
@@ -4895,6 +4945,10 @@
         compareState.rows = [];
         compareState.reports = {};
         compareState.audit = [];
+        // colunas e títulos pertencem à planilha que foi encerrada
+        compareState.colunasExtras = [];
+        compareState.titulos = {};
+        compareState.sourceSort = 'asc';
         COMPARE_ROLES.forEach(function (papel) { compareState.files[papel] = null; });
         resetCompareOutput();
         updateCompareReady();
@@ -4907,7 +4961,7 @@
       }
 
       // a aba aberta acompanha as edições de estrutura e de células
-      let regravarTimer = null;
+      var regravarTimer = null;
       function regravarExecucaoAberta() {
         if (!execucaoAberta) return;
         clearTimeout(regravarTimer);
@@ -4928,16 +4982,21 @@
       }
 
       async function excluirExecucao(id) {
+        // tira a aba da tela imediatamente: o banco é lento demais para o clique
+        const abaNaTela = document.querySelector('.sheet-tab[data-exec="' + id + '"]');
+        if (abaNaTela) abaNaTela.remove();
         try {
           const stores = await getWfaStores();
           await stores.state.removeItem(PREFIXO_EXEC + id);
         } catch (error) { /* ignora */ }
         const eraAAberta = execucaoAberta === id;
-        if (eraAAberta) execucaoAberta = null;
+        if (eraAAberta) { execucaoAberta = null; clearTimeout(regravarTimer); }
         const restantes = await lerExecucoes();
-        if (eraAAberta) {
-          if (restantes.length) await abrirExecucao(restantes[restantes.length - 1].resumo.id);
-          else await limparComparacaoAtual();
+        if (!restantes.length) {
+          execucaoAberta = null;
+          await limparComparacaoAtual();
+        } else if (eraAAberta) {
+          await abrirExecucao(restantes[restantes.length - 1].resumo.id);
         }
         renderExecucoes();
         showToast('Execução excluída.');
@@ -4983,6 +5042,7 @@
       });
       document.getElementById('sheetTabNew').addEventListener('click', async function () {
         execucaoAberta = null;
+        clearTimeout(regravarTimer);
         await limparComparacaoAtual();
         renderExecucoes();
         selectView('comparador-fontes');
