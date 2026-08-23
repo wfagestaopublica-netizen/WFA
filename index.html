@@ -437,6 +437,52 @@
     /* botão de pré-visualização legível sobre o rodapé claro da barra lateral */
     .app-view-site { background: white; border: 1px solid #24699a; color: #1c5278; font-weight: 700; }
     .app-view-site:hover { background: #24699a; border-color: #24699a; color: white; }
+    /* ================= tela de execução do script ================= */
+    .exec { width: min(100%, 1080px); background: white; border: 1px solid #cdd8e0; }
+    .exec-topo { display: flex; align-items: center; gap: 13px; padding: 13px 18px; background: #12293b; color: white; }
+    .exec-marca { width: 34px; height: 34px; flex: none; display: grid; place-items: center; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); color: white; font: 700 12px Cambria, Georgia, serif; letter-spacing: .04em; }
+    .exec-identidade small { display: block; color: rgba(255,255,255,.55); font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .exec-identidade h3 { margin: 2px 0 0; font: 700 17px/1.1 Cambria, Georgia, serif; }
+    .exec-estado { margin-left: auto; padding: 4px 10px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); font-size: 11px; font-weight: 700; letter-spacing: .03em; }
+    .exec-estado.pronto { background: #2f7d55; border-color: #2f7d55; }
+
+    .exec-grade { display: grid; grid-template-columns: 290px minmax(0, 1fr); align-items: stretch; }
+    .exec-sobre { padding: 15px 18px; background: #f6f9fb; border-right: 1px solid #e2e9ee; }
+    .exec-titulo-bloco { margin: 0 0 5px; color: #7b8f9c; font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .exec-titulo-bloco:not(:first-child) { margin-top: 14px; }
+    .exec-sobre p { color: #4f6675; font-size: 12.5px; line-height: 1.5; }
+    .exec-sobre p b { color: #12293b; }
+    .exec-nota { margin: 12px 0 0 !important; padding-top: 10px; border-top: 1px solid #e2e9ee; color: #8399a6 !important; font-size: 11.5px !important; }
+    .exec-tipos { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+    .exec-tipos li { display: flex; align-items: center; gap: 7px; color: #4f6675; font-size: 12px; }
+    .exec-tipos .marcador { width: 6px; height: 6px; flex: none; border-radius: 50%; background: #c3d0d9; }
+    .exec-tipos li.tem .marcador { background: #2f7d55; }
+    .exec-tipos li.tem { color: #12293b; font-weight: 600; }
+
+    .exec-lista { display: flex; flex-direction: column; min-height: 210px; }
+    .exec-lista-topo { display: flex; align-items: center; justify-content: space-between; padding: 9px 16px; border-bottom: 1px solid #e2e9ee; color: #7b8f9c; font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .exec-lista-topo button { padding: 3px 9px; background: white; border: 1px solid #cdd8e0; color: #24455c; font: inherit; font-size: 10px; font-weight: 700; letter-spacing: .04em; cursor: pointer; }
+    .exec-lista-topo button:hover { border-color: #205e8a; color: #205e8a; }
+    .exec-docs { flex: 1; margin: 0; padding: 0; list-style: none; overflow-y: auto; }
+    .exec-docs li { border-bottom: 1px solid #eef2f5; }
+    .exec-docs label { display: grid; grid-template-columns: 18px minmax(0,1fr) 130px 70px; align-items: center; gap: 11px; padding: 8px 16px; cursor: pointer; }
+    .exec-docs label:hover { background: #f6f9fb; }
+    .exec-docs li.tem label { background: #eef5fa; }
+    .exec-docs input { position: absolute; opacity: 0; pointer-events: none; }
+    .exec-docs .caixa { width: 16px; height: 16px; display: grid; place-items: center; border: 1px solid #b6c6d1; background: white; color: white; font-size: 11px; font-weight: 700; }
+    .exec-docs li.tem .caixa { background: #205e8a; border-color: #205e8a; }
+    .exec-docs b { display: block; color: #12293b; font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .exec-docs .tipo { color: #5b7688; font-size: 11.5px; }
+    .exec-docs .peso { color: #93a6b2; font-size: 11px; text-align: right; }
+    .exec-vazio { padding: 26px 16px; color: #8399a6; font-size: 12.5px; text-align: center; }
+
+    .exec-rodape { display: flex; align-items: center; gap: 10px; padding: 11px 16px; background: #f6f9fb; border-top: 1px solid #e2e9ee; }
+    .exec-dica { flex: 1; color: #7b8f9c; font-size: 11.5px; }
+    .exec-dica.alerta { color: #b0393a; font-weight: 600; }
+    .exec-rodape button { padding: 8px 16px; border: 1px solid #cdd8e0; background: white; color: #24455c; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+    .exec-rodape button:hover:not(:disabled) { border-color: #205e8a; }
+    .exec-principal { background: #205e8a !important; border-color: #205e8a !important; color: white !important; }
+    .exec-principal:disabled { opacity: .45; cursor: not-allowed; }
     .script-brief { max-width: 720px; padding: 26px 28px; background: white; border: 1px solid #c9d5dc; }
     .script-brief-head { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid #e2e9ed; }
     .script-brief-mark { width: 44px; height: 44px; flex: none; display: grid; place-items: center; background: #205e8a; color: white; font: 700 15px Cambria, Georgia, serif; }
@@ -547,7 +593,8 @@
     .app-recolher:hover { color: #205e8a; background: rgba(32,94,138,.08); }
     body.app-active .app-nav-label { padding: 12px 14px 5px; font-size: 8px; letter-spacing: .14em; }
     body.app-active .app-nav { gap: 1px; padding: 0 8px; }
-    body.app-active .app-nav button { min-height: 32px; padding: 0 9px; gap: 9px; font-size: 12px; }
+    body.app-active .app-nav button { min-height: 32px; padding: 0 9px; gap: 9px; border-left: 0; border-radius: 3px; font-size: 12px; }
+    body.app-active .app-nav button.active .app-nav-icon { color: #205e8a; }
     body.app-active .app-nav-icon { width: 22px; height: 22px; border: 0; background: transparent; }
     body.app-active .app-nav-texto { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     body.app-active .sidebar-files-heading { min-height: 0; padding: 10px 10px 4px 14px; }
@@ -2194,7 +2241,7 @@
     .app-nav-label { color: #78838b; }
     .app-nav button { color: #5d6c77; }
     .app-nav button:hover { color: #1b4e73; background: #e3e8eb; }
-    .app-nav button.active { color: #1c5278; background: #dce4ea; border-left-color: #24699a; }
+    .app-nav button.active { color: #12293b; background: #dce7ef; border-left-color: transparent; font-weight: 700; }
     .app-nav button[disabled] { color: #8c949a; }
     .app-nav button[disabled]:hover { background: transparent; }
     .app-nav-icon { color: #346181; background: rgba(255,255,255,.62); border-color: #c8d0d6; }
@@ -2616,19 +2663,37 @@
         <section class="app-view compare-view" id="compareView" data-view-panel="comparador-fontes">
           <div class="view-heading compare-workspace-heading compare-menu-only" hidden><button class="compare-files-button" id="compareFilesToggle" type="button" hidden aria-expanded="false" aria-controls="compareSetup"><b id="compareFilesButtonLabel">Documentos</b><span id="compareFilesButtonCount">0/2</span></button><button id="compareOptionsToggle" type="button" hidden aria-expanded="false" aria-controls="compareOptionsMenu">Menu</button><div id="compareOptionsMenu" hidden></div></div>
           <div class="compare-shell">
-            <article class="script-brief" id="compareEmptyState">
-              <header class="script-brief-head">
-                <span class="script-brief-mark" aria-hidden="true">CF</span>
-                <div><small>Script de conferência</small><h3 id="compareEmptyTitle">Comparador de fontes</h3></div>
-                <span class="script-brief-state" id="scriptBriefState">0 de 3</span>
+            <section class="exec" id="compareEmptyState">
+              <header class="exec-topo">
+                <span class="exec-marca" aria-hidden="true">CF</span>
+                <div class="exec-identidade">
+                  <small>Script de conferência</small>
+                  <h3 id="compareEmptyTitle">Comparador de fontes</h3>
+                </div>
+                <span class="exec-estado" id="scriptBriefState">0 de 3</span>
               </header>
-              <p class="script-brief-text" id="compareEmptyText">Lê o quadro <b>Total por fonte de recurso</b> no fim de cada relatório e cruza os valores fonte a fonte. Escolha abaixo quais documentos entram nesta execução — dois já bastam, e cada tipo entra uma vez.</p>
-              <ul class="script-brief-inputs" id="scriptBriefInputs"></ul>
-              <div class="script-brief-actions">
-                <button class="script-brief-run" id="scriptBriefRun" type="button" disabled>Executar comparação</button>
-                <button type="button" data-app-view="workspace">Carregar documentos</button>
+              <div class="exec-grade">
+                <aside class="exec-sobre">
+                  <p class="exec-titulo-bloco">O que este script faz</p>
+                  <p id="compareEmptyText">Lê o quadro <b>Total por fonte de recurso</b> no fim de cada relatório e cruza os valores fonte a fonte.</p>
+                  <p class="exec-titulo-bloco">Relatórios aceitos</p>
+                  <ul class="exec-tipos" id="scriptBriefTipos"></ul>
+                  <p class="exec-nota">Dois documentos já bastam. O terceiro entra como coluna extra na planilha.</p>
+                </aside>
+                <div class="exec-lista">
+                  <div class="exec-lista-topo">
+                    <span>Documentos disponíveis</span>
+                    <button type="button" data-app-view="workspace">Gerenciar</button>
+                  </div>
+                  <ul class="exec-docs" id="scriptBriefInputs"></ul>
+                </div>
               </div>
-            </article>
+              <footer class="exec-rodape">
+                <span class="exec-dica" id="scriptBriefDica">Marque os documentos que entram nesta execução.</span>
+                <button type="button" class="exec-secundario" id="scriptBriefUpload">Carregar documentos</button>
+                <button type="button" class="exec-principal" id="scriptBriefRun" disabled>Escolha ao menos dois documentos</button>
+              </footer>
+            </section>
             <div class="compare-files-backdrop" id="compareFilesBackdrop" hidden></div>
             <section class="compare-setup expanded" id="compareSetup" aria-label="Preparação da comparação" aria-hidden="true" inert hidden>
               <button id="compareFilesClose" type="button" hidden aria-label="Fechar painel de documentos">×</button>
@@ -2990,16 +3055,31 @@
         const lista = document.getElementById('scriptBriefInputs');
         if (!lista || typeof workspaceState === 'undefined') return;
         const elegiveis = documentosElegiveis();
-        // descarta seleções de arquivos que saíram da central
         Array.from(selecaoScript).forEach(function (id) {
           if (!elegiveis.some(function (item) { return item.id === id; })) selecaoScript.delete(id);
         });
+
+        // tipos aceitos, com marcador de disponibilidade
+        const tipos = document.getElementById('scriptBriefTipos');
+        if (tipos) {
+          tipos.innerHTML = COMPARE_ROLES.map(function (papel) {
+            const tem = elegiveis.some(function (item) { return item.role === papel; });
+            return '<li class="' + (tem ? 'tem' : '') + '"><span class="marcador"></span>' + escapeHtml(ROLE_INFO[papel].nome) + '</li>';
+          }).join('');
+        }
+
         if (!elegiveis.length) {
-          lista.innerHTML = '<li class="script-brief-vazio">Nenhum documento reconhecido na central. Carregue relatórios em PDF para escolher aqui.</li>';
+          lista.innerHTML = '<li class="exec-vazio">Nenhum relatório reconhecido ainda. Carregue os PDFs para escolher aqui.</li>';
         } else {
           lista.innerHTML = elegiveis.map(function (item) {
             const marcado = selecaoScript.has(item.id);
-            return '<li class="' + (marcado ? 'tem' : '') + '"><label><input type="checkbox" data-script-doc="' + escapeHtml(item.id) + '"' + (marcado ? ' checked' : '') + '><span class="marca" aria-hidden="true">' + (marcado ? '✓' : '') + '</span><span><b>' + escapeHtml(item.file.name) + '</b><small>' + escapeHtml(ROLE_INFO[item.role].nome) + ' • ' + escapeHtml(formatBytes(item.file.size)) + '</small></span></label></li>';
+            return '<li class="' + (marcado ? 'tem' : '') + '"><label>' +
+              '<input type="checkbox" data-script-doc="' + escapeHtml(item.id) + '"' + (marcado ? ' checked' : '') + '>' +
+              '<span class="caixa" aria-hidden="true">' + (marcado ? '✓' : '') + '</span>' +
+              '<b title="' + escapeHtml(item.file.name) + '">' + escapeHtml(item.file.name) + '</b>' +
+              '<span class="tipo">' + escapeHtml(ROLE_INFO[item.role].nome) + '</span>' +
+              '<span class="peso">' + escapeHtml(formatBytes(item.file.size)) + '</span>' +
+              '</label></li>';
           }).join('');
         }
         atualizarResumoDoBrief();
@@ -3011,15 +3091,21 @@
         const total = selecaoScript.size;
         const marcador = document.getElementById('scriptBriefState');
         if (marcador) {
-          marcador.textContent = total + ' de ' + elegiveis.length + ' escolhidos';
+          marcador.textContent = total + ' de ' + elegiveis.length;
           marcador.classList.toggle('pronto', total >= 2 && !conflito);
         }
         const botao = document.getElementById('scriptBriefRun');
         if (botao) {
           botao.disabled = total < 2 || Boolean(conflito);
-          botao.textContent = conflito ? 'Dois documentos de ' + conflito.toLowerCase()
-            : total >= 2 ? 'Executar com ' + total + ' documentos'
-            : 'Escolha ao menos dois documentos';
+          botao.textContent = total >= 2 && !conflito ? 'Executar com ' + total + ' documentos' : 'Executar';
+        }
+        const dica = document.getElementById('scriptBriefDica');
+        if (dica) {
+          dica.textContent = conflito ? 'Há dois documentos de ' + conflito.toLowerCase() + ' marcados. Deixe apenas um.'
+            : total >= 2 ? 'Pronto para executar com ' + total + ' documentos.'
+            : elegiveis.length ? 'Marque ao menos dois documentos de tipos diferentes.'
+            : 'Carregue relatórios em PDF para começar.';
+          dica.classList.toggle('alerta', Boolean(conflito));
         }
       }
       // mostra na barra lateral quantos documentos o script já tem prontos
@@ -3534,10 +3620,11 @@
         if (caixa.checked) selecaoScript.add(caixa.dataset.scriptDoc); else selecaoScript.delete(caixa.dataset.scriptDoc);
         const item = caixa.closest('li');
         item.classList.toggle('tem', caixa.checked);
-        const marca = item.querySelector('.marca');
+        const marca = item.querySelector('.caixa');
         if (marca) marca.textContent = caixa.checked ? '✓' : '';
         atualizarResumoDoBrief();
       });
+      document.getElementById('scriptBriefUpload').addEventListener('click', function () { workspaceDom.upload.click(); });
       document.getElementById('scriptBriefRun').addEventListener('click', function () {
         if (selecaoScript.size < 2) return;
         workspaceState.selected = new Set(selecaoScript);
@@ -5109,9 +5196,21 @@
         var corpo = document.getElementById('compareTableBody');
         if (!corpo) return;
         var caixaNome = document.getElementById('sheetNameBox');
-        var celulaLigada = null;
+        var celulaLigada = null;   // { seletor } — reencontrada na hora de gravar
         var barraFormula = document.getElementById('sheetFormula');
         var botaoExcluir = document.querySelector('[data-sheet-cmd="del"]');
+
+        function seletorDaCelula(campo) {
+          var chave = campo.dataset.rowKey ? campo.dataset.rowKey.replace(/"/g, '\\"') : '';
+          if (campo.dataset.compareCell) return '[data-compare-cell="' + campo.dataset.compareCell + '"][data-row-key="' + chave + '"]';
+          if (campo.dataset.compareExtra) return '[data-compare-extra="' + campo.dataset.compareExtra + '"][data-row-key="' + chave + '"]';
+          if (campo.dataset.formulaCol) {
+            var linha = campo.closest('tr');
+            var indice = Array.prototype.indexOf.call(corpo.rows, linha) + 1;
+            return 'tr:nth-child(' + indice + ') [data-formula-col="' + campo.dataset.formulaCol + '"]';
+          }
+          return null;
+        }
 
         function celulaDe(elemento) { return elemento ? elemento.closest('td') : null; }
         function coordenadas(celula) {
@@ -5136,7 +5235,7 @@
           var pos = coordenadas(celula);
           caixaNome.textContent = (LETRAS[pos.coluna - 1] || '#') + (pos.linha + 1);
           var campo = celula.querySelector('.cell-editor');
-          celulaLigada = campo || null;
+          celulaLigada = campo ? seletorDaCelula(campo) : null;
           barraFormula.disabled = !campo;
           barraFormula.value = campo ? (campo.dataset.bruto || campo.value) : celula.textContent.trim();
           if (botaoExcluir) botaoExcluir.disabled = !celula.parentElement.querySelector('[data-compare-remove]');
@@ -5163,15 +5262,20 @@
         barraFormula.addEventListener('keydown', function (evento) {
           if (evento.key === 'Escape') {
             evento.preventDefault();
-            if (celulaLigada) barraFormula.value = celulaLigada.dataset.bruto || celulaLigada.value;
+            var atualEsc = celulaLigada ? corpo.querySelector(celulaLigada) : null;
+            if (atualEsc) barraFormula.value = atualEsc.dataset.bruto || atualEsc.value;
             barraFormula.blur();
             return;
           }
           if (evento.key !== 'Enter') return;
           evento.preventDefault();
-          if (!celulaLigada || !document.contains(celulaLigada)) return;
-          celulaLigada.value = barraFormula.value;
-          celulaLigada.dispatchEvent(new Event('change', { bubbles: true }));
+          if (!celulaLigada) return;
+          var atual = corpo.querySelector(celulaLigada);   // reencontra depois de qualquer redesenho
+          if (!atual) return;
+          atual.value = barraFormula.value;
+          // cada tipo de célula confirma de um jeito: dado no focusout, fórmula no change
+          if (atual.dataset.compareCell) atual.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+          else atual.dispatchEvent(new Event('change', { bubbles: true }));
           barraFormula.blur();
         });
         corpo.addEventListener('keydown', function (evento) {
@@ -5203,7 +5307,7 @@
           var campo = evento.target.closest ? evento.target.closest('.cell-editor') : null;
           if (!campo) return;
           setTimeout(function () {
-            celulaLigada = campo;
+            celulaLigada = seletorDaCelula(campo);
             barraFormula.disabled = false;
             barraFormula.value = campo.dataset.bruto || campo.value;
           }, 0);
