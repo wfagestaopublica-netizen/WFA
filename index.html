@@ -535,6 +535,29 @@
     body.app-active .compare-summary-details summary { padding: 7px 11px; font-size: 12px; }
     body.app-active .compare-kpi { padding: 8px 10px; }
     body.app-active .compare-kpi strong { font-size: 17px; }
+    /* ---- guia de fórmulas ---- */
+    .guia-formulas { position: fixed; z-index: 128; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(6,20,30,.55); }
+    .guia-formulas[hidden] { display: none; }
+    .guia-box { width: min(660px, 100%); max-height: 84vh; display: flex; flex-direction: column; background: white; border: 1px solid #12293b; box-shadow: 0 26px 60px rgba(4,20,32,.38); }
+    .guia-box.compacta { width: min(460px, 100%); }
+    .guia-box header { display: flex; align-items: center; justify-content: space-between; padding: 13px 18px; background: #12293b; color: white; }
+    .guia-box header h3 { margin: 0; font: 700 16px/1.2 Cambria, Georgia, serif; }
+    .guia-box header button { width: 26px; height: 26px; border: 0; background: transparent; color: rgba(255,255,255,.7); font-size: 18px; line-height: 1; cursor: pointer; }
+    .guia-box header button:hover { color: white; background: rgba(255,255,255,.15); }
+    .guia-corpo { padding: 16px 18px; overflow-y: auto; }
+    .guia-corpo p { margin: 0 0 10px; color: #56707f; font-size: 13px; line-height: 1.5; }
+    .guia-corpo code, .guia-tabela code { padding: 1px 5px; background: #eef2f5; border: 1px solid #dde5ea; color: #14507a; font-family: Consolas, monospace; font-size: 12px; }
+    .guia-corpo input { width: 100%; height: 38px; margin-top: 4px; padding: 0 11px; border: 1px solid #c9d5dc; font: inherit; font-family: Consolas, monospace; font-size: 13px; }
+    .guia-corpo input:focus { outline: 0; border-color: #205e8a; box-shadow: 0 0 0 2px rgba(32,94,138,.18); }
+    .guia-erro { margin-top: 8px !important; color: #b0393a !important; font-weight: 600; }
+    .guia-secao { margin: 0 0 6px; color: #12293b; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .guia-tabela { width: 100%; margin-bottom: 16px; border-collapse: collapse; }
+    .guia-tabela td { padding: 6px 8px; border-bottom: 1px solid #eef2f5; color: #4a6377; font-size: 12.5px; vertical-align: top; }
+    .guia-tabela td:first-child { width: 190px; white-space: nowrap; }
+    .guia-box footer { padding: 11px 18px; background: #f5f8fa; border-top: 1px solid #dde5ea; color: #7b8f9c; font-size: 11.5px; }
+    .guia-box footer.acoes { display: flex; justify-content: flex-end; gap: 9px; }
+    .guia-box footer button { padding: 8px 15px; background: white; border: 1px solid #c9d5dc; color: #24455c; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+    .guia-box footer button.principal { background: #205e8a; border-color: #205e8a; color: white; }
     /* ---- confirmação dentro do sistema ---- */
     .app-confirm { position: fixed; z-index: 130; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(6,20,30,.55); }
     .app-confirm[hidden] { display: none; }
@@ -2562,13 +2585,14 @@
                   <span class="sheet-commands">
                     <button type="button" data-sheet-cmd="add" title="Inserir nova fonte (Ctrl+Shift+=)">＋ Linha</button>
                     <button type="button" data-sheet-cmd="col" title="Criar uma coluna livre para anotações">＋ Coluna</button>
+                    <button type="button" data-sheet-cmd="guia" title="Guia de fórmulas">ƒx Fórmulas</button>
                     <button type="button" data-sheet-cmd="del" title="Excluir a linha da célula selecionada (Ctrl+-)" disabled>－ Linha</button>
                     <button type="button" data-sheet-cmd="asc" title="Ordenar por fonte, crescente">A→Z</button>
                     <button type="button" data-sheet-cmd="desc" title="Ordenar por fonte, decrescente">Z→A</button>
                     <button type="button" data-sheet-cmd="clear" title="Limpar busca e filtros">Limpar filtros</button>
                     <button type="button" data-sheet-cmd="xlsx" title="Exportar para Excel">Exportar</button>
                   </span>
-                  <span class="sheet-hint">Setas navegam · Enter desce · Tab avança · Esc desfaz a célula · Nas colunas criadas por você: <b>=C2-D2</b>, <b>=SOMA(C2:C9)</b>, <b>=SOMA(C1;D1)</b>, <b>=ABS(E2)</b>, <b>=ARRED(C2/D2;2)</b></span>
+                  <span class="sheet-hint">Setas navegam · Enter desce · Tab avança · Esc desfaz a célula</span>
                 </div>
                 <div class="compare-table-wrap"><table class="compare-table compare-grid-table" id="compareTable"><colgroup id="compareCols"></colgroup><thead id="compareHead"></thead><tbody id="compareTableBody"></tbody><tfoot id="compareFoot"></tfoot></table></div>
                 <div class="compare-table-footer"><span id="compareCount">0 fontes exibidas</span><span>Células claras são editáveis • Enter salva • Esc cancela</span><span>Valores em reais (R$)</span></div>
@@ -2645,6 +2669,24 @@
 
     <div class="app-toast" id="appToast" role="status"></div>
     <div class="sheet-menu" id="sheetMenu" hidden></div>
+    <div class="guia-formulas" id="guiaFormulas" hidden>
+      <div class="guia-box" role="dialog" aria-modal="true" aria-labelledby="guiaTitulo">
+        <header><h3 id="guiaTitulo">Fórmulas aceitas</h3><button type="button" id="guiaFechar" aria-label="Fechar">×</button></header>
+        <div class="guia-corpo" id="guiaCorpo"></div>
+        <footer><span>Só as colunas criadas por você aceitam fórmula. As colunas de origem guardam o valor extraído do PDF.</span></footer>
+      </div>
+    </div>
+    <div class="guia-formulas" id="campoFormula" hidden>
+      <div class="guia-box compacta" role="dialog" aria-modal="true" aria-labelledby="campoFormulaTitulo">
+        <header><h3 id="campoFormulaTitulo">Fórmula da coluna</h3><button type="button" id="campoFormulaFechar" aria-label="Fechar">×</button></header>
+        <div class="guia-corpo">
+          <p>Vale para todas as linhas. Use a letra da coluna <b>sem número</b> para se referir à mesma linha: <code>=C-D</code>.</p>
+          <input id="campoFormulaEntrada" type="text" spellcheck="false" placeholder="=C-D">
+          <p class="guia-erro" id="campoFormulaErro" hidden></p>
+        </div>
+        <footer class="acoes"><button type="button" id="campoFormulaCancelar">Cancelar</button><button type="button" class="principal" id="campoFormulaAplicar">Aplicar à coluna</button></footer>
+      </div>
+    </div>
     <div class="app-confirm" id="appConfirm" hidden>
       <div class="app-confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="appConfirmTitle">
         <h3 id="appConfirmTitle">Confirmar</h3>
@@ -3636,7 +3678,7 @@
       }
 
       // aritmética pura: troca referências por números e resolve a conta
-      function avaliarAritmetica(expressao, contexto) {
+      function avaliarAritmetica(expressao, contexto, linhaAtual) {
         // resultados de funções já resolvidas voltam como marcadores, sem parênteses,
         // para não atrapalhar o reconhecimento de uma função externa
         let conta = expressao.replace(/#(\d+)#/g, function (todo, indice) {
@@ -3645,6 +3687,12 @@
         conta = conta.replace(/([A-Z])(\d+)/g, function (todo, letra, numero) {
           return '(' + String(valorDaCelula(letra, Number(numero), contexto)) + ')';
         });
+        // letra sem número = coluna desta mesma linha (usada nas fórmulas de coluna)
+        if (linhaAtual) {
+          conta = conta.replace(/\b([A-Z])\b/g, function (todo, letra) {
+            return '(' + String(valorDaCelula(letra, linhaAtual, contexto)) + ')';
+          });
+        }
         conta = conta.replace(/(\d),(\d)/g, '$1.$2');   // vírgula decimal
         if (/[^0-9+\-*/().\s]/.test(conta)) throw new Error('sintaxe');
         const resultado = Function('"use strict";return (' + conta + ')')();
@@ -3661,7 +3709,7 @@
         return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       }
 
-      function avaliarFormula(texto, contexto) {
+      function avaliarFormula(texto, contexto, linhaDaFormula) {
         try {
           let expressao = semAcento(texto.trim().slice(1)).toUpperCase();
           contexto.parciais = [];
@@ -3675,6 +3723,16 @@
               if (!funcao) throw new Error('nome:' + nome);
               const valores = [];
               separarArgumentos(argumentos).forEach(function (parte) {
+                // coluna inteira: SOMA(C)
+                const colunaInteira = parte.match(/^([A-Z])$/);
+                if (colunaInteira && !linhaDaFormula) {
+                  for (let n = 1; n <= contexto.linhas.length; n += 1) valores.push(valorDaCelula(colunaInteira[1], n, contexto));
+                  return;
+                }
+                if (colunaInteira && linhaDaFormula) {
+                  for (let n = 1; n <= contexto.linhas.length; n += 1) valores.push(valorDaCelula(colunaInteira[1], n, contexto));
+                  return;
+                }
                 const intervalo = parte.match(/^([A-Z])(\d+)\s*:\s*([A-Z])(\d+)$/);
                 if (intervalo) {
                   const inicio = Math.min(Number(intervalo[2]), Number(intervalo[4]));
@@ -3682,13 +3740,13 @@
                   for (let n = inicio; n <= fim; n += 1) valores.push(valorDaCelula(intervalo[1], n, contexto));
                   return;
                 }
-                valores.push(avaliarAritmetica(parte, contexto));
+                valores.push(avaliarAritmetica(parte, contexto, linhaDaFormula));
               });
               contexto.parciais.push(funcao(valores));
               return '#' + (contexto.parciais.length - 1) + '#';
             });
           }
-          return { valor: avaliarAritmetica(expressao, contexto) };
+          return { valor: avaliarAritmetica(expressao, contexto, linhaDaFormula) };
         } catch (erro) {
           const motivo = String(erro.message || '');
           if (motivo.indexOf('nome:') === 0) return { erro: true, rotulo: '#NOME?', detalhe: 'A função ' + motivo.slice(5) + ' não existe. Disponíveis: ' + Object.keys(FUNCOES_PLANILHA).join(', ') + '.' };
@@ -3699,7 +3757,7 @@
       function textoDaCelulaLivre(row, coluna, contexto) {
         const bruto = (row.extras && row.extras[coluna.id]) || '';
         if (!ehFormula(bruto)) return { exibido: bruto, formula: false };
-        const resultado = avaliarFormula(bruto, contexto);
+        const resultado = avaliarFormula(bruto, contexto, contexto.linhas.indexOf(row) + 1);
         if (resultado.erro) return { exibido: resultado.rotulo, formula: true, erro: true, detalhe: resultado.detalhe };
         return { exibido: formatBrl(resultado.valor), formula: true };
       }
@@ -3924,6 +3982,12 @@
             selecao.addRange(faixa);
           } }
         ];
+        if (ehLivre) itens.push({ rotulo:'Aplicar fórmula a toda a coluna', acao:function () { aplicarFormulaNaColuna(id); } });
+        if (ehLivre) itens.push({ rotulo:'Limpar conteúdo da coluna', acao:function () {
+          compareState.rows.forEach(function (row) { if (row.extras) delete row.extras[id]; });
+          renderCompareTable();
+          regravarExecucaoAberta();
+        } });
         if (ehLivre) itens.push({ rotulo:'Remover esta coluna', perigo:true, acao:function () {
           compareState.colunasExtras = extras.filter(function (coluna) { return coluna.id !== id; });
           compareState.rows.forEach(function (row) { if (row.extras) delete row.extras[id]; });
@@ -4096,6 +4160,15 @@
         const campo = evento.target.closest('[data-compare-extra]');
         if (campo && campo.dataset.bruto) campo.value = campo.dataset.bruto;
       });
+      // ao sair sem alterar nada, a célula precisa voltar a exibir o resultado
+      compareDom.tableBody.addEventListener('focusout', function (evento) {
+        const campo = evento.target.closest('[data-compare-extra]');
+        if (!campo || !document.contains(campo)) return;
+        const row = findCompareRow(campo.dataset.rowKey);
+        if (!row) return;
+        const bruto = (row.extras && row.extras[campo.dataset.compareExtra]) || '';
+        if (campo.value === bruto && ehFormula(bruto)) renderCompareTable();
+      });
       compareDom.tableBody.addEventListener('change', function (evento) {
         const campo = evento.target.closest('[data-compare-extra]');
         if (!campo) return;
@@ -4121,6 +4194,105 @@
       });
       document.addEventListener('keydown', function (evento) { if (evento.key === 'Escape') fecharMenuPlanilha(); });
       window.addEventListener('scroll', fecharMenuPlanilha, { passive:true });
+
+      // ---------- guia de fórmulas ----------
+      const GUIA_FORMULAS = [
+        { grupo:'Referências', itens:[
+          ['<code>C2</code>', 'valor da coluna C na linha 2'],
+          ['<code>C</code>', 'dentro de uma função, a coluna C inteira; numa fórmula de coluna, a mesma linha'],
+          ['<code>C2:C9</code>', 'intervalo da linha 2 à 9 na coluna C']
+        ]},
+        { grupo:'Contas', itens:[
+          ['<code>=C2-D2</code>', 'subtração entre duas células'],
+          ['<code>=C2/D2*100</code>', 'as quatro operações, com parênteses'],
+          ['<code>=C2*0,1</code>', 'a vírgula é decimal; o ponto e vírgula separa argumentos']
+        ]},
+        { grupo:'Funções', itens:[
+          ['<code>=SOMA(C2:C9)</code>', 'soma um intervalo'],
+          ['<code>=SOMA(C1;D1)</code>', 'soma valores separados por ponto e vírgula'],
+          ['<code>=SOMA(C)</code>', 'soma a coluna inteira'],
+          ['<code>=MEDIA(D2:D9)</code>', 'média dos valores'],
+          ['<code>=MIN(C)</code> · <code>=MAX(C)</code>', 'menor e maior valor'],
+          ['<code>=CONT(C2:C9)</code>', 'quantidade de valores'],
+          ['<code>=ABS(E2)</code>', 'valor absoluto, sem o sinal'],
+          ['<code>=ARRED(C2/D2;2)</code>', 'arredonda com o número de casas indicado'],
+          ['<code>=SE(C2-D2;1;0)</code>', 'se o primeiro for diferente de zero, devolve o segundo; senão o terceiro']
+        ]},
+        { grupo:'Aninhadas', itens:[
+          ['<code>=ABS(SOMA(C1;-D1))</code>', 'funções podem conter outras funções'],
+          ['<code>=ARRED(MEDIA(C;D);0)</code>', 'sem limite de profundidade']
+        ]},
+        { grupo:'Erros', itens:[
+          ['<code>#NOME?</code>', 'a função não existe — passe o mouse para ver as disponíveis'],
+          ['<code>#ERRO</code>', 'parênteses, referência ou separador incorretos']
+        ]}
+      ];
+      function abrirGuiaFormulas() {
+        const corpo = document.getElementById('guiaCorpo');
+        corpo.innerHTML = '<p>Comece a célula com <code>=</code>. As letras seguem o cabeçalho da tabela e os números seguem a linha exibida.</p>' +
+          GUIA_FORMULAS.map(function (secao) {
+            return '<p class="guia-secao">' + secao.grupo + '</p><table class="guia-tabela"><tbody>' +
+              secao.itens.map(function (item) { return '<tr><td>' + item[0] + '</td><td>' + escapeHtml(item[1]) + '</td></tr>'; }).join('') +
+              '</tbody></table>';
+          }).join('');
+        document.getElementById('guiaFormulas').hidden = false;
+      }
+
+      // ---------- fórmula aplicada a toda a coluna ----------
+      let colunaDaFormula = null;
+      function aplicarFormulaNaColuna(id) {
+        colunaDaFormula = id;
+        const entrada = document.getElementById('campoFormulaEntrada');
+        const primeira = compareState.rows.find(function (row) { return !row.deleted && row.extras && ehFormula(row.extras[id]); });
+        entrada.value = primeira ? primeira.extras[id] : '=C-D';
+        document.getElementById('campoFormulaErro').hidden = true;
+        document.getElementById('campoFormula').hidden = false;
+        setTimeout(function () { entrada.focus(); entrada.select(); }, 20);
+      }
+      function confirmarFormulaDaColuna() {
+        const entrada = document.getElementById('campoFormulaEntrada');
+        const aviso = document.getElementById('campoFormulaErro');
+        const formula = entrada.value.trim();
+        if (!ehFormula(formula)) {
+          aviso.textContent = 'A fórmula precisa começar com o sinal de igual.';
+          aviso.hidden = false;
+          return;
+        }
+        // valida na primeira linha antes de espalhar
+        const colunas = colunasDaTabela();
+        const linhas = activeCompareRows();
+        const teste = avaliarFormula(formula, { colunas: colunas, letras: colunas.map(function (c, i) { return LETRAS_COLUNA[i]; }), linhas: linhas }, 1);
+        if (teste.erro) {
+          aviso.textContent = teste.detalhe;
+          aviso.hidden = false;
+          return;
+        }
+        compareState.rows.forEach(function (row) {
+          if (row.deleted) return;
+          row.extras = row.extras || {};
+          row.extras[colunaDaFormula] = formula;
+        });
+        document.getElementById('campoFormula').hidden = true;
+        renderCompareTable();
+        addAudit('Fórmula aplicada à coluna', formula + ' — vale para todas as linhas.', 'Estrutura');
+        regravarExecucaoAberta();
+        showToast('Fórmula aplicada a ' + activeCompareRows().length + ' linhas.');
+      }
+
+      document.getElementById('guiaFechar').addEventListener('click', function () { document.getElementById('guiaFormulas').hidden = true; });
+      document.getElementById('guiaFormulas').addEventListener('mousedown', function (evento) { if (evento.target === this) this.hidden = true; });
+      document.getElementById('campoFormulaFechar').addEventListener('click', function () { document.getElementById('campoFormula').hidden = true; });
+      document.getElementById('campoFormulaCancelar').addEventListener('click', function () { document.getElementById('campoFormula').hidden = true; });
+      document.getElementById('campoFormulaAplicar').addEventListener('click', confirmarFormulaDaColuna);
+      document.getElementById('campoFormulaEntrada').addEventListener('keydown', function (evento) {
+        if (evento.key === 'Enter') { evento.preventDefault(); confirmarFormulaDaColuna(); }
+        if (evento.key === 'Escape') { evento.preventDefault(); document.getElementById('campoFormula').hidden = true; }
+      });
+      document.addEventListener('keydown', function (evento) {
+        if (evento.key !== 'Escape') return;
+        const guia = document.getElementById('guiaFormulas');
+        if (guia && !guia.hidden) guia.hidden = true;
+      });
 
       function findCompareRow(key) { return compareState.rows.find(function (row) { return row.key === key && !row.deleted; }); }
       function commitCompareCell(input) {
@@ -4707,6 +4879,7 @@
             return;
           }
           if (comando === 'col') { criarColunaLivre(); return; }
+          if (comando === 'guia') { abrirGuiaFormulas(); return; }
           if (comando === 'xlsx') { document.getElementById('compareExportXlsx').click(); return; }
         }
         document.querySelectorAll('[data-sheet-cmd]').forEach(function (botao) {
