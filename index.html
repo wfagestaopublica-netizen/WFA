@@ -473,8 +473,19 @@
     .sidebar-run b { display: block; color: #12293b; font-size: 12px; font-weight: 700; }
     .sidebar-run small { display: block; margin-top: 2px; color: #6f8697; font-size: 10.5px; }
     .sidebar-run i { display: block; margin-top: 3px; color: #205e8a; font-size: 10px; font-style: normal; font-weight: 700; }
+    /* ---- confirmação dentro do sistema ---- */
+    .app-confirm { position: fixed; z-index: 130; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(6,20,30,.55); }
+    .app-confirm[hidden] { display: none; }
+    .app-confirm-box { width: min(420px, 100%); padding: 22px 24px; background: white; border: 1px solid #12293b; box-shadow: 0 26px 60px rgba(4,20,32,.38); }
+    .app-confirm-box h3 { margin: 0 0 8px; color: #12293b; font: 700 17px/1.2 Cambria, Georgia, serif; }
+    .app-confirm-box p { margin: 0 0 18px; color: #56707f; font-size: 13.5px; line-height: 1.55; }
+    .app-confirm-actions { display: flex; justify-content: flex-end; gap: 9px; }
+    .app-confirm-actions button { padding: 9px 17px; background: white; border: 1px solid #c9d5dc; color: #24455c; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .app-confirm-actions button:hover { border-color: #205e8a; }
+    .app-confirm-actions .perigo { background: #c9403f; border-color: #c9403f; color: white; }
+    .app-confirm-actions .perigo:hover { background: #ab3231; border-color: #ab3231; }
     /* ---- abas de execução, no padrão das planilhas ---- */
-    .sheet-tabs { grid-column: 1 / -1; grid-row: 2; display: none; align-items: stretch; height: 30px; padding-left: 8px; background: #dfe6ea; border-top: 1px solid #c2ced6; }
+    .sheet-tabs { position: relative; z-index: 12; grid-column: 1 / -1; grid-row: 2; display: none; align-items: stretch; height: 30px; padding-left: 8px; background: #dfe6ea; border-top: 1px solid #c2ced6; }
     body.app-active .sheet-tabs { display: flex; }
     .sheet-tabs-list { display: flex; align-items: stretch; gap: 2px; overflow-x: auto; }
     .sheet-tabs-list::-webkit-scrollbar { height: 4px; }
@@ -495,7 +506,7 @@
     .sidebar-file .remover-doc { position: absolute; top: 50%; right: 6px; width: 18px; height: 18px; display: grid; place-items: center; transform: translateY(-50%); border: 0; border-radius: 2px; background: transparent; color: #90a4b0; font-size: 14px; line-height: 1; cursor: pointer; opacity: 0; transition: opacity .12s; }
     .sidebar-file:hover .remover-doc { opacity: 1; }
     .sidebar-file .remover-doc:hover { background: #c9403f; color: white; }
-    .app-statusbar { grid-column: 1 / -1; grid-row: 3; display: none; align-items: center; gap: 10px; height: 30px; padding: 0 16px; background: #12293b; color: rgba(255,255,255,.72); font-family: Arial, sans-serif; font-size: 11px; }
+    .app-statusbar { position: relative; z-index: 12; grid-column: 1 / -1; grid-row: 3; display: none; align-items: center; gap: 10px; height: 30px; padding: 0 16px; background: #12293b; color: rgba(255,255,255,.72); font-family: Arial, sans-serif; font-size: 11px; }
     body.app-active .app-statusbar { display: flex; }
     .status-item { white-space: nowrap; }
     .status-item.alerta { color: #ffcf8b; }
@@ -533,7 +544,33 @@
     .drop-overlay span { display: block; margin-top: 8px; color: #6b8290; font-size: 13px; }
 
     /* ================= densidade das telas internas ================= */
+    body.app-active .app-main { overflow-x: hidden; }
+    /* central de documentos em ritmo de lista, não de cartões */
+    body.app-active .workspace-view .workspace-banner { min-height: 0; padding: 10px 14px; }
+    body.app-active .workspace-view .workspace-banner h2 { font-size: 15px; }
+    body.app-active .workspace-view .workspace-banner p { display: none; }
+    body.app-active .workspace-summary { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    body.app-active .workspace-stat { padding: 6px 11px; gap: 8px; }
+    body.app-active .workspace-stat strong { font-size: 15px; }
+    body.app-active .workspace-stat span { font-size: 9.5px; line-height: 1.2; }
+    body.app-active .workspace-file-card { margin-top: 9px; }
+    body.app-active .workspace-file-head { padding: 7px 11px; }
+    body.app-active .workspace-file-head h3 { font-size: 12px; }
+    body.app-active .workspace-file-head p { display: none; }
+    body.app-active .workspace-table-actions input, body.app-active .workspace-table-actions select { height: 28px; font-size: 11.5px; }
+    body.app-active .workspace-table th { padding: 5px 9px; font-size: 9.5px; }
+    body.app-active .workspace-table td { padding: 4px 9px; font-size: 11px; }
+    body.app-active .workspace-file-name { gap: 8px; }
+    body.app-active .workspace-file-name > span { width: 22px; height: 22px; font-size: 8px; }
+    body.app-active .workspace-file-name b { font-size: 11.5px; }
+    body.app-active .workspace-file-name small { display: none; }
+    body.app-active .workspace-kind, body.app-active .workspace-status { padding: 2px 6px; font-size: 9.5px; }
+    body.app-active .workspace-remove { padding: 2px 7px; font-size: 10px; }
+    body.app-active .workspace-selection-bar { padding: 6px 11px; font-size: 10.5px; }
+    body.app-active .workspace-run-selected { min-height: 28px; padding: 0 12px; font-size: 10.5px; }
+    body.app-active .workspace-empty { padding: 22px 16px; }
     body.app-active .app-content { padding: 14px 18px 30px; }
+    body.app-active .compare-table-wrap { max-width: 100%; overflow-x: auto; }
     body.app-active .view-heading { margin-bottom: 13px; align-items: center; }
     body.app-active .view-heading p { margin-bottom: 3px; font-size: 9px; letter-spacing: .1em; }
     body.app-active .view-heading h2 { font-size: 20px; }
@@ -2544,6 +2581,16 @@
   </section>
 
     <div class="app-toast" id="appToast" role="status"></div>
+    <div class="app-confirm" id="appConfirm" hidden>
+      <div class="app-confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="appConfirmTitle">
+        <h3 id="appConfirmTitle">Confirmar</h3>
+        <p id="appConfirmText"></p>
+        <div class="app-confirm-actions">
+          <button type="button" id="appConfirmCancel">Cancelar</button>
+          <button type="button" class="perigo" id="appConfirmOk">Confirmar</button>
+        </div>
+      </div>
+    </div>
     <div class="cmdk" id="cmdk" hidden>
       <div class="cmdk-box" role="dialog" aria-modal="true" aria-label="Paleta de comandos">
         <div class="cmdk-field"><span aria-hidden="true">⌘</span><input id="cmdkInput" type="text" autocomplete="off" spellcheck="false" placeholder="Buscar comando ou documento…"></div>
@@ -2642,6 +2689,41 @@
         app.setAttribute('aria-hidden', 'true');
         appSidebar.classList.remove('open');
       }
+      // confirmação interna: promessa resolvida pelos botões do próprio sistema
+      function confirmarNoSistema(texto, titulo, rotuloOk) {
+        return new Promise(function (resolver) {
+          const palco = document.getElementById('appConfirm');
+          if (!palco) { resolver(true); return; }
+          document.getElementById('appConfirmTitle').textContent = titulo || 'Confirmar';
+          document.getElementById('appConfirmText').textContent = texto;
+          const ok = document.getElementById('appConfirmOk');
+          const cancelar = document.getElementById('appConfirmCancel');
+          ok.textContent = rotuloOk || 'Confirmar';
+          palco.hidden = false;
+          setTimeout(function () { cancelar.focus(); }, 20);
+          function encerrar(resposta) {
+            palco.hidden = true;
+            ok.removeEventListener('click', aoConfirmar);
+            cancelar.removeEventListener('click', aoCancelar);
+            document.removeEventListener('keydown', aoTeclar, true);
+            palco.removeEventListener('mousedown', aoClicarFora);
+            resolver(resposta);
+          }
+          function aoConfirmar() { encerrar(true); }
+          function aoCancelar() { encerrar(false); }
+          function aoTeclar(evento) {
+            if (evento.key === 'Escape') { evento.preventDefault(); encerrar(false); }
+            if (evento.key === 'Enter') { evento.preventDefault(); encerrar(true); }
+          }
+          function aoClicarFora(evento) { if (evento.target === palco) encerrar(false); }
+          ok.addEventListener('click', aoConfirmar);
+          cancelar.addEventListener('click', aoCancelar);
+          document.addEventListener('keydown', aoTeclar, true);
+          palco.addEventListener('mousedown', aoClicarFora);
+        });
+      }
+      window.wfaConfirmar = confirmarNoSistema;
+
       function showToast(text) {
         clearTimeout(toastTimer);
         appToast.textContent = text;
@@ -3886,7 +3968,8 @@
               fileState(entry[0], 'ready', item.file.name, formatBytes(item.file.size) + ' • restaurado deste navegador', 'Pronto');
             });
             updateCompareReady();
-            const hasReports = savedCompare.reports && Object.keys(savedCompare.reports).length >= 2;
+            const chavesExec = (await stores.state.keys()).filter(function (chave) { return chave.indexOf('exec-') === 0; });
+            const hasReports = chavesExec.length && savedCompare.reports && Object.keys(savedCompare.reports).length >= 2;
             if (savedCompare.hasResults && hasReports && Array.isArray(savedCompare.rows) && savedCompare.rows.length) {
               compareState.reports = savedCompare.reports;
               compareState.rows = savedCompare.rows;
@@ -3965,8 +4048,8 @@
       });
 
       var storageClearButton = document.getElementById('storageClear');
-      if (storageClearButton) storageClearButton.addEventListener('click', function () {
-        if (window.confirm('Apagar os PDFs guardados, a tabela e a trilha de auditoria deste navegador?')) clearWfaStorage();
+      if (storageClearButton) storageClearButton.addEventListener('click', async function () {
+        if (await window.wfaConfirmar('Os PDFs guardados, a tabela e a trilha de auditoria deste navegador serão apagados. Esta ação não pode ser desfeita.', 'Apagar dados salvos', 'Apagar tudo')) clearWfaStorage();
       });
       if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {});
       restoreWfaState();
@@ -4307,12 +4390,34 @@
         if (ativa) ativa.scrollIntoView({ block:'nearest', inline:'nearest' });
       }
 
+      // limpa o resultado em tela e o que estava guardado da última comparação
+      async function limparComparacaoAtual() {
+        compareState.rows = [];
+        compareState.reports = {};
+        compareState.audit = [];
+        COMPARE_ROLES.forEach(function (papel) { compareState.files[papel] = null; });
+        resetCompareOutput();
+        updateCompareReady();
+        renderAudit();
+        renderScriptBrief();
+        try {
+          const stores = await getWfaStores();
+          await stores.state.removeItem('compare');
+        } catch (error) { /* ignora */ }
+      }
+
       async function excluirExecucao(id) {
         try {
           const stores = await getWfaStores();
           await stores.state.removeItem(PREFIXO_EXEC + id);
         } catch (error) { /* ignora */ }
-        if (execucaoAberta === id) execucaoAberta = null;
+        const eraAAberta = execucaoAberta === id;
+        if (eraAAberta) execucaoAberta = null;
+        const restantes = await lerExecucoes();
+        if (eraAAberta) {
+          if (restantes.length) await abrirExecucao(restantes[restantes.length - 1].resumo.id);
+          else await limparComparacaoAtual();
+        }
         renderExecucoes();
         showToast('Execução excluída.');
       }
@@ -4346,19 +4451,16 @@
         const excluir = evento.target.closest('[data-exec-del]');
         if (excluir) {
           evento.stopPropagation();
-          if (window.confirm('Excluir esta execução? Os documentos continuam guardados.')) excluirExecucao(excluir.dataset.execDel);
+          window.wfaConfirmar('Esta execução sai da lista de abas. Os documentos usados continuam guardados na central.', 'Excluir execução', 'Excluir')
+            .then(function (sim) { if (sim) excluirExecucao(excluir.dataset.execDel); });
           return;
         }
         const aba = evento.target.closest('[data-exec]');
         if (aba) abrirExecucao(aba.dataset.exec);
       });
-      document.getElementById('sheetTabNew').addEventListener('click', function () {
+      document.getElementById('sheetTabNew').addEventListener('click', async function () {
         execucaoAberta = null;
-        resetCompareOutput();
-        compareState.rows = [];
-        compareState.reports = {};
-        compareState.audit = [];
-        renderScriptBrief();
+        await limparComparacaoAtual();
         renderExecucoes();
         selectView('comparador-fontes');
         showToast('Escolha os documentos e execute para criar uma nova aba.');
@@ -5008,8 +5110,8 @@
           atualizarBotoes();
         });
       }
-      function descartar() {
-        if (!window.confirm('Descartar todas as alterações que ainda não foram publicadas?')) return;
+      async function descartar() {
+        if (!await window.wfaConfirmar('Todas as alterações que ainda não foram publicadas serão perdidas.', 'Descartar alterações', 'Descartar')) return;
         localStorage.removeItem(DRAFT_KEY);
         alteracoes = {};
         imagensPendentes = {};
@@ -5036,8 +5138,8 @@
           setStatus('Token removido deste navegador.', '');
         });
         document.getElementById('cmsInline').addEventListener('click', entrarEdicao);
-        document.getElementById('cmsBarExit').addEventListener('click', function () {
-          if (totalAlteracoes() && !window.confirm('Sair sem publicar? As alterações ficam guardadas neste navegador e você pode publicar depois.')) return;
+        document.getElementById('cmsBarExit').addEventListener('click', async function () {
+          if (totalAlteracoes() && !await window.wfaConfirmar('As alterações ficam guardadas neste navegador e você pode publicar depois.', 'Sair sem publicar', 'Sair assim mesmo')) return;
           sairEdicao(true);
         });
         document.getElementById('cmsBarPublish').addEventListener('click', publicar);
