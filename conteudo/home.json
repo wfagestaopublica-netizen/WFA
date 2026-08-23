@@ -1,15 +1,13 @@
 {
-  "v": 1,
-  "atualizadoEm": "2026-08-22T23:19:42.564Z",
-  "textos": {
-    "inicio.t1": {
-      "v": "Excelência técnica para municípios mineiros x+y",
-      "o": "Excelência técnica para municípios mineiros"
+  "v": 2,
+  "atualizadoEm": "2026-08-23T01:08:10.952Z",
+  "blocos": {
+    "inicio.b2": {
+      "v": "Gestão pública com <span><span class=\"cor-navy\">controle</span>, clareza</span> e direção.",
+      "o": "Gestão pública com <span>controle, clareza</span> e direção."
     }
   },
   "imagens": {},
-  "cores": {
-    "destaque": "#c39a57"
-  },
+  "cores": {},
   "emConstrucao": true
 }
