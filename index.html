@@ -418,11 +418,14 @@
     body.cms-editando .cms-img-btn:not([hidden]) { display: block; }
     .cms-img-btn:hover { background: var(--gold-500); color: var(--navy-950); }
     body.cms-editando [data-cms-inline-img] { outline: 2px dashed rgba(195,154,87,.75); outline-offset: -4px; }
+    header b, header strong, main b, main strong, footer b, footer strong { font-weight: 700; font-synthesis-weight: none; }
     .cor-ouro { color: var(--gold-500) !important; }
     .cor-navy { color: var(--navy-900) !important; }
     .cor-vermelho { color: var(--red-mg) !important; }
     .cor-branco { color: #ffffff !important; }
-    .cms-format-bar button:hover { background: rgba(255,255,255,.12); }
+    .cms-format-bar button:hover:not(:disabled) { background: rgba(255,255,255,.12); }
+    .cms-format-bar button:disabled { opacity: .3; cursor: not-allowed; }
+    .cms-format-bar button.ativo { background: var(--gold-500); color: var(--navy-950); }
     body.cms-editando [data-cms-inline] { outline: 1px dashed rgba(195,154,87,.45); outline-offset: 3px; cursor: text; }
     body.cms-editando [data-cms-inline]:hover { outline-style: solid; outline-color: var(--gold-500); }
     body.cms-editando [data-cms-inline]:focus { outline: 2px solid var(--gold-500); background: rgba(195,154,87,.12); }
@@ -3914,6 +3917,38 @@
         barra.hidden = false;
         barra.style.top = Math.max(8, caixa.top - barra.offsetHeight - 10) + 'px';
         barra.style.left = Math.max(8, Math.min(window.innerWidth - barra.offsetWidth - 8, caixa.left + caixa.width / 2 - barra.offsetWidth / 2)) + 'px';
+        ajustarBotoesFormatacao();
+      }
+      // negrito e itálico não fazem sentido onde o estilo do site já aplica o efeito:
+      // o navegador inverteria a marcação e criaria um estado que não sobrevive à publicação
+      function ajustarBotoesFormatacao() {
+        var sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        var no = sel.getRangeAt(0).startContainer;
+        var el = no.nodeType === 1 ? no : no.parentElement;
+        if (!el) return;
+        var bloco = blocoDaSelecao();
+        var estilo = window.getComputedStyle(el);
+        // negrito vindo da folha de estilo do site x negrito aplicado aqui pelo editor:
+        // o primeiro não deve ser mexido, o segundo precisa poder ser desfeito
+        var marcaNegrito = el.closest('b, strong');
+        var marcaItalico = el.closest('i, em');
+        var negritoDoEditor = Boolean(bloco && marcaNegrito && bloco.contains(marcaNegrito));
+        var italicoDoEditor = Boolean(bloco && marcaItalico && bloco.contains(marcaItalico));
+        var negritoDoSite = parseInt(estilo.fontWeight, 10) >= 700 && !negritoDoEditor;
+        var italicoDoSite = estilo.fontStyle === 'italic' && !italicoDoEditor;
+        var botaoNegrito = document.getElementById('cmsFmtBold');
+        var botaoItalico = document.getElementById('cmsFmtItalic');
+        if (botaoNegrito) {
+          botaoNegrito.disabled = negritoDoSite;
+          botaoNegrito.classList.toggle('ativo', negritoDoEditor);
+          botaoNegrito.title = negritoDoSite ? 'Este trecho já é negrito no estilo do site' : (negritoDoEditor ? 'Remover negrito' : 'Negrito');
+        }
+        if (botaoItalico) {
+          botaoItalico.disabled = italicoDoSite;
+          botaoItalico.classList.toggle('ativo', italicoDoEditor);
+          botaoItalico.title = italicoDoSite ? 'Este trecho já é itálico no estilo do site' : (italicoDoEditor ? 'Remover itálico' : 'Itálico');
+        }
       }
       document.addEventListener('selectionchange', function () { if (editando) mostrarFormatacao(); });
 
@@ -3936,6 +3971,35 @@
       function aplicarDestaque() {
         var bloco = blocoDaSelecao();
         if (bloco) envolverSelecao(tagDeDestaque(bloco));
+      }
+      function alternarMarcacao(comando) {
+        var bloco = blocoDaSelecao();
+        var sel = window.getSelection();
+        if (!bloco || !sel.rangeCount || sel.isCollapsed) return;
+        var botao = document.getElementById(comando === 'bold' ? 'cmsFmtBold' : 'cmsFmtItalic');
+        if (botao && botao.disabled) return;
+        try { document.execCommand('styleWithCSS', false, false); } catch (error) { /* navegador antigo */ }
+        document.execCommand(comando);
+        registrarAlteracao(bloco.dataset.cmsInline, bloco.innerHTML, true);
+        mostrarFormatacao();
+      }
+      function limparFormatacao() {
+        var bloco = blocoDaSelecao();
+        var sel = window.getSelection();
+        if (!bloco || !sel.rangeCount || sel.isCollapsed) return;
+        try { document.execCommand('styleWithCSS', false, false); } catch (error) { /* navegador antigo */ }
+        document.execCommand('removeFormat');
+        if (sel.rangeCount) {
+          var faixa = sel.getRangeAt(0);
+          Array.prototype.slice.call(bloco.querySelectorAll('em, i, b, strong, span, small, u')).forEach(function (marca) {
+            if (!marca.parentNode || !faixa.intersectsNode(marca)) return;
+            while (marca.firstChild) marca.parentNode.insertBefore(marca.firstChild, marca);
+            marca.remove();
+          });
+          bloco.normalize();
+        }
+        registrarAlteracao(bloco.dataset.cmsInline, bloco.innerHTML, true);
+        esconderFormatacao();
       }
       function removerDestaque() {
         var bloco = blocoDaSelecao();
@@ -3994,18 +4058,31 @@
       document.addEventListener('submit', function (evento) { if (editando) evento.preventDefault(); }, true);
 
       /* ---------------- imagens ---------------- */
+      var temporizadorBotaoImagem = null;
       function posicionarBotaoImagem(alvo) {
         var botao = document.getElementById('cmsImgBtn');
         if (!botao) return;
+        clearTimeout(temporizadorBotaoImagem);
         var caixa = alvo.getBoundingClientRect();
         botao.dataset.chave = alvo.dataset.cmsInlineImg;
         botao.hidden = false;
-        var largura = botao.offsetWidth || 150;
-        var altura = botao.offsetHeight || 34;
-        var topo = Math.min(window.innerHeight - altura - 10, Math.max(10, caixa.top + 12));
-        var esquerda = Math.min(window.innerWidth - largura - 10, Math.max(10, caixa.right - largura - 12));
-        botao.style.top = topo + 'px';
-        botao.style.left = esquerda + 'px';
+        var largura = botao.offsetWidth || 160;
+        var altura = botao.offsetHeight || 36;
+        var ALTURA_CABECALHO = 110;   // o cabeçalho fixo cobre o topo da imagem do hero
+        var MARGEM = 20;
+        var limiteSuperior = Math.max(caixa.top + MARGEM, ALTURA_CABECALHO);
+        var base = Math.min(caixa.bottom, window.innerHeight) - altura - MARGEM;
+        var topo = Math.max(limiteSuperior, Math.min(base, window.innerHeight - altura - MARGEM));
+        var esquerda = Math.min(caixa.right, window.innerWidth) - largura - MARGEM;
+        botao.style.top = Math.round(Math.max(MARGEM, topo)) + 'px';
+        botao.style.left = Math.round(Math.max(MARGEM, esquerda)) + 'px';
+      }
+      function agendarOcultarBotaoImagem() {
+        clearTimeout(temporizadorBotaoImagem);
+        temporizadorBotaoImagem = setTimeout(function () {
+          var botao = document.getElementById('cmsImgBtn');
+          if (botao) botao.hidden = true;
+        }, 1200);
       }
       function abrirSeletorImagem(chave) {
         if (!seletorImagem) {
@@ -4225,9 +4302,9 @@
         document.getElementById('cmsBarPublish').addEventListener('click', publicar);
         document.getElementById('cmsBarDiscard').addEventListener('click', descartar);
         document.getElementById('cmsFormatOn').addEventListener('mousedown', function (e) { e.preventDefault(); aplicarDestaque(); });
-        document.getElementById('cmsFormatOff').addEventListener('mousedown', function (e) { e.preventDefault(); removerDestaque(); });
-        document.getElementById('cmsFmtBold').addEventListener('mousedown', function (e) { e.preventDefault(); envolverSelecao('strong'); });
-        document.getElementById('cmsFmtItalic').addEventListener('mousedown', function (e) { e.preventDefault(); envolverSelecao('i'); });
+        document.getElementById('cmsFormatOff').addEventListener('mousedown', function (e) { e.preventDefault(); limparFormatacao(); });
+        document.getElementById('cmsFmtBold').addEventListener('mousedown', function (e) { e.preventDefault(); alternarMarcacao('bold'); });
+        document.getElementById('cmsFmtItalic').addEventListener('mousedown', function (e) { e.preventDefault(); alternarMarcacao('italic'); });
         document.querySelectorAll('.cms-cores button').forEach(function (botao) {
           botao.addEventListener('mousedown', function (e) { e.preventDefault(); envolverSelecao('span', botao.dataset.cor); });
         });
@@ -4242,10 +4319,14 @@
           if (!alvo) return;
           posicionarBotaoImagem(alvo);
         });
+        botaoImagem.addEventListener('mouseenter', function () { clearTimeout(temporizadorBotaoImagem); });
+        botaoImagem.addEventListener('mouseleave', agendarOcultarBotaoImagem);
         document.addEventListener('mouseout', function (evento) {
-          if (!editando || !evento.relatedTarget || !evento.relatedTarget.closest) return;
-          if (evento.relatedTarget.closest('[data-cms-inline-img], .cms-img-btn')) return;
-          botaoImagem.hidden = true;
+          if (!editando) return;
+          var indo = evento.relatedTarget;
+          if (indo && indo.closest && indo.closest('[data-cms-inline-img], .cms-img-btn')) return;
+          if (!evento.target.closest || !evento.target.closest('[data-cms-inline-img]')) return;
+          agendarOcultarBotaoImagem();
         });
         window.addEventListener('scroll', function () { if (editando) botaoImagem.hidden = true; }, { passive:true });
         document.getElementById('cmsOpen').addEventListener('click', function () {
