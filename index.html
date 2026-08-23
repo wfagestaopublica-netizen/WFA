@@ -473,7 +473,29 @@
     .sidebar-run b { display: block; color: #12293b; font-size: 12px; font-weight: 700; }
     .sidebar-run small { display: block; margin-top: 2px; color: #6f8697; font-size: 10.5px; }
     .sidebar-run i { display: block; margin-top: 3px; color: #205e8a; font-size: 10px; font-style: normal; font-weight: 700; }
-    .app-statusbar { grid-column: 1 / -1; grid-row: 2; display: none; align-items: center; gap: 10px; height: 30px; padding: 0 16px; background: #12293b; color: rgba(255,255,255,.72); font-family: Arial, sans-serif; font-size: 11px; }
+    /* ---- abas de execução, no padrão das planilhas ---- */
+    .sheet-tabs { grid-column: 1 / -1; grid-row: 2; display: none; align-items: stretch; height: 30px; padding-left: 8px; background: #dfe6ea; border-top: 1px solid #c2ced6; }
+    body.app-active .sheet-tabs { display: flex; }
+    .sheet-tabs-list { display: flex; align-items: stretch; gap: 2px; overflow-x: auto; }
+    .sheet-tabs-list::-webkit-scrollbar { height: 4px; }
+    .sheet-tab { display: flex; align-items: center; gap: 7px; max-width: 240px; padding: 0 9px 0 12px; background: #eef2f5; border: 1px solid #c2ced6; border-top: 0; border-bottom: 0; color: #4a6377; font: inherit; font-size: 11.5px; white-space: nowrap; cursor: pointer; }
+    .sheet-tab:hover { background: #f6f9fb; }
+    .sheet-tab.ativa { background: white; color: #12293b; font-weight: 700; box-shadow: inset 0 2px 0 #205e8a; }
+    .sheet-tab span { overflow: hidden; text-overflow: ellipsis; }
+    .sheet-tab small { color: #8299a8; font-size: 10px; font-weight: 400; }
+    .sheet-tab i { width: 15px; height: 15px; display: grid; place-items: center; border-radius: 2px; color: #93a7b3; font-style: normal; font-size: 13px; line-height: 1; opacity: 0; }
+    .sheet-tab:hover i, .sheet-tab.ativa i { opacity: 1; }
+    .sheet-tab i:hover { background: #c9403f; color: white; }
+    .sheet-tab-new { width: 30px; flex: none; background: transparent; border: 0; color: #5c7688; font-size: 14px; cursor: pointer; }
+    .sheet-tab-new:hover { background: #eef2f5; color: #205e8a; }
+    .sheet-tabs-vazio { display: flex; align-items: center; padding: 0 10px; color: #7b8f9c; font-size: 11px; }
+
+    /* ---- remover documento ao passar o mouse ---- */
+    .sidebar-file { position: relative; }
+    .sidebar-file .remover-doc { position: absolute; top: 50%; right: 6px; width: 18px; height: 18px; display: grid; place-items: center; transform: translateY(-50%); border: 0; border-radius: 2px; background: transparent; color: #90a4b0; font-size: 14px; line-height: 1; cursor: pointer; opacity: 0; transition: opacity .12s; }
+    .sidebar-file:hover .remover-doc { opacity: 1; }
+    .sidebar-file .remover-doc:hover { background: #c9403f; color: white; }
+    .app-statusbar { grid-column: 1 / -1; grid-row: 3; display: none; align-items: center; gap: 10px; height: 30px; padding: 0 16px; background: #12293b; color: rgba(255,255,255,.72); font-family: Arial, sans-serif; font-size: 11px; }
     body.app-active .app-statusbar { display: flex; }
     .status-item { white-space: nowrap; }
     .status-item.alerta { color: #ffcf8b; }
@@ -1566,7 +1588,7 @@
     body.app-active .wfa-app {
       display: grid !important;
       grid-template-columns: 256px minmax(0,1fr) !important;
-      grid-template-rows: minmax(0,1fr) auto !important;
+      grid-template-rows: minmax(0,1fr) auto auto !important;
       color: #2c4150;
       background: #f2f4f2;
     }
@@ -2347,8 +2369,7 @@
       <nav class="app-nav" id="appScriptNav" aria-label="Scripts disponíveis">
         <button type="button" data-app-view="comparador-fontes" data-script="comparador"><span class="app-nav-icon">CF</span>Comparador de fontes<span class="app-nav-meta" id="scriptCompareMeta">0/3</span></button>
       </nav>
-      <div class="sidebar-files-heading"><p class="app-nav-label">Áreas de trabalho</p><button class="sidebar-upload-icon" id="runsClear" type="button" title="Limpar histórico de execuções" aria-label="Limpar histórico de execuções">⌫</button></div>
-      <div class="sidebar-runs" id="appRunsList" aria-label="Execuções salvas"><p class="sidebar-library-empty">As execuções concluídas ficam guardadas aqui.</p></div>
+
       <div class="sidebar-files-heading"><p class="app-nav-label">Documentos</p><button class="sidebar-upload-icon" id="workspaceUploadTrigger" type="button" title="Carregar arquivos PDF" aria-label="Carregar arquivos PDF">↥</button><input id="workspaceUploadInput" type="file" accept="application/pdf,.pdf" multiple hidden></div>
       <div class="sidebar-library" id="workspaceSidebarFiles" aria-label="Seleção rápida de arquivos"><p class="sidebar-library-empty">Os PDFs enviados aparecerão aqui para seleção rápida.</p></div>
       <nav class="app-nav sidebar-admin-nav" aria-label="Preferências">
@@ -2492,6 +2513,10 @@
         </section>
       </main>
     </div>
+      <div class="sheet-tabs" id="sheetTabs">
+        <div class="sheet-tabs-list" id="sheetTabsList"></div>
+        <button class="sheet-tab-new" id="sheetTabNew" type="button" title="Nova execução">＋</button>
+      </div>
       <footer class="app-statusbar" id="appStatusBar">
         <span class="status-item" id="statusDocs" title="Documentos carregados">— documentos</span>
         <span class="status-sep"></span>
@@ -3104,7 +3129,7 @@
         if (workspaceState.files.length && !visible.length) workspaceDom.rows.innerHTML = '<tr><td colspan="7">Nenhum arquivo corresponde à busca ou ao filtro selecionado.</td></tr>';
         workspaceDom.sidebar.innerHTML = workspaceState.files.length ? workspaceState.files.map(function (item) {
           const selected = workspaceState.selected.has(item.id);
-          return '<label class="sidebar-file"><input type="checkbox" data-workspace-select="' + escapeHtml(item.id) + '"' + (selected ? ' checked' : '') + '><span><b title="' + escapeHtml(item.file.name) + '">' + escapeHtml(item.file.name) + '</b><small>' + escapeHtml(workspaceRoleLabel(item.role)) + '</small></span></label>';
+          return '<label class="sidebar-file"><input type="checkbox" data-workspace-select="' + escapeHtml(item.id) + '"' + (selected ? ' checked' : '') + '><span><b title="' + escapeHtml(item.file.name) + '">' + escapeHtml(item.file.name) + '</b><small>' + escapeHtml(workspaceRoleLabel(item.role)) + '</small></span><button class="remover-doc" type="button" data-remover-doc="' + escapeHtml(item.id) + '" title="Remover documento" aria-label="Remover ' + escapeHtml(item.file.name) + '">×</button></label>';
         }).join('') : '<p class="sidebar-library-empty">Os PDFs enviados aparecerão aqui para seleção rápida.</p>';
 
         const selectedItems = workspaceState.files.filter(function (item) { return workspaceState.selected.has(item.id); });
@@ -3211,6 +3236,13 @@
       });
       [workspaceDom.rows, workspaceDom.sidebar].forEach(function (container) {
         container.addEventListener('change', function (event) { const input = event.target.closest('[data-workspace-select]'); if (input) setWorkspaceSelection(input.dataset.workspaceSelect, input.checked); });
+      });
+      workspaceDom.sidebar.addEventListener('click', function (event) {
+        const botao = event.target.closest('[data-remover-doc]');
+        if (!botao) return;
+        event.preventDefault();
+        event.stopPropagation();
+        removeWorkspaceFile(botao.dataset.removerDoc);
       });
       workspaceDom.rows.addEventListener('click', function (event) { const button = event.target.closest('[data-workspace-remove]'); if (button) removeWorkspaceFile(button.dataset.workspaceRemove); });
       document.querySelectorAll('[data-workspace-tool="compare"]').forEach(function (button) { button.addEventListener('click', launchWorkspaceComparator); });
@@ -3752,8 +3784,7 @@
               return window.localforage.setDriver(window.localforage.INDEXEDDB).then(function () {
                 return {
                   files: window.localforage.createInstance({ name:WFA_DB_NAME, storeName:'arquivos' }),
-                  state: window.localforage.createInstance({ name:WFA_DB_NAME, storeName:'estado' }),
-                  runs: window.localforage.createInstance({ name:WFA_DB_NAME, storeName:'execucoes' })
+                  state: window.localforage.createInstance({ name:WFA_DB_NAME, storeName:'estado' })
                 };
               });
             })
@@ -4218,6 +4249,7 @@
       /* ============ Áreas de trabalho: execuções concluídas ============
          Cada execução do script vira um registro reabrível, com os dados da
          tabela e dos relatórios que a geraram.                              */
+      const PREFIXO_EXEC = 'exec-';
       let execucaoAberta = null;
 
       async function salvarExecucao() {
@@ -4239,38 +4271,56 @@
               return acc;
             }, {})
           };
-          await stores.runs.setItem(id, { resumo: resumo, reports: compareState.reports, rows: compareState.rows, audit: compareState.audit });
+          await stores.state.setItem(PREFIXO_EXEC + id, { resumo: resumo, reports: compareState.reports, rows: compareState.rows, audit: compareState.audit });
           execucaoAberta = id;
           renderExecucoes();
         } catch (error) { /* sem armazenamento: a execução segue apenas na tela */ }
       }
 
-      async function renderExecucoes() {
-        const alvo = document.getElementById('appRunsList');
-        if (!alvo) return;
-        let registros = [];
+      async function lerExecucoes() {
         try {
           const stores = await getWfaStores();
-          const chaves = await stores.runs.keys();
-          registros = await Promise.all(chaves.map(function (chave) { return stores.runs.getItem(chave); }));
-        } catch (error) { registros = []; }
-        registros = registros.filter(Boolean).sort(function (a, b) { return b.resumo.criadoEm - a.resumo.criadoEm; });
+          const chaves = (await stores.state.keys()).filter(function (chave) { return chave.indexOf(PREFIXO_EXEC) === 0; });
+          const registros = await Promise.all(chaves.map(function (chave) { return stores.state.getItem(chave); }));
+          return registros.filter(Boolean).sort(function (a, b) { return a.resumo.criadoEm - b.resumo.criadoEm; });
+        } catch (error) { return []; }
+      }
+
+      function nomeDaExecucao(resumo) {
+        return resumo.papeis.map(function (papel) { return ROLE_INFO[papel] ? ROLE_INFO[papel].curto : papel; }).join('×');
+      }
+
+      async function renderExecucoes() {
+        const faixa = document.getElementById('sheetTabsList');
+        if (!faixa) return;
+        const registros = await lerExecucoes();
         if (!registros.length) {
-          alvo.innerHTML = '<p class="sidebar-library-empty">As execuções concluídas ficam guardadas aqui.</p>';
+          faixa.innerHTML = '<span class="sheet-tabs-vazio">Nenhuma execução salva — rode um script para criar a primeira aba.</span>';
           return;
         }
-        alvo.innerHTML = registros.map(function (registro) {
+        faixa.innerHTML = registros.map(function (registro, indice) {
           const r = registro.resumo;
           const quando = new Date(r.criadoEm).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
-          const tipos = r.papeis.map(function (papel) { return ROLE_INFO[papel] ? ROLE_INFO[papel].curto : papel; }).join(' · ');
-          return '<button class="sidebar-run' + (r.id === execucaoAberta ? ' ativa' : '') + '" type="button" data-exec="' + escapeHtml(r.id) + '"><b>' + escapeHtml(r.municipio || r.script) + '</b><small>' + escapeHtml(quando) + ' • ' + r.fontes + ' fontes</small><i>' + escapeHtml(tipos) + '</i></button>';
+          return '<button class="sheet-tab' + (r.id === execucaoAberta ? ' ativa' : '') + '" type="button" data-exec="' + escapeHtml(r.id) + '" title="' + escapeHtml(r.municipio + ' • ' + quando + ' • ' + r.fontes + ' fontes') + '"><span>' + escapeHtml(nomeDaExecucao(r)) + '</span><small>' + r.fontes + '</small><i data-exec-del="' + escapeHtml(r.id) + '" title="Excluir execução">×</i></button>';
         }).join('');
+        const ativa = faixa.querySelector('.sheet-tab.ativa');
+        if (ativa) ativa.scrollIntoView({ block:'nearest', inline:'nearest' });
+      }
+
+      async function excluirExecucao(id) {
+        try {
+          const stores = await getWfaStores();
+          await stores.state.removeItem(PREFIXO_EXEC + id);
+        } catch (error) { /* ignora */ }
+        if (execucaoAberta === id) execucaoAberta = null;
+        renderExecucoes();
+        showToast('Execução excluída.');
       }
 
       async function abrirExecucao(id) {
         try {
           const stores = await getWfaStores();
-          const registro = await stores.runs.getItem(id);
+          const registro = await stores.state.getItem(PREFIXO_EXEC + id);
           if (!registro) return;
           compareState.reports = registro.reports;
           compareState.rows = registro.rows;
@@ -4292,16 +4342,26 @@
         } catch (error) { showToast('Não foi possível reabrir esta execução.'); }
       }
 
-      document.getElementById('appRunsList').addEventListener('click', function (evento) {
-        const botao = evento.target.closest('[data-exec]');
-        if (botao) abrirExecucao(botao.dataset.exec);
+      document.getElementById('sheetTabsList').addEventListener('click', function (evento) {
+        const excluir = evento.target.closest('[data-exec-del]');
+        if (excluir) {
+          evento.stopPropagation();
+          if (window.confirm('Excluir esta execução? Os documentos continuam guardados.')) excluirExecucao(excluir.dataset.execDel);
+          return;
+        }
+        const aba = evento.target.closest('[data-exec]');
+        if (aba) abrirExecucao(aba.dataset.exec);
       });
-      document.getElementById('runsClear').addEventListener('click', async function () {
-        if (!window.confirm('Apagar o histórico de execuções? Os documentos continuam guardados.')) return;
-        try { const stores = await getWfaStores(); await stores.runs.clear(); } catch (error) { /* ignora */ }
+      document.getElementById('sheetTabNew').addEventListener('click', function () {
         execucaoAberta = null;
+        resetCompareOutput();
+        compareState.rows = [];
+        compareState.reports = {};
+        compareState.audit = [];
+        renderScriptBrief();
         renderExecucoes();
-        showToast('Histórico de execuções apagado.');
+        selectView('comparador-fontes');
+        showToast('Escolha os documentos e execute para criar uma nova aba.');
       });
       renderExecucoes();
 
