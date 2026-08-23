@@ -436,6 +436,34 @@
     .area-vazia-botao { padding: 9px 22px; background: #205e8a; border: 1px solid #205e8a; color: white; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
     .area-vazia-botao:hover { background: #1a4e73; }
     .sheet-cmd-automacao { font-weight: 700; color: #205e8a; }
+    .sidebar-marcados { margin-left: 4px; color: #a4693a; font-size: 9.5px; font-weight: 700; letter-spacing: .02em; text-transform: none; }
+    .sidebar-marcados.pronto { color: #4fae7c; }
+    .sidebar-dica { margin: 8px 14px 0; color: #8fa6b5; font-size: 10.5px; line-height: 1.45; }
+    .sidebar-dica b { color: #cfe0ec; font-weight: 700; }
+    body.sidebar-recolhida .sidebar-dica { display: none; }
+
+    /* ---- painel de automações da planilha ---- */
+    .automacao-menu { position: fixed; z-index: 1400; width: 340px; max-width: calc(100vw - 16px); padding: 4px; background: white; border: 1px solid #b9c8d3; box-shadow: 0 12px 30px rgba(18,41,59,.18); }
+    .automacao-item { padding: 13px 14px; }
+    .automacao-item + .automacao-item { border-top: 1px solid #eef2f5; }
+    .automacao-item h4 { margin: 0 0 5px; color: #12293b; font: 700 13.5px/1.25 Cambria, Georgia, serif; }
+    .automacao-desc { margin: 0 0 11px; color: #5b7688; font-size: 11.5px; line-height: 1.45; }
+    .automacao-regra { margin: 0 0 6px; color: #12293b; font-size: 11px; font-weight: 700; }
+    .automacao-req { margin: 0 0 12px; padding: 0; list-style: none; }
+    .automacao-req li { display: flex; align-items: center; gap: 7px; padding: 4px 0; border-bottom: 1px solid #f2f5f8; font-size: 11.5px; color: #7b8f9c; }
+    .automacao-req li:last-child { border-bottom: 0; }
+    .automacao-req .marca { width: 14px; height: 14px; flex: none; display: grid; place-items: center; border: 1px solid #c3d0d9; background: #fbfcfd; color: white; font-size: 9px; font-weight: 700; }
+    .automacao-req li.marcado .marca { background: #2f7d55; border-color: #2f7d55; }
+    .automacao-req li.marcado { color: #12293b; }
+    .automacao-req .req-nome { font-weight: 600; }
+    .automacao-req .req-doc { margin-left: auto; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #93a6b2; font-size: 10.5px; }
+    .automacao-req li.marcado .req-doc { color: #2f7d55; }
+    .automacao-pe { display: flex; align-items: center; gap: 10px; }
+    .automacao-estado { font-size: 11px; color: #a4693a; }
+    .automacao-estado.pronto { color: #2f7d55; font-weight: 700; }
+    .automacao-run { margin-left: auto; padding: 6px 15px; background: #205e8a; border: 1px solid #205e8a; color: white; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .automacao-run:hover:not(:disabled) { background: #1a4e73; }
+    .automacao-run:disabled { background: #dfe7ec; border-color: #cdd8e0; color: #93a6b2; cursor: not-allowed; }
     /* numa planilha em branco não há situação nem fonte para ordenar */
     .planilha-livre #compareStatusFilter,
     .planilha-livre [data-sheet-cmd="asc"],

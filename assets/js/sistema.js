@@ -145,6 +145,10 @@
         {
           id: 'comparacao-fontes',
           nome: 'Comparação de fontes de relatório',
+          descricao: 'Lê o quadro Total por fonte de recurso no fim de cada relatório e cruza os valores fonte a fonte, com diferença e execução.',
+          regra: 'Marque na barra lateral dois destes três relatórios:',
+          // orçada, arrecadada e empenhada, na ordem em que aparecem no menu
+          requisitos: ['budget', 'collected', 'committed'],
           situacao: function () {
             const marcados = documentosSelecionados();
             const tipos = tiposSelecionados();
@@ -158,6 +162,47 @@
         }
       ];
 
+      /* O menu de automações mostra o que cada rotina precisa e o que já está
+         marcado na barra lateral, para não haver adivinhação. */
+      function fecharMenuAutomacoes() {
+        const painel = document.getElementById('sheetAutomacaoMenu');
+        if (painel) painel.hidden = true;
+      }
+      function abrirMenuAutomacoes() {
+        const painel = document.getElementById('sheetAutomacaoMenu');
+        const botao = document.getElementById('sheetAutomacao');
+        if (!painel || !botao) return;
+        if (!painel.hidden) { fecharMenuAutomacoes(); return; }
+        const marcados = documentosSelecionados();
+        painel.innerHTML = AUTOMACOES.map(function (automacao) {
+          const situacao = automacao.situacao();
+          const requisitos = (automacao.requisitos || []).map(function (papel) {
+            const doc = marcados.find(function (item) { return item.role === papel; });
+            return '<li class="' + (doc ? 'marcado' : '') + '"><span class="marca" aria-hidden="true">' + (doc ? '✓' : '') + '</span>' +
+              '<span class="req-nome">' + escapeHtml(ROLE_INFO[papel].nome) + '</span>' +
+              '<span class="req-doc">' + escapeHtml(doc ? doc.file.name : 'não marcado') + '</span></li>';
+          }).join('');
+          return '<article class="automacao-item" data-automacao="' + escapeHtml(automacao.id) + '">' +
+            '<h4>' + escapeHtml(automacao.nome) + '</h4>' +
+            '<p class="automacao-desc">' + escapeHtml(automacao.descricao || '') + '</p>' +
+            (requisitos ? '<p class="automacao-regra">' + escapeHtml(automacao.regra || 'Requisitos:') + '</p><ul class="automacao-req">' + requisitos + '</ul>' : '') +
+            '<div class="automacao-pe">' +
+              '<span class="automacao-estado' + (situacao.ok ? ' pronto' : '') + '">' + escapeHtml(situacao.ok ? 'Pronta para rodar' : situacao.texto) + '</span>' +
+              '<button type="button" class="automacao-run" data-rodar="' + escapeHtml(automacao.id) + '"' + (situacao.ok ? '' : ' disabled') + '>Executar</button>' +
+            '</div></article>';
+        }).join('');
+        painel.hidden = false;
+        const caixa = botao.getBoundingClientRect();
+        const largura = painel.offsetWidth || 320;
+        painel.style.left = Math.max(8, Math.min(caixa.left, window.innerWidth - largura - 8)) + 'px';
+        painel.style.top = (caixa.bottom + 4) + 'px';
+      }
+
+      // Registros gravados antes das automações não guardam o modo: quem tem
+      // dois relatórios é comparação; o resto é planilha em branco.
+      function modoDeduzido(relatorios) {
+        return Object.keys(relatorios || {}).length >= 2 ? 'comparador' : 'livre';
+      }
       function filtrarLinhasLivres(todas, busca) {
         if (!busca) return todas.slice();
         return todas.filter(function (row) {
@@ -212,12 +257,23 @@
         return tipos;
       }
       function renderScriptBrief() { atualizarResumoDoBrief(); }
+      // Barra lateral: quantas planilhas existem e quantos documentos estão
+      // marcados para as automações.
       function atualizarResumoDoBrief() {
+        const marcados = documentosSelecionados().length;
+        const aviso = document.getElementById('sidebarDocsMarcados');
+        if (aviso) {
+          aviso.textContent = marcados ? marcados + (marcados === 1 ? ' marcado' : ' marcados') : '';
+          aviso.hidden = !marcados;
+          aviso.classList.toggle('pronto', tiposSelecionados().length >= 2);
+        }
+      }
+      function atualizarContadorPlanilhas(quantas) {
         const marcador = document.getElementById('scriptCompareMeta');
         if (!marcador) return;
-        const tipos = tiposSelecionados().length;
-        marcador.textContent = tipos + '/3';
-        marcador.classList.toggle('pronto', tipos >= 2);
+        marcador.textContent = quantas ? String(quantas) : '';
+        marcador.hidden = !quantas;
+        marcador.title = quantas + (quantas === 1 ? ' planilha' : ' planilhas');
       }
 
       function atualizarResumoDosScripts() { renderScriptBrief(); }
@@ -767,18 +823,24 @@
       workspaceDom.rows.addEventListener('click', function (event) { const button = event.target.closest('[data-workspace-remove]'); if (button) removeWorkspaceFile(button.dataset.workspaceRemove); });
       document.querySelectorAll('[data-workspace-tool="compare"]').forEach(function (button) { button.addEventListener('click', launchWorkspaceComparator); });
       document.getElementById('novaPlanilhaBotao').addEventListener('click', function () { novaPlanilha(); });
+      document.getElementById('sidebarNovaPlanilha').addEventListener('click', function () { novaPlanilha(); });
       // As automações moram dentro da planilha, na barra de comandos.
       document.getElementById('sheetAutomacao').addEventListener('click', function (evento) {
-        abrirMenuPlanilha(evento, AUTOMACOES.map(function (automacao) {
-          const situacao = automacao.situacao();
-          return {
-            rotulo: automacao.nome + (situacao.ok ? '' : '   (' + situacao.texto + ')'),
-            acao: situacao.ok
-              ? function () { automacao.executar(); }
-              : function () { showToast('Para rodar esta automação: ' + situacao.texto + '.'); }
-          };
-        }));
+        evento.stopPropagation();
+        abrirMenuAutomacoes();
       });
+      document.getElementById('sheetAutomacaoMenu').addEventListener('click', function (evento) {
+        const botao = evento.target.closest('[data-rodar]');
+        if (!botao || botao.disabled) return;
+        const automacao = AUTOMACOES.find(function (item) { return item.id === botao.dataset.rodar; });
+        fecharMenuAutomacoes();
+        if (automacao) automacao.executar();
+      });
+      document.addEventListener('click', function (evento) {
+        const painel = document.getElementById('sheetAutomacaoMenu');
+        if (painel && !painel.hidden && !painel.contains(evento.target)) fecharMenuAutomacoes();
+      });
+      document.addEventListener('keydown', function (evento) { if (evento.key === 'Escape') fecharMenuAutomacoes(); });
       workspaceDom.run.addEventListener('click', launchWorkspaceComparator);
       renderWorkspaceFiles();
 
@@ -920,6 +982,10 @@
       // Estrutura da planilha: colunas de dados são editáveis, as calculadas não.
       function colunasDaTabela() {
         const colunas = [];
+        // Uma planilha em branco sem coluna nenhuma não serve para nada: devolve o rascunho.
+        if (compareState.modo === 'livre' && !(compareState.colunasExtras || []).length && compareState.rows.length) {
+          compareState.colunasExtras = [novaColunaLivre(220), novaColunaLivre(), novaColunaLivre(), novaColunaLivre(), novaColunaLivre()];
+        }
         // Planilha em branco: existem só as colunas que você criou.
         if (compareState.modo !== 'livre') {
         colunas.push({ id:'key', tipo:'texto', titulo:'Fonte de recurso', largura:186, classe:'cell-code' });
@@ -2187,6 +2253,7 @@
             reports: compareState.reports,
             rows: compareState.rows,
             audit: compareState.audit,
+            modo: compareState.modo,
             sourceSort: compareState.sourceSort,
             colunasExtras: compareState.colunasExtras,
             titulos: compareState.titulos,
@@ -2246,7 +2313,11 @@
             updateCompareReady();
             const chavesExec = (await stores.state.keys()).filter(function (chave) { return chave.indexOf('exec-') === 0; });
             const hasReports = chavesExec.length && savedCompare.reports && Object.keys(savedCompare.reports).length >= 2;
-            if (savedCompare.hasResults && hasReports && Array.isArray(savedCompare.rows) && savedCompare.rows.length) {
+            // planilha em branco não tem relatório nenhum; comparação pela metade não volta
+            const semRelatorio = !Object.keys(savedCompare.reports || {}).length;
+            const livreSalva = chavesExec.length && semRelatorio && (savedCompare.modo || 'livre') === 'livre';
+            if (savedCompare.hasResults && (hasReports || livreSalva) && Array.isArray(savedCompare.rows) && savedCompare.rows.length) {
+              compareState.modo = savedCompare.modo || modoDeduzido(savedCompare.reports);
               compareState.reports = savedCompare.reports;
               compareState.rows = savedCompare.rows;
               compareState.audit = Array.isArray(savedCompare.audit) ? savedCompare.audit : [];
@@ -2256,14 +2327,21 @@
               compareDom.results.hidden = false;
               compareDom.empty.hidden = true;
               compareDom.details.hidden = true;
-              compareDom.detailsToggle.hidden = false;
+              compareDom.detailsToggle.hidden = compareState.modo === 'livre';
               compareDom.auditPanel.hidden = true;
-              compareDom.auditToggle.hidden = false;
+              compareDom.auditToggle.hidden = compareState.modo === 'livre';
               compareDom.view.classList.add('results-ready');
               compareDom.view.classList.remove('show-setup');
               compareDom.setup.classList.remove('expanded');
-              setCompareAlert('Tabela restaurada do armazenamento deste navegador. Reprocesse os PDFs se precisar recalcular do zero.');
+              setCompareAlert(compareState.modo === 'livre' ? '' : 'Tabela restaurada do armazenamento deste navegador. Reprocesse os PDFs se precisar recalcular do zero.');
             }
+          }
+
+          // Se o retrato da tela não trouxe a planilha de volta mas a aba aberta
+          // continua guardada, é ela que deve reaparecer — nunca uma grade vazia.
+          if (compareDom.results.hidden && execucaoAberta) {
+            const guardada = await stores.state.getItem(PREFIXO_EXEC + execucaoAberta);
+            if (guardada && Array.isArray(guardada.rows) && guardada.rows.length) await abrirExecucao(execucaoAberta);
           }
 
           // guarda contra resultado órfão: sem execução salva, nada de tabela restaurada
@@ -2729,8 +2807,9 @@
         if (registros.length && !execucaoAberta && !compareDom.results.hidden) {
           execucaoAberta = registros[registros.length - 1].resumo.id;
         }
+        atualizarContadorPlanilhas(registros.length);
         if (!registros.length) {
-          faixa.innerHTML = '<span class="sheet-tabs-vazio">Nenhuma execução salva — rode um script para criar a primeira aba.</span>';
+          faixa.innerHTML = '<span class="sheet-tabs-vazio">Nenhuma planilha ainda — use o ＋ para criar a primeira.</span>';
           return;
         }
         faixa.innerHTML = registros.map(function (registro, indice) {
@@ -2812,7 +2891,7 @@
           const stores = await getWfaStores();
           const registro = await stores.state.getItem(PREFIXO_EXEC + id);
           if (!registro) return;
-          compareState.modo = registro.modo || 'comparador';
+          compareState.modo = registro.modo || modoDeduzido(registro.reports);
           compareState.reports = registro.reports;
           compareState.rows = registro.rows;
           compareState.audit = registro.audit || [];
