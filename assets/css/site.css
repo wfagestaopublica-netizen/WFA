@@ -399,6 +399,39 @@
 
     .cms-edit-bar .cms-bar-drop { border-color: rgba(255,255,255,.2); color: rgba(255,255,255,.6); }
     .cms-edit-bar .cms-bar-drop:hover:not(:disabled) { border-color: #b03a3a; color: #ff9c9c; }
+    /* ---- área livre da homepage ---- */
+    .area-barra { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 40px 0 -22px; padding: 9px 14px; background: var(--navy-950); color: white; }
+    .area-nome { font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-400); }
+    .area-grupo { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: rgba(255,255,255,.72); }
+    .area-barra button { padding: 4px 10px; border: 1px solid rgba(255,255,255,.24); background: transparent; color: white; font: inherit; font-size: 11.5px; cursor: pointer; }
+    .area-barra button:hover { border-color: var(--gold-500); }
+    .area-barra button.ativo { background: var(--gold-500); border-color: var(--gold-500); color: var(--navy-950); font-weight: 700; }
+    .area-barra .area-novo { margin-left: auto; border-color: var(--gold-500); color: var(--gold-400); font-weight: 700; }
+    .area-barra .area-novo:hover { background: var(--gold-500); color: var(--navy-950); }
+
+    .service-grid.area-editando .service-card { outline: 1px dashed transparent; outline-offset: 3px; }
+    .service-grid.area-editando .service-card:hover { outline-color: #b9c8d3; }
+    .service-grid.area-editando .service-card.arrastando { opacity: .4; }
+    .service-grid.area-editando .service-card.solta-antes { box-shadow: -3px 0 0 var(--gold-500); }
+    .service-grid.area-editando .service-card.solta-depois { box-shadow: 3px 0 0 var(--gold-500); }
+    .area-cartao-barra { position: absolute; z-index: 3; top: 6px; right: 6px; display: none; align-items: center; gap: 3px; padding: 3px; background: var(--navy-950); }
+    .service-card:hover .area-cartao-barra, .service-card:focus-within .area-cartao-barra { display: flex; }
+    .area-cartao-barra button { width: 22px; height: 21px; padding: 0; border: 0; background: transparent; color: white; font: inherit; font-size: 11px; cursor: pointer; }
+    .area-cartao-barra button:hover { background: var(--gold-500); color: var(--navy-950); }
+    .area-cartao-barra button.ativo { background: rgba(255,255,255,.18); font-weight: 700; }
+    .area-cartao-barra button.perigo:hover { background: #c9403f; color: white; }
+    .area-larguras { display: flex; gap: 1px; padding-right: 4px; margin-right: 2px; border-right: 1px solid rgba(255,255,255,.22); }
+    .area-arrastar { padding: 0 5px; color: rgba(255,255,255,.6); cursor: grab; font-size: 12px; }
+    .service-card li { position: relative; }
+    .area-item-x { position: absolute; z-index: 2; top: 50%; right: -2px; transform: translateY(-50%); display: none; width: 17px; height: 17px; padding: 0; border: 0; background: #e6ecf0; color: #7b8f9c; font: inherit; font-size: 11px; line-height: 1; cursor: pointer; }
+    .service-grid.area-editando li:hover .area-item-x { display: block; }
+    .area-item-x:hover { background: #c9403f; color: white; }
+    .area-item-novo { list-style: none; margin-top: 4px; }
+    .area-item-novo button { padding: 2px 8px; border: 1px dashed #c3d0d9; background: transparent; color: #7b8f9c; font: inherit; font-size: 11px; cursor: pointer; }
+    .area-item-novo button:hover { border-color: var(--gold-500); color: var(--navy-950); }
+    @media (max-width: 900px) { .service-grid[style] { grid-template-columns: repeat(2, minmax(0,1fr)) !important; } }
+    @media (max-width: 640px) { .service-grid[style] { grid-template-columns: 1fr !important; } .service-card[style] { grid-column: span 1 !important; } }
+
     .cms-format-bar { position: fixed; z-index: 97; display: flex; gap: 6px; padding: 5px; background: var(--navy-950); box-shadow: 0 8px 22px rgba(3,16,26,.4); }
     .cms-format-bar button { padding: 5px 11px; border: 0; background: transparent; color: white; font: inherit; font-size: 12px; cursor: pointer; }
     .cms-format-bar #cmsFormatOn { color: var(--gold-400); font-style: italic; }

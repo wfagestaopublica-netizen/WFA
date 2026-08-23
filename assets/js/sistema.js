@@ -2947,4 +2947,8 @@
       document.getElementById('contactForm').addEventListener('submit', function (event) { event.preventDefault(); document.getElementById('formStatus').hidden = false; });
       const revealObserver = new IntersectionObserver(function (entries) { entries.forEach(function (entry) { if (entry.isIntersecting) entry.target.classList.add('visible'); }); }, { threshold: .12 });
       document.querySelectorAll('.reveal').forEach(function (element) { revealObserver.observe(element); });
+      // trechos redesenhados depois do carregamento também precisam aparecer
+      window.wfaObservarReveal = function (raiz) {
+        (raiz || document).querySelectorAll('.reveal:not(.visible)').forEach(function (element) { revealObserver.observe(element); });
+      };
     }());

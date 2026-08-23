@@ -89,6 +89,7 @@
         var imagens = {};
         Array.prototype.forEach.call(document.querySelectorAll('[data-bloco]'), function (el) {
           if (!editavel(el)) return;
+          if (el.closest('.service-grid')) return; // área livre: o modelo cuida desses
           var chave = el.getAttribute('data-bloco');
           blocos[chave] = { el:el, chave:chave, escopo:escopoDe(el), orig:sanitizar(el.innerHTML), rotulo:rotuloDe(el) };
         });
@@ -119,6 +120,7 @@
           alteracoes[chave] = salvo.v;
           aplicarBloco(campo, salvo.v);
         });
+        if (dados.areas && dados.areas[AREA]) { areaModelo = dados.areas[AREA]; desenharArea(); }
         if (dados.imagens) Object.keys(dados.imagens).forEach(function (chave) {
           var campo = mapa.imagens[chave];
           if (campo && dados.imagens[chave]) aplicarImagem(campo, dados.imagens[chave]);
@@ -146,6 +148,8 @@
       }
       function totalAlteracoes() {
         var total = Object.keys(alteracoes).length + Object.keys(imagensPendentes).length + Object.keys(coresAtuais()).length;
+        var areaPublicada = JSON.stringify((publicado && publicado.areas && publicado.areas[AREA]) || null);
+        if (areaModelo && JSON.stringify(areaModelo) !== areaPublicada) total += 1;
         var construcaoPublicada = publicado && typeof publicado.emConstrucao === 'boolean' ? publicado.emConstrucao : true;
         if (construcaoAtual() !== construcaoPublicada) total += 1;
         return total;
@@ -173,7 +177,8 @@
           var campo = mapa.blocos[chave];
           if (campo) blocos[chave] = { v:alteracoes[chave], o:campo.orig };
         });
-        try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ blocos:blocos, cores:coresAtuais(), emConstrucao:construcaoAtual() })); }
+        var areasSalvas = areaModelo ? (function () { var a = {}; a[AREA] = areaModelo; return a; }()) : null;
+        try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ blocos:blocos, areas:areasSalvas, cores:coresAtuais(), emConstrucao:construcaoAtual() })); }
         catch (error) { /* sem espaço */ }
         atualizarBotoes();
         return blocos;
@@ -211,6 +216,9 @@
           var chaveFoto = Object.keys(mapa.imagens).find(function (k) { return mapa.imagens[k].el === foto; });
           if (chaveFoto) vazio.setAttribute('data-cms-inline-img', chaveFoto);
         }
+        montarBarraArea();
+        if (!areaModelo) areaModelo = modeloDaTela();
+        desenharArea();
         window.scrollTo({ top: 0 });
         atualizarBotoes();
         toast('Clique no texto para editar. Enter quebra a linha. Selecione um trecho para formatar. Nas imagens, use o botão Trocar imagem.');
@@ -235,6 +243,9 @@
         var botaoCores = document.getElementById('cmsBarColors');
         if (botaoCores) botaoCores.classList.remove('ativo');
         document.body.classList.remove('cms-editando');
+        var barraArea = document.getElementById('areaBarra');
+        if (barraArea) barraArea.hidden = true;
+        desenharArea();
         if (voltarAoPainel !== false) document.body.classList.add('app-active');
       }
 
@@ -245,6 +256,249 @@
         var el = no.nodeType === 1 ? no : no.parentElement;
         return el ? el.closest('[data-cms-inline]') : null;
       }
+      /* ---------------- Área livre: piloto na seção de Serviços ----------------
+         Nesta seção a página deixa de ser HTML fixo e passa a ser desenhada a
+         partir de um modelo: quantas colunas a grade tem, quais cartões existem,
+         quanto cada um ocupa e o que está escrito neles. O HTML do arquivo
+         continua servindo de ponto de partida — enquanto nada for mexido aqui,
+         é ele que aparece, sem depender de JavaScript.                       */
+      var AREA = 'servicos';
+      var areaModelo = null;      // null enquanto a seção segue como está no código
+      var areaArrastando = null;
+
+      function areaGrade() { return document.querySelector('#' + AREA + ' .service-grid'); }
+      function areaSecao() { return document.getElementById(AREA); }
+      function textoDe(el) { return el ? sanitizar(el.innerHTML) : ''; }
+
+      // lê a seção como ela está na tela e transforma no modelo
+      function modeloDaTela() {
+        var grade = areaGrade();
+        if (!grade) return null;
+        var cartoes = [];
+        Array.prototype.forEach.call(grade.querySelectorAll('.service-card'), function (art, i) {
+          cartoes.push({
+            id: 'srv-' + (i + 1),
+            largura: 1,
+            numero: textoDe(art.querySelector('.service-number span')),
+            sigla: textoDe(art.querySelector('.service-number i')),
+            titulo: textoDe(art.querySelector('h3')),
+            texto: textoDe(art.querySelector('p')),
+            itens: Array.prototype.map.call(art.querySelectorAll('li'), textoDe)
+          });
+        });
+        return { colunas: 3, cartoes: cartoes };
+      }
+
+      function novoIdCartao() {
+        var n = 1;
+        var usados = (areaModelo.cartoes || []).map(function (c) { return c.id; });
+        while (usados.indexOf('srv-' + n) !== -1) n += 1;
+        return 'srv-' + n;
+      }
+
+      function campo(cartao, nome, valor, tag, classe) {
+        return '<' + tag + (classe ? ' class="' + classe + '"' : '') +
+          ' data-area-cartao="' + escapeAttr(cartao.id) + '" data-area-campo="' + escapeAttr(nome) + '">' +
+          sanitizar(valor || '') + '</' + tag + '>';
+      }
+      function escapeAttr(t) { return String(t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+      function larguras() {
+        var lista = [];
+        for (var n = 1; n <= areaModelo.colunas; n += 1) lista.push(n);
+        return lista;
+      }
+      function cartaoHtml(cartao) {
+        var largura = Math.min(Math.max(cartao.largura || 1, 1), areaModelo.colunas);
+        var itens = (cartao.itens || []).map(function (item, i) {
+          return '<li data-area-cartao="' + escapeAttr(cartao.id) + '" data-area-campo="item:' + i + '">' + sanitizar(item) + '</li>' +
+            (editando ? '<button type="button" class="area-item-x" data-area-item-remover="' + escapeAttr(cartao.id) + ':' + i + '" title="Remover este item" aria-label="Remover item">×</button>' : '');
+        }).join('');
+        var controles = editando
+          ? '<div class="area-cartao-barra">' +
+              '<span class="area-arrastar" title="Arraste para mudar a ordem" aria-hidden="true">⠿</span>' +
+              '<span class="area-larguras">' + larguras().map(function (n) {
+                return '<button type="button" data-area-largura="' + escapeAttr(cartao.id) + ':' + n + '"' + (largura === n ? ' class="ativo"' : '') + ' title="Ocupar ' + n + (n === 1 ? ' coluna' : ' colunas') + '">' + n + '</button>';
+              }).join('') + '</span>' +
+              '<button type="button" data-area-duplicar="' + escapeAttr(cartao.id) + '" title="Duplicar cartão" aria-label="Duplicar cartão">⧉</button>' +
+              '<button type="button" class="perigo" data-area-remover="' + escapeAttr(cartao.id) + '" title="Excluir cartão" aria-label="Excluir cartão">×</button>' +
+            '</div>'
+          : '';
+        return '<article class="service-card reveal" data-area-id="' + escapeAttr(cartao.id) + '"' +
+          (editando ? ' draggable="true"' : '') +
+          ' style="grid-column: span ' + largura + '">' + controles +
+          '<div class="service-number">' + campo(cartao, 'numero', cartao.numero, 'span') + campo(cartao, 'sigla', cartao.sigla, 'i') + '</div>' +
+          campo(cartao, 'titulo', cartao.titulo, 'h3') +
+          campo(cartao, 'texto', cartao.texto, 'p') +
+          '<ul>' + itens + (editando ? '<li class="area-item-novo"><button type="button" data-area-item-novo="' + escapeAttr(cartao.id) + '">＋ item</button></li>' : '') + '</ul>' +
+          '</article>';
+      }
+
+      function desenharArea() {
+        var grade = areaGrade();
+        if (!grade || !areaModelo) return;
+        grade.style.gridTemplateColumns = 'repeat(' + areaModelo.colunas + ', minmax(0, 1fr))';
+        grade.innerHTML = areaModelo.cartoes.map(cartaoHtml).join('');
+        grade.classList.toggle('area-editando', editando);
+        if (editando) {
+          Array.prototype.forEach.call(grade.querySelectorAll('[data-area-campo]'), function (el) {
+            el.setAttribute('contenteditable', 'true');
+            el.setAttribute('spellcheck', 'false');
+          });
+        }
+        if (window.wfaObservarReveal) window.wfaObservarReveal(grade);
+        Array.prototype.forEach.call(grade.querySelectorAll('.reveal'), function (el) { el.classList.add('visible'); });
+        atualizarBarraArea();
+      }
+
+      // a seção só vira modelo quando você mexe nela pela primeira vez
+      function garantirModelo() {
+        if (!areaModelo) areaModelo = modeloDaTela();
+        return Boolean(areaModelo);
+      }
+      function cartaoPorId(id) {
+        return (areaModelo.cartoes || []).find(function (c) { return c.id === id; });
+      }
+      function areaMudou() {
+        gravarRascunho();
+        desenharArea();
+      }
+
+      /* ---- barra da área ---- */
+      function atualizarBarraArea() {
+        var barra = document.getElementById('areaBarra');
+        if (!barra) return;
+        barra.hidden = !editando;
+        if (!editando) return;
+        var colunas = areaModelo ? areaModelo.colunas : 3;
+        Array.prototype.forEach.call(barra.querySelectorAll('[data-area-colunas]'), function (b) {
+          b.classList.toggle('ativo', Number(b.dataset.areaColunas) === colunas);
+        });
+      }
+      function montarBarraArea() {
+        var secao = areaSecao();
+        if (!secao || document.getElementById('areaBarra')) return;
+        var grade = areaGrade();
+        var barra = document.createElement('div');
+        barra.className = 'area-barra';
+        barra.id = 'areaBarra';
+        barra.hidden = true;
+        barra.innerHTML = '<span class="area-nome">Serviços · área livre</span>' +
+          '<span class="area-grupo">Colunas' +
+            [2, 3, 4].map(function (n) { return '<button type="button" data-area-colunas="' + n + '">' + n + '</button>'; }).join('') +
+          '</span>' +
+          '<button type="button" data-area-renumerar="1" title="Renumerar 01, 02, 03… na ordem atual">Renumerar</button>' +
+          '<button type="button" class="area-novo" data-area-novo="1">＋ Cartão</button>';
+        grade.parentNode.insertBefore(barra, grade);
+      }
+
+      /* ---- ações ---- */
+      document.addEventListener('click', function (evento) {
+        if (!editando) return;
+        var alvo = evento.target.closest && evento.target.closest('[data-area-colunas],[data-area-renumerar],[data-area-novo],[data-area-largura],[data-area-duplicar],[data-area-remover],[data-area-item-novo],[data-area-item-remover]');
+        if (!alvo) return;
+        evento.preventDefault();
+        if (!garantirModelo()) return;
+        var d = alvo.dataset;
+        if (d.areaColunas) {
+          areaModelo.colunas = Number(d.areaColunas);
+          areaModelo.cartoes.forEach(function (c) { if (c.largura > areaModelo.colunas) c.largura = areaModelo.colunas; });
+        } else if (d.areaRenumerar) {
+          areaModelo.cartoes.forEach(function (c, i) { c.numero = String(i + 1).padStart(2, '0'); });
+          toast('Cartões renumerados na ordem atual.');
+        } else if (d.areaNovo) {
+          areaModelo.cartoes.push({
+            id: novoIdCartao(), largura: 1,
+            numero: String(areaModelo.cartoes.length + 1).padStart(2, '0'), sigla: 'NV',
+            titulo: 'Novo serviço', texto: 'Descreva aqui o que este serviço entrega.',
+            itens: ['Primeiro item']
+          });
+          toast('Cartão criado. Clique no texto para escrever.');
+        } else if (d.areaLargura) {
+          var parteL = d.areaLargura.split(':');
+          var cL = cartaoPorId(parteL[0]);
+          if (cL) cL.largura = Number(parteL[1]);
+        } else if (d.areaDuplicar) {
+          var cD = cartaoPorId(d.areaDuplicar);
+          if (cD) {
+            var copia = JSON.parse(JSON.stringify(cD));
+            copia.id = novoIdCartao();
+            areaModelo.cartoes.splice(areaModelo.cartoes.indexOf(cD) + 1, 0, copia);
+          }
+        } else if (d.areaRemover) {
+          if (areaModelo.cartoes.length < 2) { toast('A área precisa de ao menos um cartão.'); return; }
+          areaModelo.cartoes = areaModelo.cartoes.filter(function (c) { return c.id !== d.areaRemover; });
+        } else if (d.areaItemNovo) {
+          var cI = cartaoPorId(d.areaItemNovo);
+          if (cI) { cI.itens = cI.itens || []; cI.itens.push('Novo item'); }
+        } else if (d.areaItemRemover) {
+          var parteR = d.areaItemRemover.split(':');
+          var cR = cartaoPorId(parteR[0]);
+          if (cR && cR.itens) cR.itens.splice(Number(parteR[1]), 1);
+        }
+        areaMudou();
+      });
+
+      // texto dos campos: escreve direto no modelo
+      document.addEventListener('input', function (evento) {
+        if (!editando) return;
+        var campoEl = evento.target.closest && evento.target.closest('[data-area-campo]');
+        if (!campoEl || !garantirModelo()) return;
+        var cartao = cartaoPorId(campoEl.dataset.areaCartao);
+        if (!cartao) return;
+        var nome = campoEl.dataset.areaCampo;
+        var valor = sanitizar(campoEl.innerHTML);
+        if (nome.indexOf('item:') === 0) cartao.itens[Number(nome.slice(5))] = valor;
+        else cartao[nome] = valor;
+        gravarRascunho();
+      });
+
+      /* ---- arrastar para reordenar ---- */
+      document.addEventListener('dragstart', function (evento) {
+        if (!editando) return;
+        var art = evento.target.closest && evento.target.closest('[data-area-id]');
+        if (!art) return;
+        areaArrastando = art.dataset.areaId;
+        art.classList.add('arrastando');
+        try { evento.dataTransfer.setData('text/plain', areaArrastando); evento.dataTransfer.effectAllowed = 'move'; } catch (erro) { /* ignora */ }
+      });
+      document.addEventListener('dragend', function () {
+        areaArrastando = null;
+        Array.prototype.forEach.call(document.querySelectorAll('.arrastando, .solta-antes, .solta-depois'), function (el) {
+          el.classList.remove('arrastando', 'solta-antes', 'solta-depois');
+        });
+      });
+      document.addEventListener('dragover', function (evento) {
+        if (!editando || !areaArrastando) return;
+        var art = evento.target.closest && evento.target.closest('[data-area-id]');
+        if (!art || art.dataset.areaId === areaArrastando) return;
+        evento.preventDefault();
+        var caixa = art.getBoundingClientRect();
+        var antes = (evento.clientX - caixa.left) < caixa.width / 2;
+        Array.prototype.forEach.call(document.querySelectorAll('.solta-antes, .solta-depois'), function (el) {
+          el.classList.remove('solta-antes', 'solta-depois');
+        });
+        art.classList.add(antes ? 'solta-antes' : 'solta-depois');
+      });
+      document.addEventListener('drop', function (evento) {
+        if (!editando || !areaArrastando) return;
+        var art = evento.target.closest && evento.target.closest('[data-area-id]');
+        if (!art || art.dataset.areaId === areaArrastando) return;
+        evento.preventDefault();
+        if (!garantirModelo()) return;
+        var origem = cartaoPorId(areaArrastando);
+        var destino = cartaoPorId(art.dataset.areaId);
+        if (!origem || !destino) return;
+        var caixa = art.getBoundingClientRect();
+        var antes = (evento.clientX - caixa.left) < caixa.width / 2;
+        areaModelo.cartoes = areaModelo.cartoes.filter(function (c) { return c !== origem; });
+        var pos = areaModelo.cartoes.indexOf(destino) + (antes ? 0 : 1);
+        areaModelo.cartoes.splice(pos, 0, origem);
+        areaArrastando = null;
+        areaMudou();
+        toast('Cartão movido. Publique para valer no site.');
+      });
+
       function esconderFormatacao() {
         var barra = document.getElementById('cmsFormatBar');
         if (barra) barra.hidden = true;
@@ -556,6 +810,7 @@
           v: 2,
           atualizadoEm: new Date().toISOString(),
           blocos: Object.assign({}, (publicado && publicado.blocos) || {}, blocos),
+          areas: Object.assign({}, (publicado && publicado.areas) || {}, areaModelo ? (function () { var a = {}; a[AREA] = areaModelo; return a; }()) : {}),
           imagens: Object.assign({}, (publicado && publicado.imagens) || {}),
           cores: coresAtuais(),
           emConstrucao: construcaoAtual()
