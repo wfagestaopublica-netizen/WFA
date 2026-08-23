@@ -1071,7 +1071,8 @@
       // valor numérico de uma célula, pela letra da coluna e número da linha exibida
       function valorDaCelula(letra, numeroLinha, contexto) {
         const indice = contexto.colunas.findIndex(function (coluna, posicao) { return contexto.letras[posicao] === letra; });
-        if (indice < 0) return 0;
+        // letra que não corresponde a coluna nenhuma: melhor acusar do que somar zero calado
+        if (indice < 0) throw new Error('referencia:' + letra);
         const coluna = contexto.colunas[indice];
         const row = contexto.linhas[numeroLinha - 1];
         if (!row) return 0;
@@ -1080,10 +1081,32 @@
         if (coluna.id === 'execucao') { const v = execucaoDaLinha(row); return Number.isFinite(v) ? v : 0; }
         if (coluna.tipo === 'livre') {
           const bruto = (row.extras && row.extras[coluna.id]) || '';
-          if (ehFormula(bruto)) return 0; // fórmula referenciando fórmula: evita laço
+          if (ehFormula(bruto)) return valorDeCelulaComFormula(bruto, coluna, row, numeroLinha, contexto);
           return parseBrl(bruto) || Number(String(bruto).replace(',', '.')) || 0;
         }
         return 0;
+      }
+
+      /* Uma celula referida pode ela mesma guardar uma formula: =SOMA(C1:C8) sobre
+         uma coluna de =A1+B1 tem de somar os resultados, nao zeros. A avaliacao
+         entra na celula referida e volta com o numero. Cada avaliacao aninhada
+         recebe seu proprio rascunho de parciais, para nao atropelar a de fora,
+         e o caminho percorrido fica registrado para barrar referencia circular. */
+      function contextoAninhado(contexto) {
+        return { colunas: contexto.colunas, letras: contexto.letras, linhas: contexto.linhas, parciais: [], emCurso: contexto.emCurso };
+      }
+      function valorDeCelulaComFormula(formula, coluna, row, numeroLinha, contexto) {
+        contexto.emCurso = contexto.emCurso || new Set();
+        const marca = coluna.id + '@' + row.key;
+        if (contexto.emCurso.has(marca)) throw new Error('circular');
+        contexto.emCurso.add(marca);
+        try {
+          const dentro = avaliarFormula(formula, contextoAninhado(contexto), numeroLinha);
+          if (dentro.erro) throw new Error(dentro.rotulo === '#CIRC' ? 'circular' : 'dependente');
+          return dentro.valor;
+        } finally {
+          contexto.emCurso.delete(marca);
+        }
       }
 
       // aritmética pura: troca referências por números e resolve a conta
@@ -1159,6 +1182,9 @@
         } catch (erro) {
           const motivo = String(erro.message || '');
           if (motivo.indexOf('nome:') === 0) return { erro: true, rotulo: '#NOME?', detalhe: 'A função ' + motivo.slice(5) + ' não existe. Disponíveis: ' + Object.keys(FUNCOES_PLANILHA).join(', ') + '.' };
+          if (motivo.indexOf('referencia:') === 0) return { erro: true, rotulo: '#REF', detalhe: 'Não existe a coluna ' + motivo.slice(11) + ' nesta planilha. Confira a letra no cabeçalho.' };
+          if (motivo === 'circular') return { erro: true, rotulo: '#CIRC', detalhe: 'Esta fórmula depende dela mesma, direta ou indiretamente. Se você somou a coluna inteira dentro da própria coluna, troque por um intervalo, como C1:C8.' };
+          if (motivo === 'dependente') return { erro: true, rotulo: '#ERRO', detalhe: 'Uma das células usadas por esta fórmula está com erro. Corrija-a primeiro.' };
           return { erro: true, rotulo: '#ERRO', detalhe: 'Confira a fórmula: parênteses, referências como C1 e o separador ; entre argumentos.' };
         }
       }
@@ -1166,7 +1192,10 @@
       function textoDaCelulaLivre(row, coluna, contexto) {
         const bruto = (row.extras && row.extras[coluna.id]) || '';
         if (!ehFormula(bruto)) return { exibido: bruto, formula: false };
+        // a própria célula entra no caminho: assim =C1 escrito em C1 é apontado como circular
+        contexto.emCurso = new Set([coluna.id + '@' + row.key]);
         const resultado = avaliarFormula(bruto, contexto, contexto.linhas.indexOf(row) + 1);
+        contexto.emCurso = null;
         if (resultado.erro) return { exibido: resultado.rotulo, formula: true, erro: true, detalhe: resultado.detalhe };
         return { exibido: formatBrl(resultado.valor), formula: true };
       }
@@ -1717,8 +1746,14 @@
           ['arrastar a alça', 'o quadrado verde no canto da célula copia a fórmula para baixo, ajustando as linhas'],
           ['<code>Ctrl</code> + <code>D</code>', 'repete a célula de cima na célula atual']
         ]},
+        { grupo:'Encadeadas', itens:[
+          ['<code>=C1+D1</code> e depois <code>=SOMA(C1:C8)</code>', 'uma fórmula pode somar células que também são fórmulas'],
+          ['<code>=SOMA(C1:C8)</code> dentro da coluna C', 'referência circular: use um intervalo que não inclua a própria célula']
+        ]},
         { grupo:'Erros', itens:[
           ['<code>#NOME?</code>', 'a função não existe — passe o mouse para ver as disponíveis'],
+          ['<code>#REF</code>', 'a letra não corresponde a nenhuma coluna da planilha'],
+          ['<code>#CIRC</code>', 'a fórmula depende dela mesma, direta ou indiretamente'],
           ['<code>#ERRO</code>', 'parênteses, referência ou separador incorretos']
         ]}
       ];
