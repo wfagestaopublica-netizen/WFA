@@ -1,10 +1,14 @@
 {
   "v": 2,
-  "atualizadoEm": "2026-08-23T01:08:41.934Z",
+  "atualizadoEm": "2026-08-23T01:09:39.505Z",
   "blocos": {
     "inicio.b2": {
       "v": "Gestão pública com <span><span class=\"cor-navy\">controle</span>, clareza</span> e direção.",
       "o": "Gestão pública com <span>controle, clareza</span> e direção."
+    },
+    "empresa.b9": {
+      "v": "<span class=\"cor-vermelho\">Perfil profissional</span>",
+      "o": "Perfil profissional"
     }
   },
   "imagens": {},
