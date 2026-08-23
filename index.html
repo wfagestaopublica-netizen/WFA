@@ -261,7 +261,7 @@
     body.app-active { overflow: hidden; background: #eef0f2; }
     body.app-active > .utility-bar, body.app-active > .main-header, body.app-active > main, body.app-active > footer { display: none; }
     .wfa-app { display: none; min-height: 100vh; height: 100vh; background: #eef0f2; color: var(--ink); }
-    body.app-active .wfa-app { display: grid; grid-template-columns: 268px minmax(0, 1fr); }
+    body.app-active .wfa-app { display: grid; grid-template-columns: 268px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
     .app-sidebar { position: relative; z-index: 4; min-height: 100vh; display: flex; flex-direction: column; color: white; background: var(--navy-950); border-right: 1px solid rgba(255,255,255,.08); }
     .app-sidebar::before { content: ""; height: 5px; background: linear-gradient(90deg,var(--gold-500) 0 76%,var(--red-mg) 76% 100%); }
     .app-brand { min-height: 104px; padding: 20px 22px; display: flex; align-items: center; gap: 13px; border-bottom: 1px solid rgba(255,255,255,.1); }
@@ -459,6 +459,45 @@
     .script-brief-actions button:hover:not(:disabled) { border-color: #205e8a; }
     .script-brief-run { background: #205e8a !important; border-color: #205e8a !important; color: white !important; }
     .script-brief-run:disabled { opacity: .45; cursor: not-allowed; }
+    /* ---- barra de status ---- */
+    body.app-active .app-sidebar { min-height: 0; }
+    body.app-active .sidebar-library { min-height: 0; overflow-y: auto; }
+    .app-statusbar { grid-column: 1 / -1; grid-row: 2; display: none; align-items: center; gap: 10px; height: 30px; padding: 0 16px; background: #12293b; color: rgba(255,255,255,.72); font-family: Arial, sans-serif; font-size: 11px; }
+    body.app-active .app-statusbar { display: flex; }
+    .status-item { white-space: nowrap; }
+    .status-item.alerta { color: #ffcf8b; }
+    .status-item.ok { color: #8fd3a8; }
+    .status-sep { width: 1px; height: 13px; background: rgba(255,255,255,.18); }
+    .status-push { flex: 1; }
+    .status-cmdk { padding: 0; border: 0; background: transparent; color: rgba(255,255,255,.72); font: inherit; cursor: pointer; }
+    .status-cmdk:hover { color: white; }
+    .app-statusbar kbd { margin-right: 2px; padding: 1px 5px; background: rgba(255,255,255,.14); border-radius: 2px; font-family: Consolas, monospace; font-size: 10px; }
+
+    /* ---- paleta de comandos ---- */
+    .cmdk { position: fixed; z-index: 120; inset: 0; display: grid; justify-items: center; align-content: start; padding-top: 12vh; background: rgba(6,20,30,.55); backdrop-filter: blur(2px); }
+    .cmdk[hidden] { display: none; }
+    .cmdk-box { width: min(620px, calc(100vw - 32px)); background: white; border: 1px solid #12293b; box-shadow: 0 30px 70px rgba(4,20,32,.4); overflow: hidden; }
+    .cmdk-field { display: flex; align-items: center; gap: 11px; padding: 0 16px; border-bottom: 1px solid #dde5ea; }
+    .cmdk-field span { color: #7d99ab; font-size: 15px; }
+    .cmdk-field input { width: 100%; height: 52px; border: 0; outline: 0; color: #12293b; font: inherit; font-size: 15px; background: transparent; }
+    .cmdk-list { max-height: 46vh; margin: 0; padding: 6px; list-style: none; overflow-y: auto; }
+    .cmdk-list li { display: flex; align-items: center; gap: 12px; padding: 9px 11px; cursor: pointer; }
+    .cmdk-list li[aria-selected="true"] { background: #eaf2f8; }
+    .cmdk-list .cmdk-icon { width: 24px; height: 24px; flex: none; display: grid; place-items: center; background: #eef2f5; color: #205e8a; font-size: 11px; font-weight: 700; }
+    .cmdk-list li[aria-selected="true"] .cmdk-icon { background: #205e8a; color: white; }
+    .cmdk-list b { display: block; color: #12293b; font-size: 13.5px; font-weight: 600; }
+    .cmdk-list small { display: block; margin-top: 1px; color: #7b8f9c; font-size: 11.5px; }
+    .cmdk-list .cmdk-group { margin-left: auto; color: #96a8b4; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .cmdk-empty { padding: 22px 14px; color: #7b8f9c; font-size: 13px; text-align: center; }
+    .cmdk-foot { display: flex; gap: 16px; padding: 8px 16px; background: #f5f8fa; border-top: 1px solid #dde5ea; color: #7b8f9c; font-size: 11px; }
+    .cmdk-foot kbd { margin-right: 3px; padding: 1px 5px; background: white; border: 1px solid #cfdae1; border-radius: 2px; font-family: Consolas, monospace; font-size: 10px; }
+
+    /* ---- soltar arquivos em qualquer lugar ---- */
+    .drop-overlay { position: fixed; z-index: 118; inset: 0; display: grid; place-items: center; background: rgba(18,41,59,.72); }
+    .drop-overlay[hidden] { display: none; }
+    .drop-overlay div { padding: 40px 56px; background: white; border: 2px dashed #205e8a; text-align: center; }
+    .drop-overlay strong { display: block; color: #12293b; font: 700 22px/1.2 Cambria, Georgia, serif; }
+    .drop-overlay span { display: block; margin-top: 8px; color: #6b8290; font-size: 13px; }
     .cor-ouro { color: var(--gold-500) !important; }
     .cor-navy { color: var(--navy-900) !important; }
     .cor-vermelho { color: var(--red-mg) !important; }
@@ -1451,14 +1490,14 @@
     body.app-active .wfa-app {
       display: grid !important;
       grid-template-columns: 256px minmax(0,1fr) !important;
-      grid-template-rows: minmax(0,1fr) !important;
+      grid-template-rows: minmax(0,1fr) auto !important;
       color: #2c4150;
       background: #f2f4f2;
     }
     .app-sidebar {
       width: auto;
-      height: 100vh;
-      min-height: 100vh;
+      height: 100%;
+      min-height: 0;
       position: relative;
       inset: auto;
       z-index: 40;
@@ -2375,6 +2414,17 @@
         </section>
       </main>
     </div>
+      <footer class="app-statusbar" id="appStatusBar">
+        <span class="status-item" id="statusDocs" title="Documentos carregados">— documentos</span>
+        <span class="status-sep"></span>
+        <span class="status-item" id="statusScript" title="Tipos de relatório prontos para o script">Comparador 0/3</span>
+        <span class="status-sep"></span>
+        <span class="status-item" id="statusRows" title="Resultado da última execução">sem execução</span>
+        <span class="status-push"></span>
+        <span class="status-item" id="statusStorage" title="Espaço usado no navegador">—</span>
+        <span class="status-sep"></span>
+        <button class="status-cmdk" id="statusCmdk" type="button" title="Abrir paleta de comandos"><kbd>Ctrl</kbd><kbd>K</kbd> comandos</button>
+      </footer>
     <div class="compare-editor-backdrop" id="compareEditor" role="presentation">
       <section class="compare-editor" role="dialog" aria-modal="true" aria-labelledby="compareEditorTitle">
         <div class="compare-editor-head"><div><h3 id="compareEditorTitle">Corrigir fonte</h3><p id="compareEditorSubtitle">Toda alteração exige uma justificativa e ficará registrada.</p></div><button class="compare-editor-close" id="compareEditorClose" type="button" aria-label="Fechar">×</button></div>
@@ -2391,6 +2441,14 @@
   </section>
 
     <div class="app-toast" id="appToast" role="status"></div>
+    <div class="cmdk" id="cmdk" hidden>
+      <div class="cmdk-box" role="dialog" aria-modal="true" aria-label="Paleta de comandos">
+        <div class="cmdk-field"><span aria-hidden="true">⌘</span><input id="cmdkInput" type="text" autocomplete="off" spellcheck="false" placeholder="Buscar comando ou documento…"></div>
+        <ul class="cmdk-list" id="cmdkList" role="listbox"></ul>
+        <footer class="cmdk-foot"><span><kbd>↑</kbd><kbd>↓</kbd> navegar</span><span><kbd>Enter</kbd> executar</span><span><kbd>Esc</kbd> fechar</span></footer>
+      </div>
+    </div>
+    <div class="drop-overlay" id="dropOverlay" hidden><div><strong>Solte os PDFs aqui</strong><span>Os relatórios são identificados automaticamente</span></div></div>
     <div class="cms-format-bar" id="cmsFormatBar" hidden><button type="button" id="cmsFmtBold" title="Negrito"><b>N</b></button><button type="button" id="cmsFmtItalic" title="Itálico"><i>I</i></button><button type="button" id="cmsFormatOn" title="Destaque na fonte do site">Destaque</button><span class="cms-cores"><button type="button" data-cor="cor-ouro" style="--c:#c39a57" title="Dourado" aria-label="Dourado"></button><button type="button" data-cor="cor-navy" style="--c:#0a2940" title="Azul escuro" aria-label="Azul escuro"></button><button type="button" data-cor="cor-vermelho" style="--c:#b72d35" title="Vermelho" aria-label="Vermelho"></button><button type="button" data-cor="cor-branco" style="--c:#ffffff" title="Branco" aria-label="Branco"></button></span><button type="button" id="cmsFormatOff" title="Remover formatação do trecho">Limpar</button></div>
     <div class="cms-edit-bar" id="cmsEditBar">
       <span class="cms-bar-title">Modo de edição</span>
@@ -2570,6 +2628,7 @@
         marcador.title = tipos.length >= 2 ? 'Pronto para executar' : 'Carregue ao menos dois relatórios';
         marcador.classList.toggle('pronto', tipos.length >= 2);
         renderScriptBrief();
+        if (window.wfaAtualizarStatus) window.wfaAtualizarStatus();
       }
       function selectView(view) {
         wfaCurrentView = view;
@@ -3878,6 +3937,168 @@
         }
         document.querySelectorAll('[data-sheet-cmd]').forEach(function (botao) {
           botao.addEventListener('click', function () { acionar(botao.dataset.sheetCmd); });
+        });
+      }());
+
+
+      /* ===================== Paleta de comandos, barra de status e arrastar-e-soltar =====================
+         Tudo aqui opera sobre ações que já existem no sistema: nada de atalho decorativo. */
+      (function () {
+        const palco = document.getElementById('cmdk');
+        const campo = document.getElementById('cmdkInput');
+        const lista = document.getElementById('cmdkList');
+        if (!palco || !campo || !lista) return;
+        let visiveis = [];
+        let ativo = 0;
+
+        function tipoDoScriptPronto() {
+          const tipos = [];
+          workspaceState.files.forEach(function (item) {
+            if (item.status === 'ready' && ROLE_INFO[item.role] && tipos.indexOf(item.role) === -1) tipos.push(item.role);
+          });
+          return tipos;
+        }
+
+        function comandos() {
+          const temResultado = !compareDom.results.hidden;
+          const prontos = tipoDoScriptPronto().length;
+          const base = [
+            { icone:'CF', titulo:'Comparador de fontes', detalhe:prontos >= 2 ? prontos + ' documentos prontos' : 'faltam documentos', grupo:'Área', acao:function () { selectView('comparador-fontes'); } },
+            { icone:'▤', titulo:'Central de documentos', detalhe:workspaceState.files.length + ' arquivos', grupo:'Área', acao:function () { selectView('workspace'); } },
+            { icone:'Aa', titulo:'Personalizar página', detalhe:'editor da homepage e cores', grupo:'Área', acao:function () { selectView('personalizar'); } },
+            { icone:'⚙', titulo:'Configurações', detalhe:'acesso e dados salvos', grupo:'Área', acao:function () { selectView('configuracoes'); } },
+            { icone:'↥', titulo:'Carregar documentos', detalhe:'selecionar PDFs do computador', grupo:'Ação', acao:function () { workspaceDom.upload.click(); } }
+          ];
+          if (prontos >= 2) base.push({ icone:'▶', titulo:'Executar comparação', detalhe:'usa um documento de cada tipo disponível', grupo:'Ação', acao:function () { document.getElementById('scriptBriefRun').click(); } });
+          if (temResultado) {
+            base.push({ icone:'XLS', titulo:'Exportar para Excel', detalhe:'planilha com comparação e auditoria', grupo:'Ação', acao:function () { document.getElementById('compareExportXlsx').click(); } });
+            base.push({ icone:'PDF', titulo:'Exportar para PDF', detalhe:'relatório com trilha de auditoria', grupo:'Ação', acao:function () { document.getElementById('compareExportPdf').click(); } });
+            base.push({ icone:'＋', titulo:'Adicionar fonte manualmente', detalhe:'nova linha na tabela', grupo:'Ação', acao:function () { document.getElementById('compareAddRow').click(); } });
+          }
+          base.push({ icone:'✎', titulo:'Editar a homepage', detalhe:'edição direto na página', grupo:'Ação', acao:function () { selectView('personalizar'); setTimeout(function () { document.getElementById('cmsInline').click(); }, 120); } });
+          base.push({ icone:'↗', titulo:'Ver a homepage', detalhe:'pré-visualizar como visitante', grupo:'Ação', acao:function () { document.getElementById('appViewSite').click(); } });
+          base.push({ icone:'↺', titulo:'Restaurar layout inicial', detalhe:'filtros e tela padrão, sem apagar arquivos', grupo:'Sistema', acao:function () { document.getElementById('layoutReset').click(); } });
+          base.push({ icone:'⏻', titulo:'Sair do sistema', detalhe:'encerrar a sessão', grupo:'Sistema', acao:function () { document.getElementById('appLogout').click(); } });
+          workspaceState.files.forEach(function (item) {
+            base.push({
+              icone:'PDF', titulo:item.file.name, detalhe:workspaceRoleLabel(item.role) + ' • ' + formatBytes(item.file.size), grupo:'Documento',
+              acao:function () { workspaceState.selected.add(item.id); renderWorkspaceFiles(); selectView('workspace'); }
+            });
+          });
+          return base;
+        }
+
+        function pontuar(texto, termo) {
+          const alvo = normalizeSearch(texto);
+          const busca = normalizeSearch(termo);
+          if (!busca) return 1;
+          const direto = alvo.indexOf(busca);
+          if (direto === 0) return 1000;
+          if (direto > 0) return 600 - direto;
+          let i = 0;
+          for (let c = 0; c < alvo.length && i < busca.length; c += 1) { if (alvo[c] === busca[i]) i += 1; }
+          return i === busca.length ? 200 : 0;
+        }
+
+        function desenhar() {
+          const termo = campo.value.trim();
+          visiveis = comandos()
+            .map(function (cmd) { return { cmd:cmd, nota:Math.max(pontuar(cmd.titulo, termo), pontuar(cmd.detalhe, termo) - 50) }; })
+            .filter(function (linha) { return linha.nota > 0; })
+            .sort(function (a, b) { return b.nota - a.nota; })
+            .map(function (linha) { return linha.cmd; })
+            .slice(0, 40);
+          if (ativo >= visiveis.length) ativo = 0;
+          if (!visiveis.length) { lista.innerHTML = '<li class="cmdk-empty">Nenhum comando corresponde a essa busca.</li>'; return; }
+          lista.innerHTML = visiveis.map(function (cmd, indice) {
+            return '<li role="option" data-indice="' + indice + '" aria-selected="' + (indice === ativo) + '"><span class="cmdk-icon">' + escapeHtml(cmd.icone) + '</span><span><b>' + escapeHtml(cmd.titulo) + '</b><small>' + escapeHtml(cmd.detalhe) + '</small></span><span class="cmdk-group">' + escapeHtml(cmd.grupo) + '</span></li>';
+          }).join('');
+          const marcado = lista.querySelector('[aria-selected="true"]');
+          if (marcado) marcado.scrollIntoView({ block:'nearest' });
+        }
+
+        function abrir() {
+          if (!document.body.classList.contains('app-active')) return;
+          palco.hidden = false;
+          campo.value = '';
+          ativo = 0;
+          desenhar();
+          setTimeout(function () { campo.focus(); }, 20);
+        }
+        function fechar() { palco.hidden = true; }
+        function executar() {
+          const escolha = visiveis[ativo];
+          if (!escolha) return;
+          fechar();
+          setTimeout(escolha.acao, 40);
+        }
+
+        campo.addEventListener('input', function () { ativo = 0; desenhar(); });
+        campo.addEventListener('keydown', function (evento) {
+          if (evento.key === 'ArrowDown') { evento.preventDefault(); ativo = Math.min(ativo + 1, visiveis.length - 1); desenhar(); }
+          else if (evento.key === 'ArrowUp') { evento.preventDefault(); ativo = Math.max(ativo - 1, 0); desenhar(); }
+          else if (evento.key === 'Enter') { evento.preventDefault(); executar(); }
+          else if (evento.key === 'Escape') { evento.preventDefault(); fechar(); }
+        });
+        lista.addEventListener('click', function (evento) {
+          const item = evento.target.closest('[data-indice]');
+          if (!item) return;
+          ativo = Number(item.dataset.indice);
+          executar();
+        });
+        palco.addEventListener('mousedown', function (evento) { if (evento.target === palco) fechar(); });
+        document.addEventListener('keydown', function (evento) {
+          if ((evento.ctrlKey || evento.metaKey) && evento.key.toLowerCase() === 'k') { evento.preventDefault(); palco.hidden ? abrir() : fechar(); }
+        });
+        const gatilho = document.getElementById('statusCmdk');
+        if (gatilho) gatilho.addEventListener('click', abrir);
+
+        /* ---- barra de status ---- */
+        async function atualizarStatus() {
+          const docs = document.getElementById('statusDocs');
+          if (!docs) return;
+          const total = workspaceState.files.length;
+          docs.textContent = total + (total === 1 ? ' documento' : ' documentos');
+          const prontos = tipoDoScriptPronto().length;
+          const script = document.getElementById('statusScript');
+          script.textContent = 'Comparador ' + prontos + '/3';
+          script.className = 'status-item ' + (prontos >= 2 ? 'ok' : prontos ? 'alerta' : '');
+          const linhas = document.getElementById('statusRows');
+          if (compareDom.results.hidden) { linhas.textContent = 'sem execução'; linhas.className = 'status-item'; }
+          else {
+            const ativas = compareState.rows.filter(function (row) { return !row.deleted; }).length;
+            const editadas = compareState.rows.filter(function (row) { return row.edited || row.manual; }).length;
+            linhas.textContent = ativas + ' fontes' + (editadas ? ' • ' + editadas + ' editadas' : '');
+            linhas.className = 'status-item ok';
+          }
+          try {
+            if (navigator.storage && navigator.storage.estimate) {
+              const est = await navigator.storage.estimate();
+              if (est && est.usage) document.getElementById('statusStorage').textContent = formatBytes(est.usage) + ' guardados';
+            }
+          } catch (error) { /* estimativa indisponível */ }
+        }
+        window.wfaAtualizarStatus = atualizarStatus;
+        setInterval(atualizarStatus, 4000);
+        atualizarStatus();
+
+        /* ---- arrastar e soltar em qualquer lugar do painel ---- */
+        const cortina = document.getElementById('dropOverlay');
+        let arrastando = 0;
+        document.addEventListener('dragenter', function (evento) {
+          if (!document.body.classList.contains('app-active')) return;
+          if (!evento.dataTransfer || Array.prototype.indexOf.call(evento.dataTransfer.types, 'Files') === -1) return;
+          arrastando += 1;
+          cortina.hidden = false;
+        });
+        document.addEventListener('dragover', function (evento) { if (!cortina.hidden) evento.preventDefault(); });
+        document.addEventListener('dragleave', function () { arrastando = Math.max(0, arrastando - 1); if (!arrastando) cortina.hidden = true; });
+        document.addEventListener('drop', function (evento) {
+          if (cortina.hidden) return;
+          evento.preventDefault();
+          arrastando = 0;
+          cortina.hidden = true;
+          if (evento.dataTransfer && evento.dataTransfer.files.length) addWorkspaceFiles(evento.dataTransfer.files);
         });
       }());
 
