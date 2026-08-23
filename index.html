@@ -473,6 +473,24 @@
     .sidebar-run b { display: block; color: #12293b; font-size: 12px; font-weight: 700; }
     .sidebar-run small { display: block; margin-top: 2px; color: #6f8697; font-size: 10.5px; }
     .sidebar-run i { display: block; margin-top: 3px; color: #205e8a; font-size: 10px; font-style: normal; font-weight: 700; }
+    /* ---- menu de contexto da planilha ---- */
+    .sheet-menu { position: fixed; z-index: 125; min-width: 210px; padding: 4px; background: white; border: 1px solid #b8c6d0; box-shadow: 0 12px 30px rgba(6,26,40,.24); }
+    .sheet-menu[hidden] { display: none; }
+    .sheet-menu button { width: 100%; padding: 7px 11px; border: 0; background: transparent; color: #24455c; font: inherit; font-size: 12.5px; text-align: left; cursor: pointer; }
+    .sheet-menu button:hover { background: #eaf2f8; }
+    .sheet-menu button.perigo { color: #b0393a; }
+    .sheet-menu button.perigo:hover { background: #fdecec; }
+    .sheet-menu hr { margin: 4px 0; border: 0; border-top: 1px solid #e3eaef; }
+    .compare-grid-table .sheet-row-number { cursor: context-menu; }
+
+    /* ---- densidade da tela de configurações ---- */
+    body.app-active .settings-card { margin-bottom: 12px; padding: 14px 16px; }
+    body.app-active .settings-card + .settings-card { margin-top: 0; }
+    body.app-active .settings-card h3 { margin-bottom: 5px; font-size: 15px; }
+    body.app-active .settings-card p { margin: 0 0 6px; font-size: 12px; line-height: 1.45; }
+    body.app-active .storage-summary { margin-top: 8px; padding: 7px 10px; font-size: 11.5px; }
+    body.app-active .ghost-button { margin-top: 10px; padding: 7px 13px; font-size: 12px; }
+    body.app-active .firebase-note { margin-top: 12px; padding: 12px; font-size: 12px; }
     /* ---- planilha editável ---- */
     .compare-grid-table .sheet-row-number { position: relative; cursor: default; }
     .compare-grid-table .sheet-row-number .excluir-linha { position: absolute; inset: 0; display: none; place-items: center; color: #c9403f; font-size: 15px; font-weight: 700; cursor: pointer; }
@@ -2613,6 +2631,7 @@
   </section>
 
     <div class="app-toast" id="appToast" role="status"></div>
+    <div class="sheet-menu" id="sheetMenu" hidden></div>
     <div class="app-confirm" id="appConfirm" hidden>
       <div class="app-confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="appConfirmTitle">
         <h3 id="appConfirmTitle">Confirmar</h3>
@@ -3521,7 +3540,10 @@
         colunas.push({ id:'execucao', tipo:'calculada', titulo:'Execução', largura:88, formula:'Arrecadado dividido por Orçado' });
         colunas.push({ id:'situacao', tipo:'calculada', titulo:'Situação', largura:170, formula:'comparação entre os relatórios' });
         (compareState.colunasExtras || []).forEach(function (extra) {
-          colunas.push({ id:extra.id, tipo:'livre', titulo:extra.titulo, largura:150, classe:'' });
+          const definicao = { id:extra.id, tipo:'livre', titulo:extra.titulo, largura:150, classe:'' };
+          const alvo = extra.ancora ? colunas.findIndex(function (coluna) { return coluna.id === extra.ancora; }) : -1;
+          if (alvo >= 0) colunas.splice(extra.lado === 'antes' ? alvo : alvo + 1, 0, definicao);
+          else colunas.push(definicao);
         });
         return colunas.map(function (coluna) {
           const personalizado = compareState.titulos && compareState.titulos[coluna.id];
@@ -3550,10 +3572,14 @@
           if (filter === 'edited') matchesStatus = row.edited || row.manual;
           return matchesSearch && matchesStatus;
         });
-        rows.sort(function (left, right) {
-          const comparison = left.key.localeCompare(right.key, 'pt-BR', { numeric:true, sensitivity:'base' });
-          return compareState.sourceSort === 'asc' ? comparison : -comparison;
-        });
+        if (compareState.sourceSort === 'manual') {
+          rows.sort(function (left, right) { return (left.ordem || 0) - (right.ordem || 0); });
+        } else {
+          rows.sort(function (left, right) {
+            const comparison = left.key.localeCompare(right.key, 'pt-BR', { numeric:true, sensitivity:'base' });
+            return compareState.sourceSort === 'asc' ? comparison : -comparison;
+          });
+        }
 
         // colunas
         document.getElementById('compareCols').innerHTML = '<col class="col-row-number">' +
@@ -3564,7 +3590,8 @@
           colunas.map(function (coluna, indice) { return '<th>' + LETRAS_COLUNA[indice] + '</th>'; }).join('') + '</tr>';
         const titulos = '<tr><th class="sheet-corner">#</th>' +
           colunas.map(function (coluna) {
-            const seta = coluna.id === 'key' ? '<button class="sheet-sort-button" id="compareSortSource" type="button" aria-label="Classificar por fonte de recurso"><span id="compareSortSourceIcon">' + (compareState.sourceSort === 'asc' ? '↑' : '↓') + '</span></button>' : '';
+            const simbolo = compareState.sourceSort === 'asc' ? '↑' : compareState.sourceSort === 'desc' ? '↓' : '≡';
+            const seta = coluna.id === 'key' ? '<button class="sheet-sort-button" id="compareSortSource" type="button" title="' + (compareState.sourceSort === 'manual' ? 'Ordem manual — clique para ordenar pelo código' : 'Classificar por fonte de recurso') + '"><span id="compareSortSourceIcon">' + simbolo + '</span></button>' : '';
             const numerica = coluna.tipo === 'moeda' || coluna.id === 'diferenca' || coluna.id === 'execucao';
             return '<th class="' + (numerica ? 'num ' : '') + 'col-' + escapeHtml(coluna.id) + (coluna.tipo === 'calculada' ? ' coluna-calculada' : '') + '">' +
               '<span class="titulo-coluna" contenteditable="true" spellcheck="false" data-coluna="' + escapeHtml(coluna.id) + '" title="Clique para renomear">' + escapeHtml(coluna.titulo) + '</span>' + seta +
@@ -3601,7 +3628,7 @@
             const entrada = '<input class="cell-editor ' + coluna.classe + '" data-compare-cell="' + campo + '" data-row-key="' + escapeHtml(row.key) + '" value="' + escapeHtml(String(valor)) + '"' + (coluna.tipo === 'moeda' ? ' inputmode="decimal"' : '') + ' aria-label="' + escapeHtml(coluna.titulo) + '">';
             return '<td class="' + (coluna.tipo === 'moeda' ? 'num ' : '') + 'editable-cell col-' + escapeHtml(coluna.id) + '">' + (co ? '<div class="cell-stack">' + entrada + co + '</div>' : entrada) + '</td>';
           }).join('');
-          return '<tr><td class="sheet-row-number"><span class="numero">' + (rowIndex + 1) + '</span><span class="excluir-linha" data-compare-remove="' + escapeHtml(row.key) + '" title="Excluir esta fonte">×</span></td>' + celulas + '</tr>';
+          return '<tr><td class="sheet-row-number" data-menu-linha="' + escapeHtml(row.key) + '" title="Clique com o botão direito para inserir ou excluir"><span class="numero">' + (rowIndex + 1) + '</span><span class="excluir-linha" data-compare-remove="' + escapeHtml(row.key) + '" title="Excluir esta fonte">×</span></td>' + celulas + '</tr>';
         }).join('');
 
         // rodapé de totais
@@ -3632,10 +3659,127 @@
         persistWfaLater();
       }
 
-      function criarColunaLivre() {
+      // ---------- inserir e excluir linhas ----------
+      function proximaChaveLivre() {
+        let n = 1;
+        while (compareState.rows.some(function (row) { return row.key === 'Nova fonte ' + n; })) n += 1;
+        return 'Nova fonte ' + n;
+      }
+      function garantirOrdem() {
+        const visiveis = activeCompareRows();
+        visiveis.forEach(function (row, indice) { if (typeof row.ordem !== 'number') row.ordem = indice; });
+      }
+      function inserirLinha(chaveReferencia, posicao) {
+        garantirOrdem();
+        const nova = {
+          key: proximaChaveLivre(), description: '', co: [], extras: {},
+          edited: true, manual: true, deleted: false, novo: true
+        };
+        COMPARE_ROLES.forEach(function (papel) {
+          nova[papel] = 0;
+          nova['original_' + papel] = null;
+          nova['tem_' + papel] = false;
+        });
+        if (chaveReferencia) {
+          const referencia = findCompareRow(chaveReferencia);
+          const base = referencia ? (referencia.ordem || 0) : 0;
+          nova.ordem = posicao === 'antes' ? base - 0.5 : base + 0.5;
+          compareState.sourceSort = 'manual';
+        } else {
+          nova.ordem = activeCompareRows().length;
+        }
+        compareState.rows.push(nova);
+        // renumera para manter inteiros
+        activeCompareRows().slice().sort(function (a, b) { return (a.ordem || 0) - (b.ordem || 0); })
+          .forEach(function (row, indice) { row.ordem = indice; });
+        renderCompareTable();
+        addAudit('Fonte adicionada', 'Linha em branco criada para preenchimento manual.', nova.key);
+        regravarExecucaoAberta();
+        setTimeout(function () {
+          const campo = document.querySelector('[data-row-key="' + nova.key.replace(/"/g, '') + '"][data-compare-cell="code"]');
+          if (campo) { campo.focus(); campo.select(); }
+        }, 60);
+      }
+      async function excluirLinha(chave) {
+        const row = findCompareRow(chave);
+        if (!row) return;
+        const confirmado = await window.wfaConfirmar('A fonte ' + row.key + ' sai da tabela e do total. A remoção fica registrada na trilha de auditoria.', 'Excluir fonte', 'Excluir');
+        if (!confirmado) return;
+        row.deleted = true;
+        row.edited = true;
+        addAudit('Fonte removida da comparação', row.key + ' • ' + (row.description || 'sem descrição'), row.key);
+        renderCompareTable();
+        regravarExecucaoAberta();
+      }
+
+      // ---------- menu de contexto no padrão de planilha ----------
+      function fecharMenuPlanilha() {
+        const menu = document.getElementById('sheetMenu');
+        if (menu) menu.hidden = true;
+      }
+      function abrirMenuPlanilha(evento, itens) {
+        const menu = document.getElementById('sheetMenu');
+        if (!menu) return;
+        menu.innerHTML = itens.map(function (item, indice) {
+          if (item.separador) return '<hr>';
+          return '<button type="button" data-item="' + indice + '"' + (item.perigo ? ' class="perigo"' : '') + '>' + escapeHtml(item.rotulo) + '</button>';
+        }).join('');
+        menu.hidden = false;
+        const largura = menu.offsetWidth || 200;
+        const altura = menu.offsetHeight || 120;
+        menu.style.left = Math.min(evento.clientX, window.innerWidth - largura - 8) + 'px';
+        menu.style.top = Math.min(evento.clientY, window.innerHeight - altura - 8) + 'px';
+        menu.onclick = function (clique) {
+          const botao = clique.target.closest('[data-item]');
+          if (!botao) return;
+          fecharMenuPlanilha();
+          const escolhido = itens[Number(botao.dataset.item)];
+          if (escolhido && escolhido.acao) escolhido.acao();
+        };
+      }
+      function abrirMenuLinha(evento, chave) {
+        evento.preventDefault();
+        abrirMenuPlanilha(evento, [
+          { rotulo:'Inserir linha acima', acao:function () { inserirLinha(chave, 'antes'); } },
+          { rotulo:'Inserir linha abaixo', acao:function () { inserirLinha(chave, 'depois'); } },
+          { separador:true },
+          { rotulo:'Excluir esta linha', perigo:true, acao:function () { excluirLinha(chave); } }
+        ]);
+      }
+      function abrirMenuColuna(evento, celula) {
+        evento.preventDefault();
+        const titulo = celula.querySelector('.titulo-coluna');
+        if (!titulo) return;
+        const id = titulo.dataset.coluna;
+        const extras = compareState.colunasExtras || [];
+        const ehLivre = extras.some(function (coluna) { return coluna.id === id; });
+        const itens = [
+          { rotulo:'Inserir coluna à esquerda', acao:function () { criarColunaLivre(id, 'antes'); } },
+          { rotulo:'Inserir coluna à direita', acao:function () { criarColunaLivre(id, 'depois'); } },
+          { separador:true },
+          { rotulo:'Renomear coluna', acao:function () {
+            titulo.focus();
+            const faixa = document.createRange();
+            faixa.selectNodeContents(titulo);
+            const selecao = window.getSelection();
+            selecao.removeAllRanges();
+            selecao.addRange(faixa);
+          } }
+        ];
+        if (ehLivre) itens.push({ rotulo:'Remover esta coluna', perigo:true, acao:function () {
+          compareState.colunasExtras = extras.filter(function (coluna) { return coluna.id !== id; });
+          compareState.rows.forEach(function (row) { if (row.extras) delete row.extras[id]; });
+          renderCompareTable();
+          regravarExecucaoAberta();
+        } });
+        abrirMenuPlanilha(evento, itens);
+      }
+
+      function criarColunaLivre(referencia, posicao) {
         compareState.colunasExtras = compareState.colunasExtras || [];
         const id = 'extra' + (compareState.colunasExtras.length + 1) + '-' + Date.now().toString(36);
-        compareState.colunasExtras.push({ id: id, titulo: 'Nova coluna' });
+        const nova = { id: id, titulo: 'Nova coluna', ancora: referencia || null, lado: posicao || null };
+        compareState.colunasExtras.push(nova);
         renderCompareTable();
         addAudit('Coluna criada', 'Coluna livre adicionada à tabela para anotações.', 'Estrutura');
         regravarExecucaoAberta();
@@ -3733,6 +3877,8 @@
           renderCompareTable();
           return;
         }
+        const alvoColuna = evento.target.closest('th[class*="col-"]');
+        if (alvoColuna && evento.altKey) { abrirMenuColuna(evento, alvoColuna); return; }
         const remover = evento.target.closest('[data-remover-coluna]');
         if (remover) {
           const id = remover.dataset.removerColuna;
@@ -3787,6 +3933,20 @@
         persistWfaLater();
         regravarExecucaoAberta();
       });
+
+      compareDom.tableBody.addEventListener('contextmenu', function (evento) {
+        const numero = evento.target.closest('[data-menu-linha]');
+        if (numero) abrirMenuLinha(evento, numero.dataset.menuLinha);
+      });
+      document.getElementById('compareHead').addEventListener('contextmenu', function (evento) {
+        const celula = evento.target.closest('th');
+        if (celula && celula.querySelector('.titulo-coluna')) abrirMenuColuna(evento, celula);
+      });
+      document.addEventListener('mousedown', function (evento) {
+        if (!evento.target.closest('#sheetMenu')) fecharMenuPlanilha();
+      });
+      document.addEventListener('keydown', function (evento) { if (evento.key === 'Escape') fecharMenuPlanilha(); });
+      window.addEventListener('scroll', fecharMenuPlanilha, { passive:true });
 
       function findCompareRow(key) { return compareState.rows.find(function (row) { return row.key === key && !row.deleted; }); }
       function commitCompareCell(input) {
@@ -3872,7 +4032,7 @@
         document.getElementById(removeMode ? 'compareEditReason' : 'compareEditCode').focus();
       }
       function closeCompareEditor() { compareDom.editor.classList.remove('open'); compareDom.editorForm.reset(); compareState.editorMode = null; compareState.editorKey = null; }
-      document.getElementById('compareAddRow').addEventListener('click', function () { openCompareEditor('add', null); });
+      document.getElementById('compareAddRow').addEventListener('click', function () { inserirLinha(null, 'depois'); });
       document.getElementById('compareEditorClose').addEventListener('click', closeCompareEditor);
       document.getElementById('compareEditorCancel').addEventListener('click', closeCompareEditor);
       compareDom.editor.addEventListener('mousedown', function (event) { if (event.target === compareDom.editor) closeCompareEditor(); });
@@ -3880,7 +4040,7 @@
         const edit = event.target.closest('[data-compare-edit]');
         const remove = event.target.closest('[data-compare-remove]');
         if (edit) openCompareEditor('edit', findCompareRow(edit.dataset.compareEdit));
-        if (remove) openCompareEditor('remove', findCompareRow(remove.dataset.compareRemove));
+        if (remove) excluirLinha(remove.dataset.compareRemove);
       });
       compareDom.editorForm.addEventListener('submit', function (event) {
         event.preventDefault();
