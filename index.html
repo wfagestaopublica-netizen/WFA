@@ -473,6 +473,11 @@
     .sidebar-run b { display: block; color: #12293b; font-size: 12px; font-weight: 700; }
     .sidebar-run small { display: block; margin-top: 2px; color: #6f8697; font-size: 10.5px; }
     .sidebar-run i { display: block; margin-top: 3px; color: #205e8a; font-size: 10px; font-style: normal; font-weight: 700; }
+    .menu-coluna { margin-left: auto; padding: 0 4px; border: 0; border-radius: 2px; background: transparent; color: rgba(255,255,255,.55); font: inherit; font-size: 11px; line-height: 1; cursor: pointer; }
+    .compare-grid-table th:hover .menu-coluna { color: white; background: rgba(255,255,255,.16); }
+    .menu-coluna:hover { background: var(--gold-500) !important; color: #12293b !important; }
+    .compare-grid-table thead tr:nth-child(2) th { position: relative; }
+    .dica-coluna { display: block; margin-top: 1px; color: rgba(255,255,255,.5); font-size: 8.5px; font-weight: 400; letter-spacing: 0; text-transform: none; }
     /* ---- menu de contexto da planilha ---- */
     .sheet-menu { position: fixed; z-index: 125; min-width: 210px; padding: 4px; background: white; border: 1px solid #b8c6d0; box-shadow: 0 12px 30px rgba(6,26,40,.24); }
     .sheet-menu[hidden] { display: none; }
@@ -3536,8 +3541,11 @@
         papeisComRelatorio().forEach(function (papel) {
           colunas.push({ id:papel, tipo:'moeda', titulo:ROLE_INFO[papel].curto, largura:118, classe:'cell-money' });
         });
-        colunas.push({ id:'diferenca', tipo:'calculada', titulo:'Diferença', largura:118, formula:'Arrecadado menos Orçado' });
-        colunas.push({ id:'execucao', tipo:'calculada', titulo:'Execução', largura:88, formula:'Arrecadado dividido por Orçado' });
+        const par = parDeComparacao();
+        const rotuloPar = par ? ROLE_INFO[par.alvo].curto + ' − ' + ROLE_INFO[par.base].curto : '';
+        colunas.push({ id:'diferenca', tipo:'calculada', titulo:'Diferença', largura:130, formula:descricaoDoPar(), dica:rotuloPar });
+        const rotuloDivisao = par ? ROLE_INFO[par.alvo].curto + ' ÷ ' + ROLE_INFO[par.base].curto : '';
+        colunas.push({ id:'execucao', tipo:'calculada', titulo:'Execução', largura:96, formula:par ? ROLE_INFO[par.alvo].curto + ' dividido por ' + ROLE_INFO[par.base].curto : 'os relatórios carregados', dica:rotuloDivisao });
         colunas.push({ id:'situacao', tipo:'calculada', titulo:'Situação', largura:170, formula:'comparação entre os relatórios' });
         (compareState.colunasExtras || []).forEach(function (extra) {
           const definicao = { id:extra.id, tipo:'livre', titulo:extra.titulo, largura:150, classe:'' };
@@ -3552,9 +3560,34 @@
         });
       }
 
+      // Sem o relatório orçado, comparar contra zero não diz nada. O par de referência
+      // é sempre o mais informativo entre os relatórios que foram carregados.
+      function parDeComparacao() {
+        const papeis = papeisComRelatorio();
+        const tem = function (papel) { return papeis.indexOf(papel) !== -1; };
+        if (tem('budget') && tem('collected')) return { base:'budget', alvo:'collected' };
+        if (tem('budget') && tem('committed')) return { base:'budget', alvo:'committed' };
+        if (tem('committed') && tem('collected')) return { base:'committed', alvo:'collected' };
+        return null;
+      }
+      function diferencaDaLinha(row) {
+        const par = parDeComparacao();
+        if (!par) return 0;
+        return row[par.alvo] - row[par.base];
+      }
+      function execucaoDaLinha(row) {
+        const par = parDeComparacao();
+        if (!par || !row[par.base]) return NaN;
+        return (row[par.alvo] / row[par.base]) * 100;
+      }
+      function descricaoDoPar() {
+        const par = parDeComparacao();
+        if (!par) return 'os relatórios carregados';
+        return ROLE_INFO[par.alvo].curto + ' menos ' + ROLE_INFO[par.base].curto;
+      }
       function valorCalculado(row, id) {
-        if (id === 'diferenca') return formatBrl(row.collected - row.budget);
-        if (id === 'execucao') return formatPercent(row.budget !== 0 ? (row.collected / row.budget) * 100 : NaN);
+        if (id === 'diferenca') return formatBrl(diferencaDaLinha(row));
+        if (id === 'execucao') return formatPercent(execucaoDaLinha(row));
         return compareStatus(row).label;
       }
 
@@ -3594,7 +3627,9 @@
             const seta = coluna.id === 'key' ? '<button class="sheet-sort-button" id="compareSortSource" type="button" title="' + (compareState.sourceSort === 'manual' ? 'Ordem manual — clique para ordenar pelo código' : 'Classificar por fonte de recurso') + '"><span id="compareSortSourceIcon">' + simbolo + '</span></button>' : '';
             const numerica = coluna.tipo === 'moeda' || coluna.id === 'diferenca' || coluna.id === 'execucao';
             return '<th class="' + (numerica ? 'num ' : '') + 'col-' + escapeHtml(coluna.id) + (coluna.tipo === 'calculada' ? ' coluna-calculada' : '') + '">' +
-              '<span class="titulo-coluna" contenteditable="true" spellcheck="false" data-coluna="' + escapeHtml(coluna.id) + '" title="Clique para renomear">' + escapeHtml(coluna.titulo) + '</span>' + seta +
+              '<span class="titulo-coluna" contenteditable="true" spellcheck="false" data-coluna="' + escapeHtml(coluna.id) + '" title="' + escapeHtml(coluna.dica ? coluna.dica : 'Clique para renomear') + '">' + escapeHtml(coluna.titulo) + '</span>' +
+              (coluna.dica ? '<small class="dica-coluna">' + escapeHtml(coluna.dica) + '</small>' : '') + seta +
+              '<button class="menu-coluna" type="button" data-menu-coluna="' + escapeHtml(coluna.id) + '" title="Opções da coluna" aria-label="Opções da coluna">▾</button>' +
               (coluna.tipo === 'livre' ? '<button class="remover-coluna" type="button" data-remover-coluna="' + escapeHtml(coluna.id) + '" title="Remover coluna">×</button>' : '') +
               '</th>';
           }).join('') + '</tr>';
@@ -3607,7 +3642,7 @@
             if (coluna.tipo === 'calculada') {
               let extraClasse = '';
               if (coluna.id === 'diferenca') {
-                const diferenca = row.collected - row.budget;
+                const diferenca = diferencaDaLinha(row);
                 extraClasse = diferenca < 0 ? ' value-negative' : diferenca > 0 ? ' value-positive' : '';
               }
               const conteudo = coluna.id === 'situacao'
@@ -3632,22 +3667,23 @@
         }).join('');
 
         // rodapé de totais
+        // o rodapé soma o que está à vista: filtrou, o total acompanha
+        const filtrado = rows.length !== allRows.length;
+        const somar = function (campo) { return rows.reduce(function (acumulado, row) { return acumulado + row[campo]; }, 0); };
+        const parTotal = parDeComparacao();
         const totais = colunas.map(function (coluna) {
           if (coluna.tipo === 'moeda') {
-            const soma = allRows.reduce(function (acumulado, row) { return acumulado + row[coluna.id]; }, 0);
-            return '<th class="num col-' + escapeHtml(coluna.id) + '">' + formatBrl(soma) + '</th>';
+            return '<th class="num col-' + escapeHtml(coluna.id) + '">' + formatBrl(somar(coluna.id)) + '</th>';
           }
           if (coluna.id === 'diferenca') {
-            const orcado = allRows.reduce(function (a, row) { return a + row.budget; }, 0);
-            const arrecadado = allRows.reduce(function (a, row) { return a + row.collected; }, 0);
-            return '<th class="num">' + formatBrl(arrecadado - orcado) + '</th>';
+            return '<th class="num">' + formatBrl(parTotal ? somar(parTotal.alvo) - somar(parTotal.base) : 0) + '</th>';
           }
           if (coluna.id === 'execucao') {
-            const orcado = allRows.reduce(function (a, row) { return a + row.budget; }, 0);
-            const arrecadado = allRows.reduce(function (a, row) { return a + row.collected; }, 0);
-            return '<th class="num">' + formatPercent(orcado ? (arrecadado / orcado) * 100 : NaN) + '</th>';
+            const base = parTotal ? somar(parTotal.base) : 0;
+            const alvo = parTotal ? somar(parTotal.alvo) : 0;
+            return '<th class="num">' + formatPercent(base ? (alvo / base) * 100 : NaN) + '</th>';
           }
-          if (coluna.id === 'key') return '<th>Total das fontes</th>';
+          if (coluna.id === 'key') return '<th>' + (filtrado ? 'Total exibido (' + rows.length + ' de ' + allRows.length + ')' : 'Total das fontes') + '</th>';
           return '<th></th>';
         }).join('');
         document.getElementById('compareFoot').innerHTML = '<tr><th class="sheet-corner"></th>' + totais + '</tr>';
@@ -3877,8 +3913,13 @@
           renderCompareTable();
           return;
         }
-        const alvoColuna = evento.target.closest('th[class*="col-"]');
-        if (alvoColuna && evento.altKey) { abrirMenuColuna(evento, alvoColuna); return; }
+        const gatilhoMenu = evento.target.closest('[data-menu-coluna]');
+        if (gatilhoMenu) {
+          evento.preventDefault();
+          evento.stopPropagation();
+          abrirMenuColuna(evento, gatilhoMenu.closest('th'));
+          return;
+        }
         const remover = evento.target.closest('[data-remover-coluna]');
         if (remover) {
           const id = remover.dataset.removerColuna;
@@ -4094,8 +4135,9 @@
             const linha = { 'Fonte de Recurso':row.key, 'Descrição':row.description, 'CO arrecadado':row.co.join(', ') };
             papeisAtivos.forEach(function (papel) { linha['Valor ' + ROLE_INFO[papel].curto] = row[papel]; });
             if (row.tem_budget) {
-              linha['Diferença (arrecadado - orçado)'] = row.collected - row.budget;
-              linha['Execução (%)'] = row.budget ? (row.collected / row.budget) * 100 : null;
+              linha['Diferença (' + descricaoDoPar() + ')'] = diferencaDaLinha(row);
+              const execucao = execucaoDaLinha(row);
+              linha['Execução (%)'] = Number.isFinite(execucao) ? execucao : null;
             }
             linha['Situação'] = status.label;
             linha['Alteração manual'] = row.edited || row.manual ? 'Sim' : 'Não';
@@ -4169,7 +4211,7 @@
             doc.text(row.key, starts[0] + 1, y);
             doc.text(description, starts[1] + 1, y);
             const values = papeisAtivos.map(function (papel) { return formatBrl(row[papel]); })
-              .concat([formatBrl(row.collected - row.budget), formatPercent(row.budget ? (row.collected / row.budget) * 100 : NaN)]);
+              .concat([formatBrl(diferencaDaLinha(row)), formatPercent(execucaoDaLinha(row))]);
             values.forEach(function (value,index) { const columnIndex = index + 2; doc.text(value, starts[columnIndex] + columns[columnIndex] - 2, y, { align:'right' }); });
             doc.text(status.label, starts[columns.length - 1] + 1, y);
             y += height;
