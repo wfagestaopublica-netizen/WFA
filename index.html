@@ -447,13 +447,17 @@
     .script-brief-text { margin: 16px 0 18px; color: #56707f; font-size: 14px; line-height: 1.6; }
     .script-brief-text b { color: #12293b; }
     .script-brief-inputs { margin: 0 0 20px; padding: 0; list-style: none; display: grid; gap: 8px; }
-    .script-brief-inputs li { display: flex; align-items: center; gap: 11px; padding: 11px 13px; background: #f7f9fb; border: 1px solid #e2e9ed; }
-    .script-brief-inputs .marca { width: 20px; height: 20px; flex: none; display: grid; place-items: center; border: 1px solid #bcccd6; border-radius: 50%; color: #8ea3af; font-size: 11px; font-weight: 700; }
+    .script-brief-inputs li { background: #f7f9fb; border: 1px solid #e2e9ed; }
+    .script-brief-inputs label { display: flex; align-items: center; gap: 11px; padding: 10px 12px; cursor: pointer; }
+    .script-brief-inputs input { position: absolute; opacity: 0; pointer-events: none; }
+    .script-brief-vazio { padding: 14px; color: #7b8f9c; font-size: 13px; }
+    .script-brief-inputs .marca { width: 19px; height: 19px; flex: none; display: grid; place-items: center; border: 1px solid #bcccd6; background: white; color: white; font-size: 12px; font-weight: 700; }
+    .script-brief-inputs li:hover { border-color: #b7d0e2; }
     .script-brief-inputs li.tem { background: #eef5fa; border-color: #b7d0e2; }
     .script-brief-inputs li.tem .marca { background: #205e8a; border-color: #205e8a; color: white; }
     .script-brief-inputs b { display: block; color: #12293b; font-size: 13px; }
     .script-brief-inputs small { display: block; margin-top: 2px; color: #7b8f9c; font-size: 11.5px; }
-    .script-brief-inputs .opcional { margin-left: auto; color: #8ea3af; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+
     .script-brief-actions { display: flex; flex-wrap: wrap; gap: 10px; }
     .script-brief-actions button { padding: 11px 20px; background: white; border: 1px solid #c9d5dc; color: #24455c; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
     .script-brief-actions button:hover:not(:disabled) { border-color: #205e8a; }
@@ -462,6 +466,13 @@
     /* ---- barra de status ---- */
     body.app-active .app-sidebar { min-height: 0; }
     body.app-active .sidebar-library { min-height: 0; overflow-y: auto; }
+    .sidebar-runs { max-height: 210px; overflow-y: auto; padding: 0 12px 6px; }
+    .sidebar-run { width: 100%; display: block; margin-bottom: 5px; padding: 8px 10px; background: rgba(255,255,255,.5); border: 1px solid #d3dde3; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+    .sidebar-run:hover { border-color: #205e8a; }
+    .sidebar-run.ativa { background: #e6eff6; border-color: #205e8a; }
+    .sidebar-run b { display: block; color: #12293b; font-size: 12px; font-weight: 700; }
+    .sidebar-run small { display: block; margin-top: 2px; color: #6f8697; font-size: 10.5px; }
+    .sidebar-run i { display: block; margin-top: 3px; color: #205e8a; font-size: 10px; font-style: normal; font-weight: 700; }
     .app-statusbar { grid-column: 1 / -1; grid-row: 2; display: none; align-items: center; gap: 10px; height: 30px; padding: 0 16px; background: #12293b; color: rgba(255,255,255,.72); font-family: Arial, sans-serif; font-size: 11px; }
     body.app-active .app-statusbar { display: flex; }
     .status-item { white-space: nowrap; }
@@ -498,6 +509,71 @@
     .drop-overlay div { padding: 40px 56px; background: white; border: 2px dashed #205e8a; text-align: center; }
     .drop-overlay strong { display: block; color: #12293b; font: 700 22px/1.2 Cambria, Georgia, serif; }
     .drop-overlay span { display: block; margin-top: 8px; color: #6b8290; font-size: 13px; }
+
+    /* ================= densidade das telas internas ================= */
+    body.app-active .app-content { padding: 14px 18px 30px; }
+    body.app-active .view-heading { margin-bottom: 13px; align-items: center; }
+    body.app-active .view-heading p { margin-bottom: 3px; font-size: 9px; letter-spacing: .1em; }
+    body.app-active .view-heading h2 { font-size: 20px; }
+    body.app-active .app-topbar { min-height: 50px; }
+    body.app-active .app-title small { font-size: 10px; }
+    body.app-active .app-title h1 { margin-top: 1px; font-size: 17px; }
+    body.app-active .app-search { height: 32px; font-size: 12px; }
+    body.app-active .app-notification, body.app-active .app-menu-toggle { width: 32px; height: 32px; }
+
+    /* faixa da central de documentos */
+    body.app-active .workspace-banner { min-height: 0; padding: 12px 16px; }
+    body.app-active .workspace-banner h2 { font-size: 16px; }
+    body.app-active .workspace-banner p { margin-top: 3px; font-size: 11px; }
+    body.app-active .workspace-eyebrow { font-size: 9px; }
+    body.app-active .workspace-tool-trigger { min-width: 0; min-height: 32px; padding: 0 14px; font-size: 11px; }
+
+    /* indicadores em linha compacta */
+    body.app-active .workspace-stat { padding: 8px 13px; gap: 9px; }
+    body.app-active .workspace-stat strong { font-size: 16px; }
+    body.app-active .workspace-stat span { font-size: 10px; line-height: 1.25; }
+
+    /* tabela de documentos no ritmo de planilha */
+    body.app-active .workspace-table th { padding: 7px 10px; font-size: 10px; letter-spacing: .04em; }
+    body.app-active .workspace-table td { padding: 6px 10px; font-size: 11.5px; }
+    body.app-active .workspace-file-name > span { width: 26px; height: 26px; font-size: 9px; }
+    body.app-active .workspace-file-name b { font-size: 12px; }
+    body.app-active .workspace-file-name small { font-size: 10px; }
+    body.app-active .workspace-file-head { padding: 9px 12px; }
+    body.app-active .workspace-file-head h3 { font-size: 13px; }
+    body.app-active .workspace-file-head p { margin-top: 2px; font-size: 10.5px; }
+    body.app-active .workspace-selection-bar { padding: 8px 12px; font-size: 11px; }
+    body.app-active .workspace-run-selected { min-height: 32px; padding: 0 14px; font-size: 11px; }
+
+    /* painel do script */
+    body.app-active .script-brief { padding: 18px 20px; }
+    body.app-active .script-brief-head { padding-bottom: 12px; }
+    body.app-active .script-brief-mark { width: 36px; height: 36px; font-size: 13px; }
+    body.app-active .script-brief-head h3 { font-size: 18px; }
+    body.app-active .script-brief-text { margin: 12px 0 14px; font-size: 13px; line-height: 1.5; }
+    body.app-active .script-brief-inputs { gap: 6px; margin-bottom: 15px; }
+    body.app-active .script-brief-inputs label { padding: 8px 11px; }
+    body.app-active .script-brief-actions button { padding: 9px 16px; font-size: 12.5px; }
+
+    /* cartões de configuração e editor */
+    body.app-active .settings-card { padding: 16px 18px; }
+    body.app-active .settings-card h3 { font-size: 16px; }
+    body.app-active .settings-card p { font-size: 12.5px; line-height: 1.5; }
+    body.app-active .cms-card { padding: 18px 20px; }
+    body.app-active .cms-card h3 { font-size: 17px; }
+    body.app-active .cms-card > p { margin-bottom: 12px; font-size: 12.5px; }
+    body.app-active .cms-actions { gap: 8px; margin-bottom: 9px; }
+    body.app-active .cms-actions button { padding: 7px 13px; font-size: 12.5px; }
+    body.app-active .cms-status { margin-bottom: 11px; padding: 8px 10px; font-size: 12px; }
+
+    /* resumo e indicadores do comparador */
+    body.app-active .compare-kpi { padding: 10px 12px; }
+    body.app-active .compare-kpi span { font-size: 10px; }
+    body.app-active .compare-kpi strong { font-size: 19px; }
+    body.app-active .compare-summary-details summary { padding: 9px 13px; font-size: 12.5px; }
+    body.app-active .compare-toolbar { padding: 8px 10px; gap: 8px; }
+    body.app-active .compare-filters input, body.app-active .compare-filters select { height: 30px; font-size: 12px; }
+
     .cor-ouro { color: var(--gold-500) !important; }
     .cor-navy { color: var(--navy-900) !important; }
     .cor-vermelho { color: var(--red-mg) !important; }
@@ -721,7 +797,7 @@
     .compare-table col.col-description { width: auto; }
     .compare-table col.col-money { width: 145px; }
     .compare-table col.col-execution { width: 100px; }
-    .compare-table col.col-status { width: 155px; }
+    .compare-table col.col-status { width: 190px; }
     .compare-table col.col-actions { width: 150px; }
     .compare-table th { position: sticky; z-index: 2; top: 0; padding: 14px 14px; color: #5f6f77; background: #edf0f2; border-bottom: 1px solid #cdd6da; font-size: 11px; letter-spacing: .035em; text-align: left; text-transform: uppercase; white-space: nowrap; }
     .compare-table th.num, .compare-table td.num { text-align: right; }
@@ -735,9 +811,9 @@
     .compare-table .value-negative { color: #a32f37; }
     .compare-table .value-positive { color: #2b704c; }
     .compare-table tfoot th { position: static; padding: 16px 14px; color: var(--navy-900); background: #e6ebee; border-top: 2px solid #bcc9ce; font-size: 12px; }
-    .compare-badge { display: inline-flex; padding: 6px 8px; border-radius: 20px; color: #2b704c; background: #eaf5ee; font-size: 10px; font-weight: 800; line-height: 1.2; white-space: nowrap; }
-    .compare-badge.warning { color: #96591f; background: #fff1df; }
-    .compare-badge.danger { color: #9a3037; background: #fff0f0; }
+    .compare-badge { display: inline; padding: 0; border: 0; border-radius: 0; background: none; color: #2b704c; font-size: 11px; font-weight: 700; line-height: 1.3; white-space: normal; }
+    .compare-badge.warning { color: #96591f; background: none; }
+    .compare-badge.danger { color: #9a3037; background: none; }
     .row-actions { display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
     .row-actions button { min-height: 34px; padding: 0 10px; color: var(--navy-800); background: white; border: 1px solid #c8d2d7; font-size: 11px; cursor: pointer; }
     .row-actions button.remove { color: #9a3037; }
@@ -2046,7 +2122,7 @@
     .compare-grid-table .cell-editor:hover { background: transparent; border: 0; }
     .compare-grid-table .cell-editor:focus { color: #1f3b4e; background: #fffef7; border: 0; box-shadow: inset 0 0 0 2px #266a9a; }
     .compare-grid-table .cell-stack small { padding: 0 8px 4px; font-size: 8.5px; }
-    .compare-grid-table .compare-badge { padding: 3px 6px; border-radius: 0; font-size: 9.5px; white-space: nowrap; }
+    .compare-grid-table .compare-badge { padding: 0; border-radius: 0; background: none; font-size: 11px; font-weight: 700; white-space: normal; }
     .compare-grid-table .row-actions { justify-content: center; }
     .compare-grid-table .row-actions button.remove { min-width: 27px; min-height: 27px; border-radius: 0; }
     .compare-grid-table tfoot th { position: sticky; z-index: 3; top: auto; bottom: 0; color: #2e4556; background: #e2ebe7; border-top: 2px solid #7b8f9e; border-right: 1px solid #bec6cb; border-bottom: 0; }
@@ -2065,7 +2141,7 @@
     .compare-view.active .compare-grid-table .cell-editor { min-height: 43px; padding: 8px 10px; font-size: 13px; }
     .compare-view.active .compare-grid-table .cell-code { font-size: 12.5px; }
     .compare-view.active .compare-grid-table .cell-stack small { font-size: 10px; }
-    .compare-view.active .compare-grid-table .compare-badge { padding: 4px 7px; font-size: 11px; }
+    .compare-view.active .compare-grid-table .compare-badge { padding: 0; font-size: 11.5px; }
     .compare-view.active .compare-table-footer { min-height: 40px; font-size: 11px; }
     .compare-view.active .compare-summary-details > summary { min-height: 50px; }
     .compare-view.active .compare-summary-details > summary b { font-size: 13.5px; }
@@ -2267,10 +2343,12 @@
   <section class="wfa-app" id="wfaApp" aria-label="Sistema WFA" aria-hidden="true">
     <header class="app-sidebar" id="appSidebar">
       <div class="app-brand"><span class="brand-symbol" aria-hidden="true"><span class="wf-letters">WF</span><span class="a-letter"></span></span><span class="app-brand-copy"><strong>WFA</strong><span>Gestão Pública</span></span></div>
-      <p class="app-nav-label">Áreas de trabalho</p>
+      <p class="app-nav-label">Scripts</p>
       <nav class="app-nav" id="appScriptNav" aria-label="Scripts disponíveis">
         <button type="button" data-app-view="comparador-fontes" data-script="comparador"><span class="app-nav-icon">CF</span>Comparador de fontes<span class="app-nav-meta" id="scriptCompareMeta">0/3</span></button>
       </nav>
+      <div class="sidebar-files-heading"><p class="app-nav-label">Áreas de trabalho</p><button class="sidebar-upload-icon" id="runsClear" type="button" title="Limpar histórico de execuções" aria-label="Limpar histórico de execuções">⌫</button></div>
+      <div class="sidebar-runs" id="appRunsList" aria-label="Execuções salvas"><p class="sidebar-library-empty">As execuções concluídas ficam guardadas aqui.</p></div>
       <div class="sidebar-files-heading"><p class="app-nav-label">Documentos</p><button class="sidebar-upload-icon" id="workspaceUploadTrigger" type="button" title="Carregar arquivos PDF" aria-label="Carregar arquivos PDF">↥</button><input id="workspaceUploadInput" type="file" accept="application/pdf,.pdf" multiple hidden></div>
       <div class="sidebar-library" id="workspaceSidebarFiles" aria-label="Seleção rápida de arquivos"><p class="sidebar-library-empty">Os PDFs enviados aparecerão aqui para seleção rápida.</p></div>
       <nav class="app-nav sidebar-admin-nav" aria-label="Preferências">
@@ -2316,7 +2394,7 @@
                 <div><small>Script de conferência</small><h3 id="compareEmptyTitle">Comparador de fontes</h3></div>
                 <span class="script-brief-state" id="scriptBriefState">0 de 3</span>
               </header>
-              <p class="script-brief-text" id="compareEmptyText">Lê o quadro <b>Total por fonte de recurso</b> no fim de cada relatório e cruza os valores fonte a fonte. Dois relatórios já bastam; o terceiro entra como coluna extra.</p>
+              <p class="script-brief-text" id="compareEmptyText">Lê o quadro <b>Total por fonte de recurso</b> no fim de cada relatório e cruza os valores fonte a fonte. Escolha abaixo quais documentos entram nesta execução — dois já bastam, e cada tipo entra uma vez.</p>
               <ul class="script-brief-inputs" id="scriptBriefInputs"></ul>
               <div class="script-brief-actions">
                 <button class="script-brief-run" id="scriptBriefRun" type="button" disabled>Executar comparação</button>
@@ -2591,29 +2669,56 @@
       document.getElementById('appLogout').addEventListener('click', async function () { if (authAdapter) await authAdapter.signOut(); leaveApp(); });
 
       const viewTitles = { workspace:'Central de documentos', 'comparador-fontes':'Comparador de fontes', personalizar:'Personalizar página', configuracoes:'Configurações' };
-      // painel do script: lista o que ele aceita e o que já está carregado
+      // painel do script: você escolhe quais documentos entram nesta execução
+      const selecaoScript = new Set();
+      function documentosElegiveis() {
+        return workspaceState.files.filter(function (item) { return item.status === 'ready' && ROLE_INFO[item.role]; });
+      }
+      function conflitoDeTipos() {
+        const vistos = {};
+        let conflito = null;
+        selecaoScript.forEach(function (id) {
+          const item = workspaceState.files.find(function (candidato) { return candidato.id === id; });
+          if (!item) return;
+          if (vistos[item.role]) conflito = ROLE_INFO[item.role].nome;
+          vistos[item.role] = true;
+        });
+        return conflito;
+      }
       function renderScriptBrief() {
         const lista = document.getElementById('scriptBriefInputs');
         if (!lista || typeof workspaceState === 'undefined') return;
-        const prontos = {};
-        workspaceState.files.forEach(function (item) {
-          if (item.status === 'ready' && ROLE_INFO[item.role] && !prontos[item.role]) prontos[item.role] = item;
+        const elegiveis = documentosElegiveis();
+        // descarta seleções de arquivos que saíram da central
+        Array.from(selecaoScript).forEach(function (id) {
+          if (!elegiveis.some(function (item) { return item.id === id; })) selecaoScript.delete(id);
         });
-        lista.innerHTML = COMPARE_ROLES.map(function (papel) {
-          const item = prontos[papel];
-          const info = ROLE_INFO[papel];
-          return '<li class="' + (item ? 'tem' : '') + '"><span class="marca">' + (item ? '✓' : '·') + '</span><span><b>' + escapeHtml(info.nome) + '</b><small>' + (item ? escapeHtml(item.file.name) : 'Nenhum arquivo deste tipo carregado') + '</small></span><span class="opcional">' + (item ? 'pronto' : 'ausente') + '</span></li>';
-        }).join('');
-        const total = Object.keys(prontos).length;
+        if (!elegiveis.length) {
+          lista.innerHTML = '<li class="script-brief-vazio">Nenhum documento reconhecido na central. Carregue relatórios em PDF para escolher aqui.</li>';
+        } else {
+          lista.innerHTML = elegiveis.map(function (item) {
+            const marcado = selecaoScript.has(item.id);
+            return '<li class="' + (marcado ? 'tem' : '') + '"><label><input type="checkbox" data-script-doc="' + escapeHtml(item.id) + '"' + (marcado ? ' checked' : '') + '><span class="marca" aria-hidden="true">' + (marcado ? '✓' : '') + '</span><span><b>' + escapeHtml(item.file.name) + '</b><small>' + escapeHtml(ROLE_INFO[item.role].nome) + ' • ' + escapeHtml(formatBytes(item.file.size)) + '</small></span></label></li>';
+          }).join('');
+        }
+        atualizarResumoDoBrief();
+      }
+      // atualiza contador e botão sem refazer a lista, para não perder o item clicado
+      function atualizarResumoDoBrief() {
+        const elegiveis = documentosElegiveis();
+        const conflito = conflitoDeTipos();
+        const total = selecaoScript.size;
         const marcador = document.getElementById('scriptBriefState');
         if (marcador) {
-          marcador.textContent = total + ' de 3';
-          marcador.classList.toggle('pronto', total >= 2);
+          marcador.textContent = total + ' de ' + elegiveis.length + ' escolhidos';
+          marcador.classList.toggle('pronto', total >= 2 && !conflito);
         }
         const botao = document.getElementById('scriptBriefRun');
         if (botao) {
-          botao.disabled = total < 2;
-          botao.textContent = total >= 2 ? 'Executar com ' + total + ' documentos' : 'Carregue ao menos dois documentos';
+          botao.disabled = total < 2 || Boolean(conflito);
+          botao.textContent = conflito ? 'Dois documentos de ' + conflito.toLowerCase()
+            : total >= 2 ? 'Executar com ' + total + ' documentos'
+            : 'Escolha ao menos dois documentos';
         }
       }
       // mostra na barra lateral quantos documentos o script já tem prontos
@@ -3109,13 +3214,19 @@
       });
       workspaceDom.rows.addEventListener('click', function (event) { const button = event.target.closest('[data-workspace-remove]'); if (button) removeWorkspaceFile(button.dataset.workspaceRemove); });
       document.querySelectorAll('[data-workspace-tool="compare"]').forEach(function (button) { button.addEventListener('click', launchWorkspaceComparator); });
+      document.getElementById('scriptBriefInputs').addEventListener('change', function (evento) {
+        const caixa = evento.target.closest('[data-script-doc]');
+        if (!caixa) return;
+        if (caixa.checked) selecaoScript.add(caixa.dataset.scriptDoc); else selecaoScript.delete(caixa.dataset.scriptDoc);
+        const item = caixa.closest('li');
+        item.classList.toggle('tem', caixa.checked);
+        const marca = item.querySelector('.marca');
+        if (marca) marca.textContent = caixa.checked ? '✓' : '';
+        atualizarResumoDoBrief();
+      });
       document.getElementById('scriptBriefRun').addEventListener('click', function () {
-        // marca automaticamente um documento de cada tipo disponível e executa
-        const porTipo = {};
-        workspaceState.files.forEach(function (item) {
-          if (item.status === 'ready' && ROLE_INFO[item.role] && !porTipo[item.role]) porTipo[item.role] = item;
-        });
-        workspaceState.selected = new Set(Object.keys(porTipo).map(function (papel) { return porTipo[papel].id; }));
+        if (selecaoScript.size < 2) return;
+        workspaceState.selected = new Set(selecaoScript);
         renderWorkspaceFiles();
         launchWorkspaceComparator();
       });
@@ -3217,11 +3328,11 @@
         const papeis = papeisComRelatorio();
         const presentes = papeis.filter(function (papel) { return row['tem_' + papel]; });
         if (presentes.length < papeis.length) {
-          return { code:'only-' + presentes.join('-'), label:'Só em ' + presentes.map(function (p) { return ROLE_INFO[p].curto.toLowerCase(); }).join(' e '), className:'warning' };
+          return { code:'only-' + presentes.join('-'), label:'Só ' + presentes.map(function (p) { return ROLE_INFO[p].curto.toLowerCase(); }).join(' + '), className:'warning' };
         }
-        if (row.tem_budget && row.collected > row.budget + 0.005) return { code:'above', label:'Arrecadado acima do orçado', className:'danger' };
-        if (row.tem_budget && row.tem_committed && row.committed > row.budget + 0.005) return { code:'above', label:'Empenhado acima do orçado', className:'danger' };
-        return { code:'matched', label:'Em todos os relatórios', className:'' };
+        if (row.tem_budget && row.collected > row.budget + 0.005) return { code:'above', label:'Arrecadado > orçado', className:'danger' };
+        if (row.tem_budget && row.tem_committed && row.committed > row.budget + 0.005) return { code:'above', label:'Empenhado > orçado', className:'danger' };
+        return { code:'matched', label:'Conferido', className:'' };
       }
       function activeCompareRows() { return compareState.rows.filter(function (row) { return !row.deleted; }); }
       function renderCompareMeta(report, targetId) {
@@ -3347,6 +3458,7 @@
           compareDom.filesLabel.textContent = 'Documentos';
           compareDom.filesCount.textContent = papeis.length + '/3';
           renderCompareResults();
+          salvarExecucao();
           closeCompareFilesSheet();
           compareDom.results.scrollIntoView({ behavior:'smooth', block:'start' });
         } catch (error) {
@@ -3640,7 +3752,8 @@
               return window.localforage.setDriver(window.localforage.INDEXEDDB).then(function () {
                 return {
                   files: window.localforage.createInstance({ name:WFA_DB_NAME, storeName:'arquivos' }),
-                  state: window.localforage.createInstance({ name:WFA_DB_NAME, storeName:'estado' })
+                  state: window.localforage.createInstance({ name:WFA_DB_NAME, storeName:'estado' }),
+                  runs: window.localforage.createInstance({ name:WFA_DB_NAME, storeName:'execucoes' })
                 };
               });
             })
@@ -4101,6 +4214,96 @@
           if (evento.dataTransfer && evento.dataTransfer.files.length) addWorkspaceFiles(evento.dataTransfer.files);
         });
       }());
+
+      /* ============ Áreas de trabalho: execuções concluídas ============
+         Cada execução do script vira um registro reabrível, com os dados da
+         tabela e dos relatórios que a geraram.                              */
+      let execucaoAberta = null;
+
+      async function salvarExecucao() {
+        try {
+          const stores = await getWfaStores();
+          const papeis = papeisComRelatorio();
+          const id = 'exec-' + Date.now();
+          const resumo = {
+            id: id,
+            script: 'Comparador de fontes',
+            criadoEm: Date.now(),
+            papeis: papeis,
+            arquivos: papeis.map(function (papel) { return compareState.reports[papel].fileName; }),
+            municipio: compareState.reports[papeis[0]].municipality,
+            exercicio: compareState.reports[papeis[0]].exercise,
+            fontes: compareState.rows.filter(function (row) { return !row.deleted; }).length,
+            totais: papeis.reduce(function (acc, papel) {
+              acc[papel] = compareState.rows.reduce(function (soma, row) { return soma + row[papel]; }, 0);
+              return acc;
+            }, {})
+          };
+          await stores.runs.setItem(id, { resumo: resumo, reports: compareState.reports, rows: compareState.rows, audit: compareState.audit });
+          execucaoAberta = id;
+          renderExecucoes();
+        } catch (error) { /* sem armazenamento: a execução segue apenas na tela */ }
+      }
+
+      async function renderExecucoes() {
+        const alvo = document.getElementById('appRunsList');
+        if (!alvo) return;
+        let registros = [];
+        try {
+          const stores = await getWfaStores();
+          const chaves = await stores.runs.keys();
+          registros = await Promise.all(chaves.map(function (chave) { return stores.runs.getItem(chave); }));
+        } catch (error) { registros = []; }
+        registros = registros.filter(Boolean).sort(function (a, b) { return b.resumo.criadoEm - a.resumo.criadoEm; });
+        if (!registros.length) {
+          alvo.innerHTML = '<p class="sidebar-library-empty">As execuções concluídas ficam guardadas aqui.</p>';
+          return;
+        }
+        alvo.innerHTML = registros.map(function (registro) {
+          const r = registro.resumo;
+          const quando = new Date(r.criadoEm).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+          const tipos = r.papeis.map(function (papel) { return ROLE_INFO[papel] ? ROLE_INFO[papel].curto : papel; }).join(' · ');
+          return '<button class="sidebar-run' + (r.id === execucaoAberta ? ' ativa' : '') + '" type="button" data-exec="' + escapeHtml(r.id) + '"><b>' + escapeHtml(r.municipio || r.script) + '</b><small>' + escapeHtml(quando) + ' • ' + r.fontes + ' fontes</small><i>' + escapeHtml(tipos) + '</i></button>';
+        }).join('');
+      }
+
+      async function abrirExecucao(id) {
+        try {
+          const stores = await getWfaStores();
+          const registro = await stores.runs.getItem(id);
+          if (!registro) return;
+          compareState.reports = registro.reports;
+          compareState.rows = registro.rows;
+          compareState.audit = registro.audit || [];
+          execucaoAberta = id;
+          COMPARE_ROLES.forEach(function (papel) {
+            const relatorio = compareState.reports[papel];
+            if (relatorio) fileState(papel, 'ready', relatorio.fileName, relatorio.sources.size + ' fontes • total ' + formatBrl(relatorio.reportedTotal), 'Validado');
+          });
+          renderCompareResults();
+          compareDom.results.hidden = false;
+          compareDom.empty.hidden = true;
+          compareDom.detailsToggle.hidden = false;
+          compareDom.auditToggle.hidden = false;
+          compareDom.view.classList.add('results-ready');
+          setCompareAlert('Execução de ' + new Date(registro.resumo.criadoEm).toLocaleString('pt-BR') + ' reaberta.');
+          selectView('comparador-fontes');
+          renderExecucoes();
+        } catch (error) { showToast('Não foi possível reabrir esta execução.'); }
+      }
+
+      document.getElementById('appRunsList').addEventListener('click', function (evento) {
+        const botao = evento.target.closest('[data-exec]');
+        if (botao) abrirExecucao(botao.dataset.exec);
+      });
+      document.getElementById('runsClear').addEventListener('click', async function () {
+        if (!window.confirm('Apagar o histórico de execuções? Os documentos continuam guardados.')) return;
+        try { const stores = await getWfaStores(); await stores.runs.clear(); } catch (error) { /* ignora */ }
+        execucaoAberta = null;
+        renderExecucoes();
+        showToast('Histórico de execuções apagado.');
+      });
+      renderExecucoes();
 
       menuButton.addEventListener('click', function () { const isOpen = menu.classList.toggle('open'); menuButton.setAttribute('aria-expanded', String(isOpen)); });
       menu.querySelectorAll('a').forEach(function (link) { link.addEventListener('click', function () { menu.classList.remove('open'); menuButton.setAttribute('aria-expanded', 'false'); }); });
