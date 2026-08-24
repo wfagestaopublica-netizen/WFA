@@ -2408,6 +2408,47 @@
     .app-avatar { color: white; background: #b88b49; }
     .app-logout { color: #79848b; }
     .app-logout:hover { color: #9c3037; }
+
+    /* ---- pé da barra lateral ----
+       Tudo passa a nascer da mesma coluna: o ícone ocupa 22px, o texto começa
+       depois dele, e conta, ver a homepage e sair viram linhas iguais às da
+       navegação acima — em vez de um botão emoldurado no meio de itens soltos. */
+    body.app-active .app-sidebar-bottom {
+      min-height: 0; padding: 0 8px 5px; gap: 0;
+      border-top: 1px solid #cfd5d9;
+    }
+    body.app-active .app-user-mini {
+      grid-template-columns: 27px minmax(0,1fr); gap: 9px;
+      padding: 7px 9px 8px; margin: 0;
+      border-bottom: 1px solid #d9dee1;
+    }
+    body.app-active .app-avatar { width: 24px; height: 24px; justify-self: center; font-size: 9px; }
+    body.app-active .app-user-mini strong { font-size: 11px; line-height: 1.2; }
+    body.app-active .app-user-mini small { margin-top: 0; font-size: 9.5px; line-height: 1.3; }
+    body.app-active .app-view-site,
+    body.app-active .app-logout {
+      width: 100%; min-height: 30px; margin: 3px 0 0; padding: 0 9px;
+      display: flex; align-items: center; justify-content: flex-start; gap: 9px;
+      border: 0; border-radius: 3px; background: transparent;
+      color: #5d6c77; font: inherit; font-size: 11.5px; font-weight: 400;
+      letter-spacing: 0; text-transform: none; text-align: left;
+    }
+    body.app-active .app-view-site svg,
+    body.app-active .app-logout svg {
+      width: 27px; height: 15px; flex: none;
+      fill: none; stroke: currentColor; stroke-width: 1.5;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    body.app-active .app-view-site:hover { background: #dce7ef; color: #1b4e73; }
+    body.app-active .app-logout:hover { background: #f4e3e3; color: #9c3037; }
+    body.app-active .app-logout { margin-top: 1px; padding-top: 0; border-top: 0; }
+    /* a dica acima nasce na mesma coluna do resto */
+    body.app-active .sidebar-dica { margin: 7px 14px 9px 17px; }
+
+    body.app-active.sidebar-recolhida .app-user-mini { grid-template-columns: 24px; justify-content: center; padding: 7px 0 8px; }
+    body.app-active.sidebar-recolhida .app-user-mini .app-avatar { display: grid; }
+    body.app-active.sidebar-recolhida .app-view-site,
+    body.app-active.sidebar-recolhida .app-logout { justify-content: center; padding: 0; }
     .app-topbar { min-height: 60px; color: white; background: #205e8a; border-bottom-color: #1d547b; }
     .app-title small { color: rgba(255,255,255,.64); }
     .app-title h1 { color: white; }
