@@ -912,23 +912,23 @@
     body.app-active .app-brand {
       height: 34px; min-height: 34px; padding: 0 10px 0 12px;
       justify-content: space-between; gap: 8px;
-      border-bottom: 1px solid rgba(255,255,255,.14);
-      background: linear-gradient(180deg, rgba(255,255,255,.05), transparent);
+      border-bottom: 1px solid #d3d9dd;
+      background: transparent;
     }
     body.app-active .app-brand-copy { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
     body.app-active .app-brand-copy strong {
-      display: inline; margin: 0; color: #fff;
-      font: 600 14px/1 Cambria, Georgia, serif; letter-spacing: .11em;
+      display: inline; margin: 0; color: #12293b;
+      font: 700 14.5px/1 Cambria, Georgia, serif; letter-spacing: .1em;
     }
     body.app-active .app-brand-copy span {
       display: inline-flex; align-items: center; gap: 8px; margin: 0;
-      color: rgba(255,255,255,.42); font-size: 7.5px; font-weight: 700;
-      letter-spacing: .17em; text-transform: uppercase; white-space: nowrap;
+      color: #5f7484; font-size: 8px; font-weight: 700;
+      letter-spacing: .16em; text-transform: uppercase; white-space: nowrap;
       overflow: hidden; text-overflow: ellipsis;
     }
     body.app-active .app-brand-copy span::before {
       content: ""; width: 1px; height: 10px; flex: none;
-      background: var(--gold-500); opacity: .65;
+      background: var(--gold-500); opacity: 1;
     }
     /* Recolhida a barra tem 52px: não cabem o nome e a seta, e a seta é o
        único jeito de abrir de novo. Fica só ela, centrada. */
