@@ -1,6 +1,6 @@
 {
   "v": 2,
-  "atualizadoEm": "2026-08-24T12:24:51.278Z",
+  "atualizadoEm": "2026-08-24T12:25:41.238Z",
   "blocos": {
     "inicio.b2": {
       "v": "Gestão pública com <span><span class=\"cor-navy\"><span class=\"cor-ouro\">controle</span></span>, <span class=\"cor-ouro\">clareza</span></span> e direção.",
@@ -16,5 +16,5 @@
   "cores": {
     "--red-mg": "#ff000d"
   },
-  "emConstrucao": false
+  "emConstrucao": true
 }
