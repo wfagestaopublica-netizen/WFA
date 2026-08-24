@@ -160,32 +160,46 @@
           executar: function () { launchWorkspaceComparator(); }
         },
         {
-          id: 'consignacoes-sintetica',
-          nome: 'Consignações por fonte de recurso (sintética)',
-          descricao: 'Uma linha por fonte de recurso e uma coluna por consignatária, com o total de cada cruzamento.',
+          id: 'consignacoes',
+          nome: 'Consignações por fonte de recurso (folha)',
           regra: 'Marque na barra lateral o relatório:',
           requisitos: ['consignacoes'],
           situacao: function () { return situacaoDeConsignacoes(); },
-          executar: function () { montarConsignacoes('sintetica'); }
-        },
-        {
-          id: 'consignacoes-completa',
-          nome: 'Consignações por fonte de recurso (completa)',
-          descricao: 'Uma linha por verba, com código, consignatária, ocorrências e valor, sem agrupar nada.',
-          regra: 'Marque na barra lateral o relatório:',
-          requisitos: ['consignacoes'],
-          situacao: function () { return situacaoDeConsignacoes(); },
-          executar: function () { montarConsignacoes('completa'); }
+          // uma automação, dois formatos de saída: a escolha vem antes do quadro
+          opcoes: [
+            {
+              id: 'sintetica', nome: 'Tabela sintética',
+              descricao: 'Uma linha por fonte de recurso e uma coluna por consignatária, com o total de cada cruzamento e o total da fonte.',
+              executar: function () { montarConsignacoes('sintetica'); }
+            },
+            {
+              id: 'completa', nome: 'Tabela completa',
+              descricao: 'Uma linha por verba, com código, consignatária, ocorrências e valor, sem agrupar nada.',
+              executar: function () { montarConsignacoes('completa'); }
+            }
+          ]
         }
       ];
 
       /* O menu de automações mostra o que cada rotina precisa e o que já está
          marcado na barra lateral, para não haver adivinhação. */
+      // segundo nível: qual tabela essa automação deve montar
+      function abrirFormatos(automacao, evento) {
+        abrirMenuPlanilha(evento, [{ titulo: automacao.nome }].concat(automacao.opcoes.map(function (opcao) {
+          return {
+            rotulo: opcao.nome,
+            dica: opcao.descricao,
+            acao: function () {
+              window.setTimeout(function () { abrirMenuAutomacoes(automacao.id, opcao.id); }, 0);
+            }
+          };
+        })));
+      }
       function fecharMenuAutomacoes() {
         const painel = document.getElementById('sheetAutomacaoMenu');
         if (painel) painel.hidden = true;
       }
-      function abrirMenuAutomacoes(id) {
+      function abrirMenuAutomacoes(id, formatoId) {
         const painel = document.getElementById('sheetAutomacaoMenu');
         const botao = document.getElementById('sheetAutomacao');
         if (!painel || !botao) return;
@@ -193,6 +207,7 @@
         if (!escolhidas.length) { fecharMenuAutomacoes(); return; }
         const marcados = documentosSelecionados();
         painel.innerHTML = escolhidas.map(function (automacao) {
+          const formato = (automacao.opcoes || []).find(function (opcao) { return opcao.id === formatoId; });
           const situacao = automacao.situacao();
           const requisitos = (automacao.requisitos || []).map(function (papel) {
             const doc = marcados.find(function (item) { return item.role === papel; });
@@ -202,11 +217,14 @@
           }).join('');
           return '<article class="automacao-item" data-automacao="' + escapeHtml(automacao.id) + '">' +
             '<h4>' + escapeHtml(automacao.nome) + '</h4>' +
-            '<p class="automacao-desc">' + escapeHtml(automacao.descricao || '') + '</p>' +
+            (formato ? '<p class="automacao-formato">' + escapeHtml(formato.nome) + '</p>' : '') +
+            '<p class="automacao-desc">' + escapeHtml((formato && formato.descricao) || automacao.descricao || '') + '</p>' +
             (requisitos ? '<p class="automacao-regra">' + escapeHtml(automacao.regra || 'Requisitos:') + '</p><ul class="automacao-req">' + requisitos + '</ul>' : '') +
             '<div class="automacao-pe">' +
               '<span class="automacao-estado' + (situacao.ok ? ' pronto' : '') + '">' + escapeHtml(situacao.ok ? 'Pronta para rodar' : situacao.texto) + '</span>' +
-              '<button type="button" class="automacao-run" data-rodar="' + escapeHtml(automacao.id) + '"' + (situacao.ok ? '' : ' disabled') + '>Executar</button>' +
+              '<button type="button" class="automacao-run" data-rodar="' + escapeHtml(automacao.id) + '"' +
+                (formato ? ' data-formato="' + escapeHtml(formato.id) + '"' : '') +
+                (situacao.ok ? '' : ' disabled') + '>Executar</button>' +
             '</div></article>';
         }).join('');
         painel.hidden = false;
@@ -1085,14 +1103,20 @@
         const itens = [{ titulo:'Automações desta planilha' }];
         AUTOMACOES.forEach(function (automacao) {
           const disponivel = automacao.disponivel !== false;
+          const temFormatos = Array.isArray(automacao.opcoes) && automacao.opcoes.length;
           itens.push({
-            rotulo: automacao.nome,
+            rotulo: automacao.nome + (temFormatos ? '  ›' : ''),
             nota: disponivel ? '' : automacao.nota || 'em desenvolvimento',
             desabilitado: !disponivel,
-            dica: disponivel ? automacao.descricao : 'Esta automação ainda não está pronta.',
-            // o quadro abre depois que este clique termina, senão o fechamento
-            // por clique fora o derrubaria no mesmo instante
-            acao: function () { window.setTimeout(function () { abrirMenuAutomacoes(automacao.id); }, 0); }
+            dica: disponivel ? (automacao.descricao || 'Escolha o formato da tabela.') : 'Esta automação ainda não está pronta.',
+            // tudo abre depois que este clique termina, senão o fechamento por
+            // clique fora derrubaria o que acabou de aparecer
+            acao: function () {
+              window.setTimeout(function () {
+                if (temFormatos) abrirFormatos(automacao, evento);
+                else abrirMenuAutomacoes(automacao.id);
+              }, 0);
+            }
           });
         });
         abrirMenuPlanilha(evento, itens);
@@ -1102,7 +1126,10 @@
         if (!botao || botao.disabled) return;
         const automacao = AUTOMACOES.find(function (item) { return item.id === botao.dataset.rodar; });
         fecharMenuAutomacoes();
-        if (automacao) automacao.executar();
+        if (!automacao) return;
+        const formato = (automacao.opcoes || []).find(function (opcao) { return opcao.id === botao.dataset.formato; });
+        if (formato) formato.executar();
+        else if (automacao.executar) automacao.executar();
       });
       document.addEventListener('click', function (evento) {
         const painel = document.getElementById('sheetAutomacaoMenu');
