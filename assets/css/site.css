@@ -2432,11 +2432,6 @@
     .compare-filters input:focus, .compare-filters select:focus { border-color: #26628d; box-shadow: inset 0 0 0 1px #26628d; }
     .compare-table-wrap { max-height: calc(100vh - 225px); overflow: auto; background: #fff; }
     .compare-grid-table { min-width: 1160px; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-family: Arial,sans-serif; }
-    /* a coluna vazia do fim recebe a sobra da tela e mantém a grade inteira */
-    .compare-grid-table .preenchimento { padding: 0; border-right: 0; }
-    .compare-grid-table thead .preenchimento { background: #dde3e8; }
-    .compare-grid-table thead tr:not(.sheet-letters) .preenchimento { background: #1f4e6d; }
-    .compare-grid-table tfoot .preenchimento { background: #e8efe9; }
     .compare-grid-table col.col-row-number { width: 42px; }
     .compare-grid-table th {
       height: 38px;
