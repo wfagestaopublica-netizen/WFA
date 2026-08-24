@@ -1361,7 +1361,7 @@
               '<span class="pega-largura" data-redim-col="' + indice + '" title="Arraste para mudar a largura"></span></th>';
           }).join('') + '</tr>';
         const titulos = '<tr><th class="sheet-corner">#</th>' +
-          colunas.map(function (coluna) {
+          colunas.map(function (coluna, indice) {
             const simbolo = compareState.sourceSort === 'asc' ? '↑' : compareState.sourceSort === 'desc' ? '↓' : '≡';
             const seta = coluna.id === 'key' ? '<button class="sheet-sort-button" id="compareSortSource" type="button" title="' + (compareState.sourceSort === 'manual' ? 'Ordem manual — clique para ordenar pelo código' : 'Classificar por fonte de recurso') + '"><span id="compareSortSourceIcon">' + simbolo + '</span></button>' : '';
             const numerica = coluna.tipo === 'moeda' || coluna.id === 'diferenca' || coluna.id === 'execucao';
@@ -1371,6 +1371,7 @@
                 '<button class="menu-coluna" type="button" data-menu-coluna="' + escapeHtml(coluna.id) + '" title="Opções da coluna" aria-label="Opções da coluna">▾</button>' +
               '</span>' +
               (coluna.dica ? '<small class="dica-coluna">' + escapeHtml(coluna.dica) + '</small>' : '') +
+              '<span class="pega-largura" data-redim-col="' + indice + '" title="Arraste para mudar a largura"></span>' +
               '</th>';
           }).join('') + '</tr>';
         document.getElementById('compareHead').innerHTML = letras + titulos;

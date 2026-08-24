@@ -438,9 +438,12 @@
     td.celula-marcada input.cell-editor { background: transparent; }
     td.celula-marcada::after { content: ""; position: absolute; inset: 0; background: rgba(32,94,138,.10); pointer-events: none; }
     /* ---- pegas de redimensionamento ---- */
-    .sheet-letters th { position: relative; }
-    .pega-largura { position: absolute; z-index: 4; top: 0; right: -3px; width: 7px; height: 100%; cursor: col-resize; }
-    .pega-largura:hover { background: var(--gold-500); }
+    /* o manípulo cobre a faixa das letras e a do título: junto dá um alvo alto */
+    .compare-grid-table thead th { position: relative; }
+    .pega-largura { position: absolute; z-index: 6; top: 0; right: -4px; width: 9px; height: 100%; cursor: col-resize; }
+    .pega-largura::before { content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 3px; background: transparent; }
+    .pega-largura:hover::before { background: var(--gold-500); }
+    .compare-grid-table thead th:hover .pega-largura::before { background: rgba(195,154,87,.45); }
     .sheet-row-number { position: relative; }
     .pega-altura { position: absolute; z-index: 4; left: 0; bottom: -3px; width: 100%; height: 7px; cursor: row-resize; }
     .pega-altura:hover { background: var(--gold-500); }
