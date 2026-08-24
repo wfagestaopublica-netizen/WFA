@@ -228,6 +228,8 @@
         compareState.audit = [];
         compareState.titulos = {};
         compareState.formulas = {};
+        compareState.larguras = {};
+        compareState.alturas = {};
         compareState.sourceSort = 'manual';
         compareState.editorMode = null;
         compareState.editorKey = null;
@@ -324,6 +326,7 @@
       function selectView(view) {
         wfaCurrentView = view;
         escreverRota(view);
+        if (view === 'comparador-fontes') ajustarAlturaDaPlanilha();
         document.querySelectorAll('[data-view-panel]').forEach(function (panel) { panel.classList.toggle('active', panel.dataset.viewPanel === view); });
         document.querySelectorAll('.app-nav [data-app-view]').forEach(function (button) { button.classList.toggle('active', button.dataset.appView === view); });
         document.querySelectorAll('.app-nav [data-workspace-tool]').forEach(function (button) { button.classList.toggle('active', view === 'comparador-fontes' && button.dataset.workspaceTool === 'compare'); });
@@ -345,7 +348,7 @@
       };
       function papeisCarregados() { return COMPARE_ROLES.filter(function (papel) { return Boolean(compareState.files[papel]); }); }
       function papeisComRelatorio() { return COMPARE_ROLES.filter(function (papel) { return Boolean(compareState.reports[papel]); }); }
-      const compareState = { files: { budget: null, committed: null, collected: null }, reports: {}, rows: [], audit: [], editorMode: null, editorKey: null, sourceSort: 'asc', colunasExtras: [], titulos: {}, formulas: {}, modo: 'livre' };
+      const compareState = { files: { budget: null, committed: null, collected: null }, reports: {}, rows: [], audit: [], editorMode: null, editorKey: null, sourceSort: 'asc', colunasExtras: [], titulos: {}, formulas: {}, larguras: {}, alturas: {}, modo: 'livre' };
       const compareDom = {
         run: document.getElementById('compareRun'), progress: document.getElementById('compareProgress'), alert: document.getElementById('compareAlert'), results: document.getElementById('compareResults'),
         processHint: document.getElementById('compareProcessHint'), tableBody: document.getElementById('compareTableBody'), search: document.getElementById('compareSearch'), status: document.getElementById('compareStatusFilter'),
@@ -1202,6 +1205,102 @@
         return compareStatus(row).label;
       }
 
+      /* A planilha ocupa o que sobra da tela. Antes era uma conta fixa em CSS,
+         calibrada para um cabeçalho que não existe mais — e sobrava um vão. */
+      /* ---------------- largura das colunas e altura das linhas ----------------
+         Arrastar a divisa na linha das letras muda a largura; arrastar a divisa
+         de baixo no número da linha muda a altura. Fica guardado com a planilha. */
+      const LARGURA_MINIMA = 54;
+      const ALTURA_MINIMA = 22;
+      let redimensionando = null;
+
+      function larguraGuardada(coluna) {
+        const guardadas = compareState.larguras || {};
+        return guardadas[coluna.id] || coluna.largura;
+      }
+      function guardarLargura(id, valor) {
+        compareState.larguras = compareState.larguras || {};
+        compareState.larguras[id] = Math.max(LARGURA_MINIMA, Math.round(valor));
+      }
+      function guardarAltura(chave, valor) {
+        compareState.alturas = compareState.alturas || {};
+        compareState.alturas[chave] = Math.max(ALTURA_MINIMA, Math.round(valor));
+      }
+
+      function iniciarRedimensionamento(evento) {
+        const pegaColuna = evento.target.closest('[data-redim-col]');
+        const pegaLinha = evento.target.closest('[data-redim-linha]');
+        if (!pegaColuna && !pegaLinha) return;
+        evento.preventDefault();
+        evento.stopPropagation();
+        if (pegaColuna) {
+          const indice = Number(pegaColuna.dataset.redimCol);
+          const colunas = colunasDaTabela();
+          const coluna = colunas[indice];
+          if (!coluna) return;
+          redimensionando = { tipo:'coluna', id:coluna.id, indice:indice, inicio:evento.clientX, base:larguraGuardada(coluna) };
+        } else {
+          const linha = document.querySelector('#compareTableBody tr [data-menu-linha="' + pegaLinha.dataset.redimLinha + '"]');
+          const alvo = linha ? linha.parentElement : null;
+          if (!alvo) return;
+          redimensionando = { tipo:'linha', chave:pegaLinha.dataset.redimLinha, inicio:evento.clientY, base:alvo.getBoundingClientRect().height, el:alvo };
+        }
+        document.body.classList.add('redimensionando');
+      }
+
+      document.getElementById('compareHead').addEventListener('mousedown', iniciarRedimensionamento);
+      document.getElementById('compareTableBody').addEventListener('mousedown', iniciarRedimensionamento);
+
+      document.addEventListener('mousemove', function (evento) {
+        if (!redimensionando) return;
+        if (redimensionando.tipo === 'coluna') {
+          const nova = Math.max(LARGURA_MINIMA, redimensionando.base + (evento.clientX - redimensionando.inicio));
+          const col = document.getElementById('compareCols').children[redimensionando.indice + 1];
+          if (col) col.style.width = Math.round(nova) + 'px';
+          redimensionando.valor = nova;
+        } else {
+          const nova = Math.max(ALTURA_MINIMA, redimensionando.base + (evento.clientY - redimensionando.inicio));
+          redimensionando.el.style.height = Math.round(nova) + 'px';
+          redimensionando.valor = nova;
+        }
+      });
+      document.addEventListener('mouseup', function () {
+        if (!redimensionando) return;
+        if (redimensionando.valor) {
+          if (redimensionando.tipo === 'coluna') guardarLargura(redimensionando.id, redimensionando.valor);
+          else guardarAltura(redimensionando.chave, redimensionando.valor);
+          persistWfaLater();
+          regravarExecucaoAberta();
+        }
+        redimensionando = null;
+        document.body.classList.remove('redimensionando');
+      });
+
+      function ajustarAlturaDaPlanilha() {
+        const caixa = document.querySelector('.compare-table-wrap');
+        if (!caixa) return;
+        // Depois do desenho, e insistindo: a planilha pode estar escondida ainda
+        // quando a tela é restaurada, e aí a caixa não tem posição para medir.
+        let tentativas = 0;
+        const medir = function () {
+          const topo = caixa.getBoundingClientRect().top;
+          if (!topo) {
+            if (tentativas += 1, tentativas < 12) window.setTimeout(medir, 80);
+            return;
+          }
+          const rodape = document.querySelector('.compare-table-footer');
+          const abas = document.querySelector('.sheet-tabs');
+          // medir até o começo das abas evita ter de saber de margens e recuos
+          const limite = abas && abas.getBoundingClientRect().top
+            ? abas.getBoundingClientRect().top
+            : window.innerHeight;
+          const sobra = limite - topo - (rodape ? rodape.offsetHeight : 0) - 6;
+          caixa.style.maxHeight = Math.max(220, Math.round(sobra)) + 'px';
+        };
+        window.setTimeout(medir, 0);
+      }
+      window.addEventListener('resize', ajustarAlturaDaPlanilha);
+
       function renderCompareTable() {
         const query = normalizeSearch(compareDom.search.value);
         const filter = compareDom.status.value;
@@ -1227,11 +1326,14 @@
 
         // colunas
         document.getElementById('compareCols').innerHTML = '<col class="col-row-number">' +
-          colunas.map(function (coluna) { return '<col style="width:' + coluna.largura + 'px">'; }).join('');
+          colunas.map(function (coluna) { return '<col style="width:' + larguraGuardada(coluna) + 'px">'; }).join('');
 
         // cabeçalho: linha de letras + linha de títulos renomeáveis
         const letras = '<tr class="sheet-letters"><th class="sheet-corner"></th>' +
-          colunas.map(function (coluna, indice) { return '<th>' + LETRAS_COLUNA[indice] + '</th>'; }).join('') + '</tr>';
+          colunas.map(function (coluna, indice) {
+            return '<th>' + LETRAS_COLUNA[indice] +
+              '<span class="pega-largura" data-redim-col="' + indice + '" title="Arraste para mudar a largura"></span></th>';
+          }).join('') + '</tr>';
         const titulos = '<tr><th class="sheet-corner">#</th>' +
           colunas.map(function (coluna) {
             const simbolo = compareState.sourceSort === 'asc' ? '↑' : compareState.sourceSort === 'desc' ? '↓' : '≡';
@@ -1289,7 +1391,8 @@
             const entrada = '<input class="cell-editor ' + coluna.classe + '" data-compare-cell="' + campo + '" data-row-key="' + escapeHtml(row.key) + '" value="' + escapeHtml(String(valor)) + '"' + (coluna.tipo === 'moeda' ? ' inputmode="decimal"' : '') + ' aria-label="' + escapeHtml(coluna.titulo) + '">';
             return '<td class="' + (coluna.tipo === 'moeda' ? 'num ' : '') + 'editable-cell col-' + escapeHtml(coluna.id) + '">' + (co ? '<div class="cell-stack">' + entrada + co + '</div>' : entrada) + '</td>';
           }).join('');
-          return '<tr><td class="sheet-row-number" data-menu-linha="' + escapeHtml(row.key) + '" title="Opções da linha"><span class="numero">' + (rowIndex + 1) + '</span><button class="menu-linha" type="button" data-abrir-menu-linha="' + escapeHtml(row.key) + '" title="Opções da linha" aria-label="Opções da linha">▾</button></td>' + celulas + '</tr>';
+          const alturaLinha = compareState.alturas && compareState.alturas[row.key];
+          return '<tr' + (alturaLinha ? ' style="height:' + alturaLinha + 'px"' : '') + '><td class="sheet-row-number" data-menu-linha="' + escapeHtml(row.key) + '" title="Opções da linha"' + (compareState.alturas && compareState.alturas[row.key] ? ' style="height:' + compareState.alturas[row.key] + 'px"' : '') + '><span class="numero">' + (rowIndex + 1) + '</span><span class="pega-altura" data-redim-linha="' + escapeHtml(row.key) + '" title="Arraste para mudar a altura"></span><button class="menu-linha" type="button" data-abrir-menu-linha="' + escapeHtml(row.key) + '" title="Opções da linha" aria-label="Opções da linha">▾</button></td>' + celulas + '</tr>';
         }).join('');
 
         // rodapé de totais
@@ -1316,6 +1419,7 @@
         document.getElementById('compareFoot').innerHTML = '<tr><th class="sheet-corner"></th>' + totais + '</tr>';
 
         compareDom.tableBody.dispatchEvent(new CustomEvent('wfa:redesenhou'));
+        ajustarAlturaDaPlanilha();
         compareDom.view.classList.toggle('planilha-livre', compareState.modo === 'livre');
         document.getElementById('compareCount').textContent = compareState.modo === 'livre'
           ? rows.length + (rows.length === 1 ? ' linha' : ' linhas') + ' • ' + colunas.length + (colunas.length === 1 ? ' coluna' : ' colunas')
@@ -1740,12 +1844,23 @@
           ['<code>=ARRED(MEDIA(C;D);0)</code>', 'sem limite de profundidade']
         ]},
         { grupo:'Preencher', itens:[
+          ['apontar com o mouse', 'com a fórmula aberta, clicar ou arrastar em outras células escreve a referência dentro dela'],
           ['arrastar a alça', 'o quadrado verde no canto da célula copia a fórmula para baixo, ajustando as linhas'],
           ['<code>Ctrl</code> + <code>D</code>', 'repete a célula de cima na célula atual']
         ]},
         { grupo:'Encadeadas', itens:[
           ['<code>=C1+D1</code> e depois <code>=SOMA(C1:C8)</code>', 'uma fórmula pode somar células que também são fórmulas'],
           ['<code>=SOMA(C1:C8)</code> dentro da coluna C', 'referência circular: use um intervalo que não inclua a própria célula']
+        ]},
+        { grupo:'Seleção', itens:[
+          ['arrastar pela tabela', 'marca um bloco de células; o rodapé mostra quantas são e a soma delas'],
+          ['<code>Shift</code> + clique ou setas', 'estica a marcação até onde você indicar'],
+          ['<code>Delete</code>', 'limpa tudo o que está marcado'],
+          ['<code>Ctrl</code> + <code>C</code>', 'copia o bloco no formato que o Excel cola']
+        ]},
+        { grupo:'Medidas', itens:[
+          ['divisa na linha das letras', 'arraste para mudar a largura da coluna'],
+          ['divisa abaixo do número', 'arraste para mudar a altura da linha']
         ]},
         { grupo:'Erros', itens:[
           ['<code>#NOME?</code>', 'a função não existe — passe o mouse para ver as disponíveis'],
@@ -2281,6 +2396,8 @@
             modo: compareState.modo,
             sourceSort: compareState.sourceSort,
             colunasExtras: compareState.colunasExtras,
+            larguras: compareState.larguras,
+            alturas: compareState.alturas,
             titulos: compareState.titulos,
             formulas: compareState.formulas,
             execucaoAberta: typeof execucaoAberta === 'string' ? execucaoAberta : null,
@@ -2325,6 +2442,8 @@
           if (savedCompare) {
             compareState.sourceSort = savedCompare.sourceSort || 'asc';
             compareState.colunasExtras = savedCompare.colunasExtras || [];
+            compareState.larguras = savedCompare.larguras || {};
+            compareState.alturas = savedCompare.alturas || {};
             compareState.titulos = savedCompare.titulos || {};
             compareState.formulas = savedCompare.formulas || {};
             if (savedCompare.execucaoAberta) execucaoAberta = savedCompare.execucaoAberta;
@@ -2584,11 +2703,79 @@
           pintarSelecao();
         }
 
+        /* ---------------- apontar células dentro de uma fórmula ----------------
+           Como no Excel: com a célula em modo de fórmula, arrastar ou clicar em
+           outras células escreve a referência dentro da fórmula, em vez de
+           trocar a seleção. B1:B8 aparece onde o cursor estava.            */
+        var apontando = null;   // { campo, inicio, ancora }
+
+        function letraDaColuna(indice) { return LETRAS[indice - 1] || ''; }
+        function referenciaDoRetangulo(r) {
+          var c1 = letraDaColuna(r.c1);
+          var c2 = letraDaColuna(r.c2);
+          if (!c1 || !c2) return '';
+          if (r.l1 === r.l2 && r.c1 === r.c2) return c1 + (r.l1 + 1);
+          return c1 + (r.l1 + 1) + ':' + c2 + (r.l2 + 1);
+        }
+        // a fórmula aceita uma referência aqui? só depois de = ( ; , ou de um operador
+        function esperaReferencia(texto, posicao) {
+          var antes = texto.slice(0, posicao).replace(/\s+$/, '');
+          if (!antes || antes === '=') return true;
+          return /[=+\-*/(;,:]$/.test(antes);
+        }
+        function campoEmFormula() {
+          var ativo = document.activeElement;
+          if (!ativo || !ativo.classList || !ativo.classList.contains('cell-editor')) return null;
+          return ehFormula(ativo.value) ? ativo : null;
+        }
+        function escreverReferencia(texto) {
+          if (!apontando) return;
+          var campo = apontando.campo;
+          var antes = campo.value.slice(0, apontando.inicio);
+          var depois = campo.value.slice(apontando.fim);
+          campo.value = antes + texto + depois;
+          apontando.fim = apontando.inicio + texto.length;
+          campo.setSelectionRange(apontando.fim, apontando.fim);
+          barraFormula.value = campo.value;
+        }
+        function comecarApontamento(campo, pos) {
+          var inicio = campo.selectionStart;
+          if (!esperaReferencia(campo.value, inicio)) return false;
+          apontando = { campo: campo, inicio: inicio, fim: campo.selectionEnd, ancora: pos };
+          escreverReferencia(referenciaDoRetangulo({ l1: pos.linha, l2: pos.linha, c1: pos.coluna, c2: pos.coluna }));
+          definirSelecao(pos, pos);
+          document.body.classList.add('apontando-celulas');
+          return true;
+        }
+        function estenderApontamento(pos) {
+          if (!apontando) return;
+          var r = {
+            l1: Math.min(apontando.ancora.linha, pos.linha), l2: Math.max(apontando.ancora.linha, pos.linha),
+            c1: Math.min(apontando.ancora.coluna, pos.coluna), c2: Math.max(apontando.ancora.coluna, pos.coluna)
+          };
+          escreverReferencia(referenciaDoRetangulo(r));
+          definirSelecao(apontando.ancora, pos);
+        }
+        function encerrarApontamento() {
+          if (!apontando) return;
+          apontando.campo.focus();
+          apontando.campo.setSelectionRange(apontando.fim, apontando.fim);
+          apontando = null;
+          document.body.classList.remove('apontando-celulas');
+        }
+
         // arrastar pela tabela marca o retângulo; um clique simples continua editando
         corpo.addEventListener('mousedown', function (evento) {
           var celula = celulaDe(evento.target);
           if (!celula || celula.classList.contains('sheet-row-number')) return;
           var pos = coordenadas(celula);
+          // com uma fórmula aberta, clicar em outra célula escreve a referência nela
+          var emFormula = campoEmFormula();
+          if (emFormula && celula !== celulaDe(emFormula) && comecarApontamento(emFormula, pos)) {
+            evento.preventDefault();
+            ancoraDoArrasto = pos;
+            return;
+          }
           if (evento.shiftKey && selecao) {
             evento.preventDefault();
             definirSelecao(selecao.ancora, pos);
@@ -2604,6 +2791,7 @@
           var celula = celulaDe(evento.target);
           if (!celula || celula.classList.contains('sheet-row-number')) return;
           var pos = coordenadas(celula);
+          if (apontando) { estenderApontamento(pos); return; }
           if (pos.linha === ancoraDoArrasto.linha && pos.coluna === ancoraDoArrasto.coluna) return;
           if (!arrastando) {
             arrastando = true;
@@ -2614,6 +2802,7 @@
           definirSelecao(ancoraDoArrasto, pos);
         });
         document.addEventListener('mouseup', function () {
+          encerrarApontamento();
           ancoraDoArrasto = null;
           arrastando = false;
           document.body.classList.remove('selecionando-celulas');
@@ -2637,7 +2826,7 @@
 
         // apagar e copiar valem para tudo o que está marcado
         document.addEventListener('keydown', function (evento) {
-          if (!selecao) return;
+          if (!selecao || apontando) return;
           var r = retangulo();
           if (!r || (r.l1 === r.l2 && r.c1 === r.c2)) return;
           var editando = document.activeElement && document.activeElement.classList
@@ -2702,6 +2891,9 @@
         });
         corpo.addEventListener('input', function (evento) {
           if (evento.target.classList.contains('cell-editor')) barraFormula.value = evento.target.value;
+        });
+        corpo.addEventListener('change', function (evento) {
+          if (evento.target.classList && evento.target.classList.contains('cell-editor')) limparSelecao();
         });
         // digitar na barra e confirmar altera a célula selecionada
         barraFormula.addEventListener('keydown', function (evento) {
@@ -2992,7 +3184,7 @@
               return acc;
             }, {})
           };
-          await stores.state.setItem(PREFIXO_EXEC + id, { resumo: resumo, modo: compareState.modo, reports: compareState.reports, rows: compareState.rows, audit: compareState.audit, colunasExtras: compareState.colunasExtras, titulos: compareState.titulos, formulas: compareState.formulas });
+          await stores.state.setItem(PREFIXO_EXEC + id, { resumo: resumo, modo: compareState.modo, reports: compareState.reports, rows: compareState.rows, audit: compareState.audit, colunasExtras: compareState.colunasExtras, larguras: compareState.larguras, alturas: compareState.alturas, titulos: compareState.titulos, formulas: compareState.formulas });
           execucaoAberta = id;
           renderExecucoes();
         } catch (error) { /* sem armazenamento: a execução segue apenas na tela */ }
@@ -3068,6 +3260,8 @@
             registro.audit = compareState.audit;
             registro.modo = compareState.modo;
             registro.colunasExtras = compareState.colunasExtras;
+            registro.larguras = compareState.larguras;
+            registro.alturas = compareState.alturas;
             registro.titulos = compareState.titulos;
             registro.formulas = compareState.formulas;
             registro.resumo.fontes = compareState.rows.filter(function (row) { return !row.deleted; }).length;
@@ -3108,6 +3302,8 @@
           compareState.rows = registro.rows;
           compareState.audit = registro.audit || [];
           compareState.colunasExtras = registro.colunasExtras || [];
+          compareState.larguras = registro.larguras || {};
+          compareState.alturas = registro.alturas || {};
           compareState.titulos = registro.titulos || {};
           compareState.formulas = registro.formulas || {};
           execucaoAberta = id;

@@ -437,7 +437,21 @@
     td.celula-marcada { position: relative; background: #e4eef6 !important; }
     td.celula-marcada input.cell-editor { background: transparent; }
     td.celula-marcada::after { content: ""; position: absolute; inset: 0; background: rgba(32,94,138,.10); pointer-events: none; }
+    /* ---- pegas de redimensionamento ---- */
+    .sheet-letters th { position: relative; }
+    .pega-largura { position: absolute; z-index: 4; top: 0; right: -3px; width: 7px; height: 100%; cursor: col-resize; }
+    .pega-largura:hover { background: var(--gold-500); }
+    .sheet-row-number { position: relative; }
+    .pega-altura { position: absolute; z-index: 4; left: 0; bottom: -3px; width: 100%; height: 7px; cursor: row-resize; }
+    .pega-altura:hover { background: var(--gold-500); }
+    body.redimensionando { user-select: none; }
+    body.redimensionando * { cursor: inherit !important; }
+
     body.selecionando-celulas { user-select: none; cursor: cell; }
+    /* enquanto se aponta dentro de uma fórmula, o alvo aparece tracejado */
+    body.apontando-celulas { user-select: none; cursor: cell; }
+    body.apontando-celulas td.celula-marcada { outline: 2px dashed var(--gold-500); outline-offset: -2px; background: #fdf6e9 !important; }
+    body.apontando-celulas td.celula-marcada::after { background: rgba(195,154,87,.12); }
     body.selecionando-celulas input.cell-editor { pointer-events: none; }
 
     .cms-format-bar { position: fixed; z-index: 97; display: flex; gap: 6px; padding: 5px; background: var(--navy-950); box-shadow: 0 8px 22px rgba(3,16,26,.4); }
