@@ -508,31 +508,41 @@
       /* Uma vez fechada por clique fora, a barra só volta quando você mexer de
          novo dentro de um trecho. Sem isso o navegador guarda a seleção antiga
          e qualquer movimento a trazia de volta. */
+      /* Depois de fechada por um clique fora, a barra só volta quando você
+         mexer de novo no texto: o navegador guarda a seleção antiga e sem isso
+         qualquer movimento a trazia de volta. */
       var formatacaoDispensada = false;
-      /* Enquanto a paleta do sistema esta aberta a barra nao pode sumir: o
-         seletor de cor precisa do foco, e tirar o foco do texto disparava o
-         fechamento - a barra sumia no meio do clique e a paleta nem abria. */
-      var pintandoLivre = false;
+      /* A última faixa selecionada dentro de um trecho fica guardada. É ela que
+         o seletor de cor usa, então pintar não depende de o texto ainda estar
+         selecionado na hora — que é justamente o que a paleta do sistema
+         desfaz ao tomar o foco. */
+      var ultimaFaixa = null;
+      var ultimoBloco = null;
+
+      function dentroDaBarra(el) {
+        return Boolean(el && el.closest && el.closest('.cms-format-bar'));
+      }
       function esconderFormatacao() {
-        if (pintandoLivre) return;
         var barra = document.getElementById('cmsFormatBar');
         if (barra) barra.hidden = true;
       }
       function mostrarFormatacao() {
         var barra = document.getElementById('cmsFormatBar');
         if (!barra || !editando || formatacaoDispensada) return;
-        // sair da homepage para o painel não desligava a edição, e a barra ficava
-        // flutuando sobre o sistema sem nada que a fechasse
+        // fora da edição da página a barra não tem por que existir
         if (!document.body.classList.contains('cms-editando') || document.body.classList.contains('app-active')) { esconderFormatacao(); return; }
+        // foco dentro da própria barra: é o seletor de cor em uso, deixa como está
+        if (dentroDaBarra(document.activeElement)) return;
         var sel = window.getSelection();
         var bloco = blocoDaSelecao();
         if (!sel || sel.isCollapsed || !bloco) { esconderFormatacao(); return; }
-        // clicar fora tira o foco do trecho, mas o navegador guarda a seleção:
-        // sem esta checagem a barra reaparecia sozinha a cada movimento
         var ativo = document.activeElement;
-        if (ativo !== bloco && !bloco.contains(ativo) && !(ativo && ativo.closest && ativo.closest('.cms-format-bar'))) { esconderFormatacao(); return; }
-        var caixa = sel.getRangeAt(0).getBoundingClientRect();
+        if (ativo !== bloco && !bloco.contains(ativo)) { esconderFormatacao(); return; }
+        var faixa = sel.getRangeAt(0);
+        var caixa = faixa.getBoundingClientRect();
         if (!caixa.width && !caixa.height) { esconderFormatacao(); return; }
+        ultimaFaixa = faixa.cloneRange();
+        ultimoBloco = bloco;
         barra.hidden = false;
         barra.style.top = Math.max(8, caixa.top - barra.offsetHeight - 10) + 'px';
         barra.style.left = Math.max(8, Math.min(window.innerWidth - barra.offsetWidth - 8, caixa.left + caixa.width / 2 - barra.offsetWidth / 2)) + 'px';
@@ -610,6 +620,7 @@
         if (cor) marca.style.color = cor;
         try { faixa.surroundContents(marca); }
         catch (error) { marca.appendChild(faixa.extractContents()); faixa.insertNode(marca); }
+        if (cor || /cor-/.test(classe || '')) limparCoresDentro(marca);
         sel.removeAllRanges();
         esconderFormatacao();
         registrarAlteracao(bloco.dataset.cmsInline, bloco.innerHTML, true);
@@ -617,20 +628,54 @@
       /* Pinta o trecho e deixa a selecao sobre ele, para dar para continuar
          mexendo na cor sem precisar selecionar de novo. */
       function pintarSelecaoLivre(cor) {
-        var bloco = blocoDaSelecao();
-        var sel = window.getSelection();
-        if (!bloco || !sel.rangeCount || sel.isCollapsed) return null;
-        var faixa = sel.getRangeAt(0);
+        var faixa = ultimaFaixa;
+        var bloco = ultimoBloco;
+        if (!faixa || !bloco || !bloco.isConnected) return null;
+        // já é um trecho colorido e a seleção cobre ele inteiro: troca a cor
+        // em vez de embrulhar de novo, senão as marcações vão se empilhando
+        var existente = marcaDeCorQueCobre(faixa);
+        if (existente) {
+          existente.style.color = cor;
+          existente.classList.remove('cor-ouro', 'cor-navy', 'cor-vermelho', 'cor-branco');
+          limparCoresDentro(existente);
+          registrarAlteracao(bloco.dataset.cmsInline, bloco.innerHTML, true);
+          return existente;
+        }
         var marca = document.createElement('span');
         marca.style.color = cor;
         try { faixa.surroundContents(marca); }
-        catch (error) { marca.appendChild(faixa.extractContents()); faixa.insertNode(marca); }
-        var nova = document.createRange();
-        nova.selectNodeContents(marca);
-        sel.removeAllRanges();
-        sel.addRange(nova);
+        catch (erro) { marca.appendChild(faixa.extractContents()); faixa.insertNode(marca); }
+        limparCoresDentro(marca);
+        ultimaFaixa = document.createRange();
+        ultimaFaixa.selectNodeContents(marca);
         registrarAlteracao(bloco.dataset.cmsInline, bloco.innerHTML, true);
         return marca;
+      }
+      /* A cor aplicada agora vale sobre tudo o que ela envolve: sem isso, uma
+         marcação antiga ficava por dentro e, como a de dentro vence no CSS, a
+         cor da palavra não mudava por mais que se escolhesse outra. */
+      function limparCoresDentro(raiz) {
+        Array.prototype.forEach.call(raiz.querySelectorAll('span'), function (span) {
+          span.style.removeProperty('color');
+          span.classList.remove('cor-ouro', 'cor-navy', 'cor-vermelho', 'cor-branco');
+          if (!span.getAttribute('style')) span.removeAttribute('style');
+          if (!span.getAttribute('class')) span.removeAttribute('class');
+          // sobrou um span sem função nenhuma: fica só o texto
+          if (!span.attributes.length) {
+            while (span.firstChild) span.parentNode.insertBefore(span.firstChild, span);
+            span.parentNode.removeChild(span);
+          }
+        });
+      }
+      // devolve o span colorido que contém exatamente a faixa, se houver
+      function marcaDeCorQueCobre(faixa) {
+        var no = faixa.commonAncestorContainer;
+        var el = no.nodeType === 1 ? no : no.parentElement;
+        var marca = el && el.closest ? el.closest('[data-cms-inline] span') : null;
+        if (!marca) return null;
+        var temCor = marca.style.color || /cor-(ouro|navy|vermelho|branco)/.test(marca.className);
+        if (!temCor) return null;
+        return marca.textContent === faixa.toString() ? marca : null;
       }
       function aplicarDestaque() {
         var bloco = blocoDaSelecao();
@@ -948,36 +993,18 @@
            pintar. */
         var seletorCor = document.getElementById('cmsCorLivre');
         if (seletorCor) {
-          var faixaGuardada = null;
           var trechoPintado = null;
-          seletorCor.addEventListener('mousedown', function () {
-            var sel = window.getSelection();
-            faixaGuardada = sel && sel.rangeCount && !sel.isCollapsed ? sel.getRangeAt(0).cloneRange() : null;
-            trechoPintado = null;
-            pintandoLivre = true;
-          });
-          // a paleta fechou: a barra volta a poder se esconder
-          var encerrarPintura = function () {
-            pintandoLivre = false;
-            faixaGuardada = null;
-            trechoPintado = null;
-          };
-          seletorCor.addEventListener('change', function () { window.setTimeout(encerrarPintura, 300); });
-          seletorCor.addEventListener('blur', function () { window.setTimeout(encerrarPintura, 300); });
-          /* A paleta do sistema dispara a cada arrasto. Na primeira vez o trecho
-             e envolvido; nas seguintes so a cor dele muda - antes a selecao era
-             desfeita depois de pintar e as trocas seguintes nao pegavam nada. */
+          seletorCor.addEventListener('mousedown', function () { trechoPintado = null; });
+          /* A paleta dispara a cada arrasto: na primeira vez o trecho é
+             envolvido, nas seguintes só a cor dele muda. Assim não se acumulam
+             marcações e dá para ajustar o tom sem selecionar de novo. */
           seletorCor.addEventListener('input', function () {
-            if (trechoPintado) {
+            if (trechoPintado && trechoPintado.isConnected) {
               trechoPintado.style.color = seletorCor.value;
-              var donoAtual = trechoPintado.closest('[data-cms-inline]');
-              if (donoAtual) registrarAlteracao(donoAtual.dataset.cmsInline, donoAtual.innerHTML, true);
+              var dono = trechoPintado.closest('[data-cms-inline]');
+              if (dono) registrarAlteracao(dono.dataset.cmsInline, dono.innerHTML, true);
               return;
             }
-            if (!faixaGuardada) return;
-            var sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(faixaGuardada);
             trechoPintado = pintarSelecaoLivre(seletorCor.value);
           });
         }
