@@ -1,15 +1,30 @@
 {
   "v": 1,
-  "atualizadoEm": "2026-08-23",
+  "atualizadoEm": "2026-08-24",
   "nota": "Como cada relatorio e lido. Publicado aqui para valer em qualquer computador, sem mexer no codigo do sistema.",
   "relatorios": {
     "budget": {
       "reconhecer": "RELATORIO DE RECEITAS ORCADAS",
       "quadro": "TOTAL POR FONTE DE RECURSO",
       "colunas": [
-        { "campo": "chave", "tipo": "codigo", "partes": [2, 4, 4, 4] },
-        { "campo": "descricao", "tipo": "texto" },
-        { "campo": "valor", "tipo": "moeda" }
+        {
+          "campo": "chave",
+          "tipo": "codigo",
+          "partes": [
+            2,
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "campo": "descricao",
+          "tipo": "texto"
+        },
+        {
+          "campo": "valor",
+          "tipo": "moeda"
+        }
       ],
       "total": "TOTAL"
     },
@@ -17,10 +32,31 @@
       "reconhecer": "RELACAO DAS RECEITAS ARRECADADAS",
       "quadro": "TOTAL POR FONTE DE RECURSO",
       "colunas": [
-        { "campo": "chave", "tipo": "codigo", "partes": [2, 4, 4, 4] },
-        { "campo": "co", "tipo": "codigo", "partes": [4] },
-        { "campo": "descricao", "tipo": "texto" },
-        { "campo": "valor", "tipo": "moeda" }
+        {
+          "campo": "chave",
+          "tipo": "codigo",
+          "partes": [
+            2,
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "campo": "co",
+          "tipo": "codigo",
+          "partes": [
+            4
+          ]
+        },
+        {
+          "campo": "descricao",
+          "tipo": "texto"
+        },
+        {
+          "campo": "valor",
+          "tipo": "moeda"
+        }
       ],
       "total": "TOTAL"
     },
@@ -28,11 +64,68 @@
       "reconhecer": "RELACAO DA DESPESA",
       "quadro": "TOTAL POR FONTE DE RECURSO",
       "colunas": [
-        { "campo": "chave", "tipo": "codigo", "partes": [2, 4, 4, 4] },
-        { "campo": "descricao", "tipo": "texto" },
-        { "campo": "valor", "tipo": "moeda" }
+        {
+          "campo": "chave",
+          "tipo": "codigo",
+          "partes": [
+            2,
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "campo": "descricao",
+          "tipo": "texto"
+        },
+        {
+          "campo": "valor",
+          "tipo": "moeda"
+        }
       ],
       "total": "TOTAL"
+    },
+    "consignacoes": {
+      "reconhecer": "TOTALIZACAO DE VERBAS",
+      "modo": "blocos",
+      "bloco": {
+        "inicio": "Fonte de Recurso:\\s*(\\d+)\\s*-\\s*(\\d+)\\s*-\\s*(\\d+)\\s*-\\s*(\\d+)\\s*-\\s*(\\d+)\\s*-\\s*(.*)$",
+        "chave": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "tamanhos": [
+          2,
+          4,
+          4,
+          4
+        ],
+        "rotulo": 6,
+        "fim": "^Total\\s+\\d+\\s+(-?[\\d.]+,\\d{2})$"
+      },
+      "colunas": [
+        {
+          "campo": "codigo",
+          "tipo": "codigo",
+          "partes": [
+            0
+          ]
+        },
+        {
+          "campo": "item",
+          "tipo": "texto"
+        },
+        {
+          "campo": "ocorrencias",
+          "tipo": "inteiro"
+        },
+        {
+          "campo": "valor",
+          "tipo": "moeda"
+        }
+      ]
     }
   }
 }

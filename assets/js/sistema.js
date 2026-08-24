@@ -149,8 +149,8 @@
           // orçada, arrecadada e empenhada, na ordem em que aparecem no menu
           requisitos: ['budget', 'collected', 'committed'],
           situacao: function () {
-            const marcados = documentosSelecionados();
-            const tipos = tiposSelecionados();
+            const marcados = documentosSelecionados().filter(function (item) { return COMPARE_ROLES.indexOf(item.role) !== -1; });
+            const tipos = tiposSelecionados().filter(function (papel) { return COMPARE_ROLES.indexOf(papel) !== -1; });
             if (!workspaceState.files.length) return { ok:false, texto:'nenhum documento carregado' };
             if (!marcados.length) return { ok:false, texto:'marque documentos na barra lateral' };
             if (tipos.length < 2) return { ok:false, texto:'marque dois tipos diferentes' };
@@ -160,15 +160,22 @@
           executar: function () { launchWorkspaceComparator(); }
         },
         {
-          id: 'consignacoes-folha',
-          nome: 'Consignações por fonte de recurso (folha)',
-          descricao: 'Cruza os descontos consignados da folha com a fonte de recurso que os pagou.',
-          disponivel: false,
-          nota: 'em desenvolvimento',
-          regra: '',
-          requisitos: [],
-          situacao: function () { return { ok:false, texto:'em desenvolvimento' }; },
-          executar: function () {}
+          id: 'consignacoes-sintetica',
+          nome: 'Consignações por fonte de recurso (sintética)',
+          descricao: 'Uma linha por fonte de recurso e uma coluna por consignatária, com o total de cada cruzamento.',
+          regra: 'Marque na barra lateral o relatório:',
+          requisitos: ['consignacoes'],
+          situacao: function () { return situacaoDeConsignacoes(); },
+          executar: function () { montarConsignacoes('sintetica'); }
+        },
+        {
+          id: 'consignacoes-completa',
+          nome: 'Consignações por fonte de recurso (completa)',
+          descricao: 'Uma linha por verba, com código, consignatária, ocorrências e valor, sem agrupar nada.',
+          regra: 'Marque na barra lateral o relatório:',
+          requisitos: ['consignacoes'],
+          situacao: function () { return situacaoDeConsignacoes(); },
+          executar: function () { montarConsignacoes('completa'); }
         }
       ];
 
@@ -232,7 +239,7 @@
       function novaColunaLivre(largura) {
         return { id:'col-' + Math.random().toString(36).slice(2, 8) + Date.now().toString(36), titulo:'', ancora:null, lado:null, largura:largura || 150 };
       }
-      function novaPlanilha() {
+      function novaPlanilha(silenciosa) {
         execucaoAberta = null;
         clearTimeout(regravarTimer);
         compareState.modo = 'livre';
@@ -262,8 +269,114 @@
         renderCompareTable();
         renderAudit();
         selectView('comparador-fontes');
-        salvarExecucao();
-        showToast('Planilha criada. Use Automação para preenchê-la com os documentos.');
+        if (!silenciosa) showToast('Planilha criada. Use Automação para preenchê-la com os documentos.');
+        return salvarExecucao();
+      }
+
+      /* ============ Planilhas das consignações ============
+         A sintética cruza fonte contra consignatária; a completa lista verba a
+         verba. As duas nascem numa planilha livre, para você poder somar,
+         renomear e criar colunas em cima do resultado.                     */
+      function documentoDeConsignacoes() {
+        return documentosSelecionados().find(function (item) { return item.role === 'consignacoes'; }) || null;
+      }
+      function situacaoDeConsignacoes() {
+        if (!workspaceState.files.length) return { ok:false, texto:'nenhum documento carregado' };
+        const doc = documentoDeConsignacoes();
+        if (!doc) return { ok:false, texto:'marque o relatório de consignações na barra lateral' };
+        return { ok:true, texto:doc.file.name };
+      }
+
+      async function montarConsignacoes(formato) {
+        const doc = documentoDeConsignacoes();
+        if (!doc) { showToast('Marque o relatório de consignações na barra lateral.'); return; }
+        showToast('Lendo o relatório…');
+        let relatorio;
+        try {
+          relatorio = await extrairRelatorioEmBlocos('consignacoes', doc.file);
+        } catch (erro) {
+          showToast(erro.message || 'Não foi possível ler o relatório.');
+          return;
+        }
+        await novaPlanilha(true);
+        compareState.titulos = {};
+        compareState.formulas = {};
+        compareState.larguras = {};
+        compareState.alturas = {};
+        if (formato === 'sintetica') preencherConsignacoesSintetica(relatorio);
+        else preencherConsignacoesCompleta(relatorio);
+        addAudit('Consignações lidas', relatorio.fileName + ' • ' + relatorio.itens.length + ' verbas em ' +
+          relatorio.totaisDeBloco.length + ' fontes • total ' + formatBrl(relatorio.extractedTotal) +
+          (relatorio.reconciled ? ' • confere com os totais do relatório' : ' • ATENÇÃO: não bate com os totais do relatório'), 'Extração');
+        renderCompareTable();
+        renderAudit();
+        await salvarExecucao();
+        showToast(relatorio.reconciled
+          ? 'Pronto. Os totais conferem com os do relatório.'
+          : 'Atenção: a soma não bateu com os totais impressos no relatório.');
+      }
+
+      // escreve uma linha da planilha livre a partir de uma lista de valores
+      function escreverLinhaLivre(indice, valores) {
+        const colunas = compareState.colunasExtras;
+        while (compareState.rows.length <= indice) {
+          compareState.rows.push({ key:'L' + (compareState.rows.length + 1), description:'', co:[], extras:{}, ordem:compareState.rows.length, edited:false, manual:true, deleted:false });
+        }
+        const linha = compareState.rows[indice];
+        linha.extras = linha.extras || {};
+        valores.forEach(function (valor, coluna) {
+          if (colunas[coluna]) linha.extras[colunas[coluna].id] = valor;
+        });
+      }
+      function prepararColunas(titulos, larguras) {
+        compareState.colunasExtras = titulos.map(function (titulo, i) {
+          const coluna = novaColunaLivre(larguras[i] || 130);
+          coluna.titulo = titulo;
+          return coluna;
+        });
+        compareState.titulos = {};
+        compareState.colunasExtras.forEach(function (coluna) { compareState.titulos[coluna.id] = coluna.titulo; });
+      }
+
+      function preencherConsignacoesSintetica(relatorio) {
+        const fontes = [];
+        const grupos = [];
+        relatorio.itens.forEach(function (item) {
+          if (fontes.indexOf(item.chave) === -1) fontes.push(item.chave);
+          if (grupos.indexOf(item.grupo) === -1) grupos.push(item.grupo);
+        });
+        grupos.sort();
+        const soma = function (chave, grupo) {
+          return relatorio.itens.reduce(function (total, item) {
+            return item.chave === chave && item.grupo === grupo ? total + item.valor : total;
+          }, 0);
+        };
+        prepararColunas(['Fonte de recurso', 'Descrição'].concat(grupos).concat(['Total da fonte']),
+          [150, 260].concat(grupos.map(function () { return 130; })).concat([140]));
+        compareState.rows = [];
+        fontes.forEach(function (chave, linha) {
+          const descricao = (relatorio.itens.find(function (item) { return item.chave === chave; }) || {}).chaveDescricao || '';
+          const valores = grupos.map(function (grupo) { const v = soma(chave, grupo); return v ? formatBrl(v) : ''; });
+          const totalDaFonte = grupos.reduce(function (total, grupo) { return total + soma(chave, grupo); }, 0);
+          escreverLinhaLivre(linha, [chave, descricao].concat(valores).concat([formatBrl(totalDaFonte)]));
+        });
+        // rodapé com o total de cada consignatária
+        const totais = grupos.map(function (grupo) {
+          return formatBrl(relatorio.itens.reduce(function (t, item) { return item.grupo === grupo ? t + item.valor : t; }, 0));
+        });
+        escreverLinhaLivre(fontes.length, ['TOTAL', ''].concat(totais).concat([formatBrl(relatorio.extractedTotal)]));
+        compareState.sourceSort = 'manual';
+      }
+
+      function preencherConsignacoesCompleta(relatorio) {
+        prepararColunas(['Fonte de recurso', 'Descrição da fonte', 'Código', 'Consignatária', 'Consignatária (grupo)', 'Ocorrências', 'Valor'],
+          [150, 250, 90, 250, 210, 110, 130]);
+        compareState.rows = [];
+        relatorio.itens.forEach(function (item, linha) {
+          escreverLinhaLivre(linha, [item.chave, item.chaveDescricao, item.codigo, item.item, item.grupo, String(item.ocorrencias), formatBrl(item.valor)]);
+        });
+        escreverLinhaLivre(relatorio.itens.length, ['TOTAL', '', '', '', '', '', formatBrl(relatorio.extractedTotal)]);
+        compareState.sourceSort = 'manual';
       }
 
       function documentosSelecionados() {
@@ -394,8 +507,30 @@
           total:'TOTAL'
         }
       };
+      /* A folha de pagamento não traz um quadro único: são blocos, um por fonte
+         de recurso. A descrição diz onde o bloco abre, onde fecha e qual o
+         formato da linha de verba. */
+      ROLE_INFO.consignacoes = {
+        curto:'Consignações', nome:'Consignações da folha', titulo:'Totalização de verbas da folha',
+        reconhecer:'TOTALIZACAO DE VERBAS',
+        modo:'blocos',
+        bloco: {
+          inicio:'Fonte de Recurso:\\s*(\\d+)\\s*-\\s*(\\d+)\\s*-\\s*(\\d+)\\s*-\\s*(\\d+)\\s*-\\s*(\\d+)\\s*-\\s*(.*)$',
+          chave: [1, 2, 3, 4],
+          tamanhos: [2, 4, 4, 4],
+          rotulo: 6,
+          fim: '^Total\\s+\\d+\\s+(-?[\\d.]+,\\d{2})$'
+        },
+        colunas: [
+          { campo:'codigo', tipo:'codigo', partes:[0] },
+          { campo:'item', tipo:'texto' },
+          { campo:'ocorrencias', tipo:'inteiro' },
+          { campo:'valor', tipo:'moeda' }
+        ]
+      };
+
       // a ordem importa: "RELACAO DA DESPESA" é a marca mais curta e casaria antes das outras
-      const ORDEM_RECONHECIMENTO = ['budget', 'collected', 'committed'];
+      const ORDEM_RECONHECIMENTO = ['budget', 'collected', 'committed', 'consignacoes'];
 
       /* Descrições publicadas no repositório afinam ou corrigem as de fábrica.
          Se o arquivo não existir, o sistema segue com as que já traz. */
@@ -421,7 +556,11 @@
          valor vira o formato de moeda brasileiro. */
       function padraoDaLinha(colunas) {
         const partes = (colunas || []).map(function (coluna) {
-          if (coluna.tipo === 'codigo') return coluna.partes.map(function (n) { return '(\\d{' + n + '})'; }).join('\\s+');
+          if (coluna.tipo === 'codigo') {
+            // partes [0] quer dizer código de tamanho livre
+            return coluna.partes.map(function (n) { return n ? '(\\d{' + n + '})' : '(\\d+)'; }).join('\\s+');
+          }
+          if (coluna.tipo === 'inteiro') return '(\\d+)';
           if (coluna.tipo === 'texto') return '(.+?)';
           if (coluna.tipo === 'moeda') return '(-?[\\d.]+,\\d{2})';
           return '';
@@ -1041,6 +1180,98 @@
           sources:sourceMap, reportedTotal:reportedTotal, extractedTotal:extractedTotal, reconciled:Number.isFinite(reportedTotal) && Math.abs(reportedTotal - extractedTotal) <= 0.05
         };
       }
+      /* ============ Relatórios em blocos ============
+         O comparador lê um quadro único no fim do documento. A folha de
+         pagamento vem de outro jeito: um bloco por fonte de recurso, cada um
+         com suas verbas e a própria linha de Total. E as últimas páginas
+         repetem tudo consolidado — por isso o bloco termina no seu Total, e
+         verba fora de bloco é ignorada, senão o valor sairia multiplicado. */
+      async function extrairRelatorioEmBlocos(role, file) {
+        await carregarDescricoes();
+        const descricao = ROLE_INFO[role];
+        const pdfjs = await getPdfJs();
+        const buffer = await file.arrayBuffer();
+        const hash = await sha256(buffer.slice(0));
+        const pdf = await pdfjs.getDocument({ data:new Uint8Array(buffer), enableScripting:false, isEvalSupported:false }).promise;
+        const linhas = [];
+        for (let n = 1; n <= pdf.numPages; n += 1) {
+          const pagina = await pdf.getPage(n);
+          const conteudo = await pagina.getTextContent();
+          linesFromPdfItems(conteudo.items).forEach(function (linha) { linhas.push(linha); });
+          pagina.cleanup();
+        }
+        const documento = normalizeSearch(linhas.join(' '));
+        if (!documento.includes(descricao.reconhecer)) {
+          throw Object.assign(new Error('O arquivo “' + file.name + '” não parece ser o ' + descricao.nome + '.'), { compareRole:role });
+        }
+        const inicioBloco = new RegExp(descricao.bloco.inicio);
+        const fimBloco = new RegExp(descricao.bloco.fim);
+        const padraoItem = padraoDaLinha(descricao.colunas);
+        const itens = [];
+        const totaisDeBloco = [];
+        let atual = null;
+        linhas.forEach(function (linha) {
+          const abre = linha.match(inicioBloco);
+          if (abre) {
+            const partes = descricao.bloco.chave.map(function (indice, ordem) {
+              return String(abre[indice]).padStart(descricao.bloco.tamanhos[ordem], '0');
+            });
+            atual = { chave: partes.join(' '), descricao: (abre[descricao.bloco.rotulo] || '').trim() };
+            return;
+          }
+          const fecha = linha.match(fimBloco);
+          if (fecha) {
+            if (atual) totaisDeBloco.push({ chave:atual.chave, valor:parseBrl(fecha[fecha.length - 1]) });
+            atual = null;
+            return;
+          }
+          if (!atual) return;   // consolidação do fim do relatório: já contada
+          const casado = linha.match(padraoItem);
+          if (!casado) return;
+          const campos = camposDaLinha(casado, descricao.colunas);
+          const valor = parseBrl(campos.valor);
+          if (!Number.isFinite(valor)) return;
+          itens.push({
+            chave: atual.chave,
+            chaveDescricao: atual.descricao,
+            codigo: campos.codigo || '',
+            item: campos.item || '',
+            grupo: agruparItem(campos.item || ''),
+            ocorrencias: Number(campos.ocorrencias || 0),
+            valor: valor
+          });
+        });
+        if (!itens.length) {
+          throw Object.assign(new Error('O relatório foi reconhecido, mas nenhuma verba pôde ser lida. Revise a qualidade do PDF.'), { compareRole:role });
+        }
+        // cada bloco confere contra o próprio Total impresso
+        const somaPorChave = {};
+        itens.forEach(function (item) { somaPorChave[item.chave] = (somaPorChave[item.chave] || 0) + item.valor; });
+        const divergentes = totaisDeBloco.filter(function (total) {
+          return Math.abs((somaPorChave[total.chave] || 0) - total.valor) > 0.005;
+        });
+        const referencia = linhas.find(function (linha) { return /referente a/i.test(linha); }) || '';
+        const municipio = (linhas.find(function (linha) { return /Munic.pio de/i.test(linha); }) || '').replace(/.*Munic.pio de\s*/i, '').trim();
+        return {
+          role: role, fileName: file.name, fileSize: file.size, hash: hash, pages: pdf.numPages,
+          title: descricao.titulo,
+          municipality: municipio || 'Não identificado',
+          competencia: (referencia.match(/referente a\s*(.+)$/i) || [])[1] || '',
+          itens: itens,
+          totaisDeBloco: totaisDeBloco,
+          extractedTotal: itens.reduce(function (soma, item) { return soma + item.valor; }, 0),
+          reportedTotal: totaisDeBloco.reduce(function (soma, total) { return soma + total.valor; }, 0),
+          reconciled: divergentes.length === 0
+        };
+      }
+
+      /* As verbas vêm numeradas em sequência — EMPRESTIMO CAIXA, CAIXA I, II…
+         Tirar o algarismo romano do fim junta cada consignatária numa coluna
+         só, sem precisar conhecer o nome de nenhum banco. */
+      function agruparItem(texto) {
+        return String(texto).replace(/\s+(?:I{1,3}|IV|V|VI{1,3}|IX|X)$/, '').trim();
+      }
+
       function mergeCompareReports() {
         const papeis = papeisComRelatorio();
         const keys = new Set();
