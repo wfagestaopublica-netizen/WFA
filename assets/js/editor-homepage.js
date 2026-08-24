@@ -509,7 +509,12 @@
          novo dentro de um trecho. Sem isso o navegador guarda a seleção antiga
          e qualquer movimento a trazia de volta. */
       var formatacaoDispensada = false;
+      /* Enquanto a paleta do sistema esta aberta a barra nao pode sumir: o
+         seletor de cor precisa do foco, e tirar o foco do texto disparava o
+         fechamento - a barra sumia no meio do clique e a paleta nem abria. */
+      var pintandoLivre = false;
       function esconderFormatacao() {
+        if (pintandoLivre) return;
         var barra = document.getElementById('cmsFormatBar');
         if (barra) barra.hidden = true;
       }
@@ -949,7 +954,16 @@
             var sel = window.getSelection();
             faixaGuardada = sel && sel.rangeCount && !sel.isCollapsed ? sel.getRangeAt(0).cloneRange() : null;
             trechoPintado = null;
+            pintandoLivre = true;
           });
+          // a paleta fechou: a barra volta a poder se esconder
+          var encerrarPintura = function () {
+            pintandoLivre = false;
+            faixaGuardada = null;
+            trechoPintado = null;
+          };
+          seletorCor.addEventListener('change', function () { window.setTimeout(encerrarPintura, 300); });
+          seletorCor.addEventListener('blur', function () { window.setTimeout(encerrarPintura, 300); });
           /* A paleta do sistema dispara a cada arrasto. Na primeira vez o trecho
              e envolvido; nas seguintes so a cor dele muda - antes a selecao era
              desfeita depois de pintar e as trocas seguintes nao pegavam nada. */
