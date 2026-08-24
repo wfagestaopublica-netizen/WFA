@@ -353,11 +353,107 @@
       document.querySelectorAll('[data-demo-action]').forEach(function (button) { button.addEventListener('click', function () { showToast(button.dataset.demoAction + ': função preparada para a próxima etapa do sistema.'); }); });
 
       const COMPARE_ROLES = ['budget', 'committed', 'collected'];
+      /* ============ Descrição dos relatórios ============
+         Cada relatório diz como se reconhece, onde começa o quadro de fontes e
+         qual o formato de cada linha. Nada disso fica escrito na função que lê
+         o PDF — ela só aplica o que está descrito aqui. Um leiaute novo é uma
+         descrição nova, publicada em conteudo/relatorios.json.            */
       const ROLE_INFO = {
-        budget:    { curto:'Orçado',     nome:'Receitas orçadas',      titulo:'Relatório de Receitas Orçadas',    marca:'RELATORIO DE RECEITAS ORCADAS',    comCo:false },
-        committed: { curto:'Empenhado',  nome:'Despesas empenhadas',   titulo:'Relação da Despesa Empenhada',     marca:'RELACAO DA DESPESA',               comCo:false },
-        collected: { curto:'Arrecadado', nome:'Receitas arrecadadas',  titulo:'Relação das Receitas Arrecadadas', marca:'RELACAO DAS RECEITAS ARRECADADAS', comCo:true }
+        budget: {
+          curto:'Orçado', nome:'Receitas orçadas', titulo:'Relatório de Receitas Orçadas',
+          reconhecer:'RELATORIO DE RECEITAS ORCADAS',
+          quadro:'TOTAL POR FONTE DE RECURSO',
+          colunas:[
+            { campo:'chave', tipo:'codigo', partes:[2,4,4,4] },
+            { campo:'descricao', tipo:'texto' },
+            { campo:'valor', tipo:'moeda' }
+          ],
+          total:'TOTAL'
+        },
+        committed: {
+          curto:'Empenhado', nome:'Despesas empenhadas', titulo:'Relação da Despesa Empenhada',
+          reconhecer:'RELACAO DA DESPESA',
+          quadro:'TOTAL POR FONTE DE RECURSO',
+          colunas:[
+            { campo:'chave', tipo:'codigo', partes:[2,4,4,4] },
+            { campo:'descricao', tipo:'texto' },
+            { campo:'valor', tipo:'moeda' }
+          ],
+          total:'TOTAL'
+        },
+        collected: {
+          curto:'Arrecadado', nome:'Receitas arrecadadas', titulo:'Relação das Receitas Arrecadadas',
+          reconhecer:'RELACAO DAS RECEITAS ARRECADADAS',
+          quadro:'TOTAL POR FONTE DE RECURSO',
+          colunas:[
+            { campo:'chave', tipo:'codigo', partes:[2,4,4,4] },
+            { campo:'co', tipo:'codigo', partes:[4] },
+            { campo:'descricao', tipo:'texto' },
+            { campo:'valor', tipo:'moeda' }
+          ],
+          total:'TOTAL'
+        }
       };
+      // a ordem importa: "RELACAO DA DESPESA" é a marca mais curta e casaria antes das outras
+      const ORDEM_RECONHECIMENTO = ['budget', 'collected', 'committed'];
+
+      /* Descrições publicadas no repositório afinam ou corrigem as de fábrica.
+         Se o arquivo não existir, o sistema segue com as que já traz. */
+      let descricoesPedidas = null;
+      function carregarDescricoes() {
+        if (descricoesPedidas) return descricoesPedidas;
+        descricoesPedidas = fetch('/conteudo/relatorios.json?v=' + Date.now())
+          .then(function (resposta) { return resposta.ok ? resposta.json() : null; })
+          .then(function (dados) {
+            if (dados && dados.relatorios) {
+              Object.keys(dados.relatorios).forEach(function (papel) {
+                if (ROLE_INFO[papel]) Object.assign(ROLE_INFO[papel], dados.relatorios[papel]);
+              });
+            }
+            return ROLE_INFO;
+          })
+          .catch(function () { return ROLE_INFO; });
+        return descricoesPedidas;
+      }
+
+      /* Monta o padrão de uma linha a partir das colunas descritas: um código de
+         quatro partes vira quatro grupos de dígitos, texto vira o resto, e o
+         valor vira o formato de moeda brasileiro. */
+      function padraoDaLinha(colunas) {
+        const partes = (colunas || []).map(function (coluna) {
+          if (coluna.tipo === 'codigo') return coluna.partes.map(function (n) { return '(\\d{' + n + '})'; }).join('\\s+');
+          if (coluna.tipo === 'texto') return '(.+?)';
+          if (coluna.tipo === 'moeda') return '(-?[\\d.]+,\\d{2})';
+          return '';
+        }).filter(Boolean);
+        return new RegExp('^' + partes.join('\\s+') + '$');
+      }
+      // lê uma linha já casada e devolve os campos com o nome que a descrição deu
+      function camposDaLinha(casado, colunas) {
+        const valores = {};
+        let grupo = 1;
+        colunas.forEach(function (coluna) {
+          if (coluna.tipo === 'codigo') {
+            valores[coluna.campo] = coluna.partes.map(function () { return casado[grupo++]; }).join(' ');
+          } else {
+            valores[coluna.campo] = casado[grupo++];
+          }
+        });
+        return valores;
+      }
+      /* O total de conferência pode estar na mesma linha da palavra TOTAL ou na
+         linha seguinte — no relatório de receitas orçadas ele vem separado. */
+      function totalDeclarado(linhas, marca) {
+        let achado = null;
+        linhas.forEach(function (linha, indice) {
+          if (!normalizeSearch(linha).startsWith(marca)) return;
+          const mesma = linha.match(/(-?[\d.]+,\d{2})\s*$/);
+          if (mesma) { achado = parseBrl(mesma[1]); return; }
+          const seguinte = (linhas[indice + 1] || '').match(/^(-?[\d.]+,\d{2})$/);
+          if (seguinte) achado = parseBrl(seguinte[1]);
+        });
+        return achado;
+      }
       function papeisCarregados() { return COMPARE_ROLES.filter(function (papel) { return Boolean(compareState.files[papel]); }); }
       function papeisComRelatorio() { return COMPARE_ROLES.filter(function (papel) { return Boolean(compareState.reports[papel]); }); }
       const compareState = { files: { budget: null, committed: null, collected: null }, reports: {}, rows: [], audit: [], editorMode: null, editorKey: null, sourceSort: 'asc', colunasExtras: [], titulos: {}, formulas: {}, larguras: {}, alturas: {}, modo: 'livre' };
@@ -637,6 +733,7 @@
         }).filter(Boolean);
       }
       async function detectCompareFileRole(file) {
+        await carregarDescricoes();
         const pdfjs = await getPdfJs();
         const buffer = await file.arrayBuffer();
         const loadingTask = pdfjs.getDocument({ data:new Uint8Array(buffer), enableScripting:false, isEvalSupported:false });
@@ -647,9 +744,9 @@
           const content = await page.getTextContent();
           const normalized = normalizeSearch(linesFromPdfItems(content.items).join(' '));
           page.cleanup();
-          if (normalized.includes('RELATORIO DE RECEITAS ORCADAS')) role = 'budget';
-          else if (normalized.includes('RELACAO DAS RECEITAS ARRECADADAS')) role = 'collected';
-          else if (normalized.includes('RELACAO DA DESPESA')) role = 'committed';
+          role = ORDEM_RECONHECIMENTO.find(function (papel) {
+            return normalized.includes(ROLE_INFO[papel].reconhecer);
+          }) || null;
         }
         if (typeof pdf.destroy === 'function') await pdf.destroy();
         return role;
@@ -877,6 +974,8 @@
       renderWorkspaceFiles();
 
       async function extractCompareReport(role, file) {
+        await carregarDescricoes();
+        const descricao = ROLE_INFO[role];
         const pdfjs = await getPdfJs();
         const buffer = await file.arrayBuffer();
         const hash = await sha256(buffer.slice(0));
@@ -892,10 +991,9 @@
         }
         const allLines = pages.reduce(function (result, page) { return result.concat(page.lines); }, []);
         const normalizedDocument = normalizeSearch(allLines.join(' '));
-        let detected = null;
-        if (normalizedDocument.includes('RELATORIO DE RECEITAS ORCADAS')) detected = 'budget';
-        if (normalizedDocument.includes('RELACAO DAS RECEITAS ARRECADADAS')) detected = 'collected';
-        if (!detected && normalizedDocument.includes('RELACAO DA DESPESA')) detected = 'committed';
+        const detected = ORDEM_RECONHECIMENTO.find(function (papel) {
+          return normalizedDocument.includes(ROLE_INFO[papel].reconhecer);
+        }) || null;
         if (!detected) throw Object.assign(new Error('Não foi possível reconhecer o tipo do arquivo “' + file.name + '”. Confirme se ele contém um dos relatórios esperados.'), { compareRole:role });
         if (detected !== role) {
           const found = ROLE_INFO[detected].nome;
@@ -905,24 +1003,23 @@
         let sectionPage = -1;
         let sectionLine = -1;
         pages.some(function (page, pageIndex) {
-          const lineIndex = page.lines.findIndex(function (line) { return normalizeSearch(line).includes('TOTAL POR FONTE DE RECURSO'); });
+          const lineIndex = page.lines.findIndex(function (line) { return normalizeSearch(line).includes(descricao.quadro); });
           if (lineIndex >= 0) { sectionPage = pageIndex; sectionLine = lineIndex; return true; }
           return false;
         });
         if (sectionPage < 0) throw Object.assign(new Error('O quadro “Total por Fonte de Recurso” não foi encontrado em “' + file.name + '”.'), { compareRole:role });
         let sectionLines = pages[sectionPage].lines.slice(sectionLine + 1);
         pages.slice(sectionPage + 1).forEach(function (page) { sectionLines = sectionLines.concat(page.lines); });
-        const budgetPattern = /^(\d{2})\s+(\d{4})\s+(\d{4})\s+(\d{4})\s+(.+?)\s+(-?[\d.]+,\d{2})$/;
-        const collectedPattern = /^(\d{2})\s+(\d{4})\s+(\d{4})\s+(\d{4})\s+(\d{4})\s+(.+?)\s+(-?[\d.]+,\d{2})$/;
+        const padrao = padraoDaLinha(descricao.colunas);
         const sourceMap = new Map();
         sectionLines.forEach(function (line) {
-          const match = line.match(ROLE_INFO[role].comCo ? collectedPattern : budgetPattern);
+          const match = line.match(padrao);
           if (!match) return;
-          const key = [match[1],match[2],match[3],match[4]].join(' ');
-          const temCo = ROLE_INFO[role].comCo;
-          const co = temCo ? match[5] : '';
-          const description = temCo ? match[6] : match[5];
-          const value = parseBrl(temCo ? match[7] : match[6]);
+          const campos = camposDaLinha(match, descricao.colunas);
+          const key = campos.chave;
+          const co = campos.co || '';
+          const description = campos.descricao || '';
+          const value = parseBrl(campos.valor);
           if (!Number.isFinite(value)) return;
           const existing = sourceMap.get(key) || { key:key, description:description, value:0, co:[] };
           existing.value += value;
@@ -931,8 +1028,7 @@
           sourceMap.set(key, existing);
         });
         if (!sourceMap.size) throw Object.assign(new Error('O relatório foi reconhecido, mas nenhuma linha de fonte pôde ser extraída. Revise a qualidade do PDF.'), { compareRole:role });
-        const totalCandidates = sectionLines.map(function (line) { const match = line.match(/^TOTAL\b.*?(-?[\d.]+,\d{2})\s*$/i); return match ? parseBrl(match[1]) : null; }).filter(function (value) { return Number.isFinite(value); });
-        const reportedTotal = totalCandidates.length ? totalCandidates[totalCandidates.length - 1] : null;
+        const reportedTotal = totalDeclarado(sectionLines, descricao.total || 'TOTAL');
         const extractedTotal = Array.from(sourceMap.values()).reduce(function (sum, source) { return sum + source.value; }, 0);
         const municipalityLine = allLines.find(function (line) { const normalized = normalizeSearch(line); return normalized.includes('MUNICIPIO') && /-\s*MG/i.test(line); }) || '';
         const municipalityMatch = municipalityLine.match(/MUNIC.PIO\s+(.+?-\s*MG)/i);
@@ -940,7 +1036,7 @@
         const periodMatch = normalizedDocument.match(/PERIODO\s*:\s*([A-Z]+)\s+A\s+([A-Z]+)/);
         return {
           role:role, fileName:file.name, fileSize:file.size, hash:hash, pages:pdf.numPages, sectionPages:(sectionPage + 1) + '–' + pdf.numPages,
-          title:ROLE_INFO[role].titulo, municipality:municipalityMatch ? municipalityMatch[1].trim() : 'Não identificado',
+          title:descricao.titulo, municipality:municipalityMatch ? municipalityMatch[1].trim() : 'Não identificado',
           exercise:exerciseMatch ? exerciseMatch[1] : 'Não identificado', period:periodMatch ? periodMatch[1] + ' a ' + periodMatch[2] : 'Não informado',
           sources:sourceMap, reportedTotal:reportedTotal, extractedTotal:extractedTotal, reconciled:Number.isFinite(reportedTotal) && Math.abs(reportedTotal - extractedTotal) <= 0.05
         };

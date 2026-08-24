@@ -1,0 +1,38 @@
+{
+  "v": 1,
+  "atualizadoEm": "2026-08-23",
+  "nota": "Como cada relatorio e lido. Publicado aqui para valer em qualquer computador, sem mexer no codigo do sistema.",
+  "relatorios": {
+    "budget": {
+      "reconhecer": "RELATORIO DE RECEITAS ORCADAS",
+      "quadro": "TOTAL POR FONTE DE RECURSO",
+      "colunas": [
+        { "campo": "chave", "tipo": "codigo", "partes": [2, 4, 4, 4] },
+        { "campo": "descricao", "tipo": "texto" },
+        { "campo": "valor", "tipo": "moeda" }
+      ],
+      "total": "TOTAL"
+    },
+    "collected": {
+      "reconhecer": "RELACAO DAS RECEITAS ARRECADADAS",
+      "quadro": "TOTAL POR FONTE DE RECURSO",
+      "colunas": [
+        { "campo": "chave", "tipo": "codigo", "partes": [2, 4, 4, 4] },
+        { "campo": "co", "tipo": "codigo", "partes": [4] },
+        { "campo": "descricao", "tipo": "texto" },
+        { "campo": "valor", "tipo": "moeda" }
+      ],
+      "total": "TOTAL"
+    },
+    "committed": {
+      "reconhecer": "RELACAO DA DESPESA",
+      "quadro": "TOTAL POR FONTE DE RECURSO",
+      "colunas": [
+        { "campo": "chave", "tipo": "codigo", "partes": [2, 4, 4, 4] },
+        { "campo": "descricao", "tipo": "texto" },
+        { "campo": "valor", "tipo": "moeda" }
+      ],
+      "total": "TOTAL"
+    }
+  }
+}
