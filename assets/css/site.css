@@ -905,7 +905,35 @@
     body.app-active .view-heading h2 { font-size: 20px; }
     /* no computador a barra de cima não tem mais conteúdo: o ☰ só existe no celular */
     body.app-active .app-topbar { min-height: 0; padding: 0; border: 0; }
-    body.app-active .app-brand { border-bottom: 1px solid rgba(255,255,255,.1); }
+    /* ---- assinatura da barra lateral ----
+       Uma linha só, com cara de papel timbrado: o nome em serifa, um fio
+       dourado de separação e a atividade em versalete apagado. Discreta,
+       mas o nome continua lá — inclusive com a barra recolhida.          */
+    body.app-active .app-brand {
+      height: 34px; min-height: 34px; padding: 0 10px 0 12px;
+      justify-content: space-between; gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), transparent);
+    }
+    body.app-active .app-brand-copy { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+    body.app-active .app-brand-copy strong {
+      display: inline; margin: 0; color: #fff;
+      font: 600 14px/1 Cambria, Georgia, serif; letter-spacing: .11em;
+    }
+    body.app-active .app-brand-copy span {
+      display: inline-flex; align-items: center; gap: 8px; margin: 0;
+      color: rgba(255,255,255,.42); font-size: 7.5px; font-weight: 700;
+      letter-spacing: .17em; text-transform: uppercase; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    body.app-active .app-brand-copy span::before {
+      content: ""; width: 1px; height: 10px; flex: none;
+      background: var(--gold-500); opacity: .65;
+    }
+    /* Recolhida a barra tem 52px: não cabem o nome e a seta, e a seta é o
+       único jeito de abrir de novo. Fica só ela, centrada. */
+    body.app-active.sidebar-recolhida .app-brand { justify-content: center; padding: 0; }
+    body.app-active.sidebar-recolhida .app-brand-copy { display: none; }
     body.app-active .app-title small { font-size: 10px; }
     body.app-active .app-title h1 { margin-top: 1px; font-size: 17px; }
     body.app-active .app-search { height: 32px; font-size: 12px; }
