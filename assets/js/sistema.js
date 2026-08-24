@@ -1020,7 +1020,7 @@
         }
         // Planilha em branco: existem só as colunas que você criou.
         if (compareState.modo !== 'livre') {
-        colunas.push({ id:'key', tipo:'texto', titulo:'Fonte de recurso', largura:186, classe:'cell-code' });
+        colunas.push({ id:'key', tipo:'texto', titulo:'Fonte de recurso', largura:150, classe:'cell-code' });
         colunas.push({ id:'description', tipo:'texto', titulo:'Descrição', largura:300, classe:'' });
         papeisComRelatorio().forEach(function (papel) {
           colunas.push({ id:papel, tipo:'moeda', titulo:ROLE_INFO[papel].curto, largura:118, classe:'cell-money' });
@@ -1351,8 +1351,19 @@
         }
 
         // colunas
+        let temFlexivel = false;
         document.getElementById('compareCols').innerHTML = '<col class="col-row-number">' +
-          colunas.map(function (coluna) { return '<col style="width:' + larguraGuardada(coluna) + 'px">'; }).join('');
+          colunas.map(function (coluna) {
+            // Numa tela larga a tabela estica e reparte a sobra por todas as
+            // colunas, engordando até a do código, que nunca precisa disso.
+            // Sem largura declarada, a descrição fica com a sobra inteira.
+            const flexivel = coluna.id === 'description' && !(compareState.larguras || {})[coluna.id];
+            if (flexivel) temFlexivel = true;
+            return flexivel ? '<col>' : '<col style="width:' + larguraGuardada(coluna) + 'px">';
+          }).join('');
+        // Sem nenhuma coluna elástica, a tabela para de esticar: cada coluna fica
+        // com a largura pedida e a sobra vira espaço vazio, como no Excel.
+        document.getElementById('compareTable').classList.toggle('sem-elastica', !temFlexivel);
 
         // cabeçalho: linha de letras + linha de títulos renomeáveis
         const letras = '<tr class="sheet-letters"><th class="sheet-corner"></th>' +
