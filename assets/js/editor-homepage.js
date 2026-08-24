@@ -609,6 +609,24 @@
         esconderFormatacao();
         registrarAlteracao(bloco.dataset.cmsInline, bloco.innerHTML, true);
       }
+      /* Pinta o trecho e deixa a selecao sobre ele, para dar para continuar
+         mexendo na cor sem precisar selecionar de novo. */
+      function pintarSelecaoLivre(cor) {
+        var bloco = blocoDaSelecao();
+        var sel = window.getSelection();
+        if (!bloco || !sel.rangeCount || sel.isCollapsed) return null;
+        var faixa = sel.getRangeAt(0);
+        var marca = document.createElement('span');
+        marca.style.color = cor;
+        try { faixa.surroundContents(marca); }
+        catch (error) { marca.appendChild(faixa.extractContents()); faixa.insertNode(marca); }
+        var nova = document.createRange();
+        nova.selectNodeContents(marca);
+        sel.removeAllRanges();
+        sel.addRange(nova);
+        registrarAlteracao(bloco.dataset.cmsInline, bloco.innerHTML, true);
+        return marca;
+      }
       function aplicarDestaque() {
         var bloco = blocoDaSelecao();
         if (bloco) envolverSelecao(tagDeDestaque(bloco));
@@ -926,17 +944,27 @@
         var seletorCor = document.getElementById('cmsCorLivre');
         if (seletorCor) {
           var faixaGuardada = null;
+          var trechoPintado = null;
           seletorCor.addEventListener('mousedown', function () {
             var sel = window.getSelection();
             faixaGuardada = sel && sel.rangeCount && !sel.isCollapsed ? sel.getRangeAt(0).cloneRange() : null;
+            trechoPintado = null;
           });
+          /* A paleta do sistema dispara a cada arrasto. Na primeira vez o trecho
+             e envolvido; nas seguintes so a cor dele muda - antes a selecao era
+             desfeita depois de pintar e as trocas seguintes nao pegavam nada. */
           seletorCor.addEventListener('input', function () {
+            if (trechoPintado) {
+              trechoPintado.style.color = seletorCor.value;
+              var donoAtual = trechoPintado.closest('[data-cms-inline]');
+              if (donoAtual) registrarAlteracao(donoAtual.dataset.cmsInline, donoAtual.innerHTML, true);
+              return;
+            }
             if (!faixaGuardada) return;
             var sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(faixaGuardada);
-            envolverSelecao('span', null, seletorCor.value);
-            faixaGuardada = null;
+            trechoPintado = pintarSelecaoLivre(seletorCor.value);
           });
         }
         var botaoImagem = document.getElementById('cmsImgBtn');
