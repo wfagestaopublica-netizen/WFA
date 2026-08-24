@@ -286,7 +286,7 @@
     .site-preview-bar button { padding: 7px 14px; border: 1px solid rgba(255,255,255,.28); background: transparent; color: white; font: inherit; font-size: 12px; cursor: pointer; }
     .site-preview-bar button:hover { border-color: var(--gold-500); }
     .app-main { min-width: 0; height: 100vh; overflow: auto; }
-    .app-topbar { min-height: 77px; position: sticky; z-index: 3; top: 0; padding: 0 34px; display: flex; align-items: center; justify-content: space-between; gap: 24px; background: rgba(255,255,255,.96); border-bottom: 1px solid #d7dde0; backdrop-filter: blur(8px); }
+    .app-topbar { min-height: 0; position: sticky; z-index: 3; top: 0; padding: 0 34px; display: flex; align-items: center; justify-content: space-between; gap: 24px; background: rgba(255,255,255,.96); border-bottom: 1px solid #d7dde0; backdrop-filter: blur(8px); }
     .app-title small { display: block; color: #8a969c; font-size: 8px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
     .app-title h1 { margin: 6px 0 0; color: var(--navy-900); font: 700 24px/1 Cambria,Georgia,serif; }
     .app-top-actions { display: flex; align-items: center; gap: 10px; }
@@ -431,6 +431,14 @@
     .area-item-novo button:hover { border-color: var(--gold-500); color: var(--navy-950); }
     @media (max-width: 900px) { .service-grid[style] { grid-template-columns: repeat(2, minmax(0,1fr)) !important; } }
     @media (max-width: 640px) { .service-grid[style] { grid-template-columns: 1fr !important; } .service-card[style] { grid-column: span 1 !important; } }
+
+    /* ---- seleção de várias células ---- */
+    .sheet-selecao { margin-right: 12px; padding: 1px 8px; background: #e8f0f6; border: 1px solid #c3d5e2; color: #12293b; font-size: 11px; font-weight: 600; }
+    td.celula-marcada { position: relative; background: #e4eef6 !important; }
+    td.celula-marcada input.cell-editor { background: transparent; }
+    td.celula-marcada::after { content: ""; position: absolute; inset: 0; background: rgba(32,94,138,.10); pointer-events: none; }
+    body.selecionando-celulas { user-select: none; cursor: cell; }
+    body.selecionando-celulas input.cell-editor { pointer-events: none; }
 
     .cms-format-bar { position: fixed; z-index: 97; display: flex; gap: 6px; padding: 5px; background: var(--navy-950); box-shadow: 0 8px 22px rgba(3,16,26,.4); }
     .cms-format-bar button { padding: 5px 11px; border: 0; background: transparent; color: white; font: inherit; font-size: 12px; cursor: pointer; }
@@ -666,7 +674,7 @@
     body.app-active .app-nav-icon { display: grid; place-items: center; }
     body.app-active .sidebar-upload-icon { border: 0; background: transparent; color: #7c94a4; }
     body.app-active .sidebar-upload-icon:hover { color: #205e8a; background: rgba(32,94,138,.08); }
-    body.app-active .app-brand { min-height: 0; height: 48px; padding: 0 12px; gap: 9px; }
+    body.app-active .app-brand { min-height: 0; height: 38px; padding: 0 12px; gap: 9px; }
     body.app-active .app-brand .brand-symbol { width: 30px; height: 30px; }
     body.app-active .app-brand .brand-symbol .wf-letters { font-size: 11px; }
     body.app-active .app-brand .brand-symbol .a-letter { width: 8px; height: 7px; }
@@ -872,7 +880,9 @@
     body.app-active .view-heading { margin-bottom: 13px; align-items: center; }
     body.app-active .view-heading p { margin-bottom: 3px; font-size: 9px; letter-spacing: .1em; }
     body.app-active .view-heading h2 { font-size: 20px; }
-    body.app-active .app-topbar { min-height: 50px; }
+    /* no computador a barra de cima não tem mais conteúdo: o ☰ só existe no celular */
+    body.app-active .app-topbar { min-height: 0; padding: 0; border: 0; }
+    body.app-active .app-brand { border-bottom: 1px solid rgba(255,255,255,.1); }
     body.app-active .app-title small { font-size: 10px; }
     body.app-active .app-title h1 { margin-top: 1px; font-size: 17px; }
     body.app-active .app-search { height: 32px; font-size: 12px; }

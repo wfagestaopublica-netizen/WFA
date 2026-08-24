@@ -207,7 +207,7 @@
 
   <section class="wfa-app" id="wfaApp" aria-label="Sistema WFA" aria-hidden="true">
     <header class="app-sidebar" id="appSidebar">
-      <div class="app-brand"><span class="brand-symbol" aria-hidden="true"><span class="wf-letters">WF</span><span class="a-letter"></span></span><span class="app-brand-copy"><strong>WFA</strong><span>Gestão Pública</span></span><button class="app-recolher" id="appRecolher" type="button" title="Recolher a barra lateral" aria-label="Recolher a barra lateral"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M11.8 5.5 7.3 10l4.5 4.5"/></svg></button></div>
+      <div class="app-brand"><span class="app-brand-copy"><strong>WFA</strong><span>Gestão Pública</span></span><button class="app-recolher" id="appRecolher" type="button" title="Recolher a barra lateral" aria-label="Recolher a barra lateral"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M11.8 5.5 7.3 10l4.5 4.5"/></svg></button></div>
       <div class="sidebar-files-heading"><p class="app-nav-label">Planilhas</p><button class="sidebar-upload-icon" id="sidebarNovaPlanilha" type="button" title="Nova planilha" aria-label="Nova planilha"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 4.8v10.4M4.8 10h10.4"/></svg></button></div>
       <nav class="app-nav" id="appScriptNav" aria-label="Área de trabalho">
         <button type="button" data-app-view="comparador-fontes" data-script="comparador" title="Área de trabalho"><span class="app-nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6.5 3.5h7a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1z"/><path d="M8 7h4M8 10h4M8 13h2.5"/></svg></span><span class="app-nav-texto">Área de trabalho</span><span class="app-nav-meta" id="scriptCompareMeta" hidden></span></button>
@@ -225,7 +225,7 @@
     </header>
 
     <div class="app-main">
-      <header class="app-topbar"><div class="app-title"><small>WFA • Ambiente contábil</small><h1 id="appPageTitle">Central de documentos</h1></div><div class="app-top-actions"><input class="app-search" id="workspaceTopSearch" type="search" placeholder="Buscar arquivo ou tipo de relatório" aria-label="Buscar no sistema"><button class="app-notification" type="button" aria-label="Notificações">◇</button><button class="app-menu-toggle" id="appMenuToggle" type="button" aria-label="Abrir menu">☰</button></div></header>
+      <header class="app-topbar"><button class="app-menu-toggle" id="appMenuToggle" type="button" aria-label="Abrir menu">☰</button></header>
       <main class="app-content">
         <section class="app-view workspace-view active" data-view-panel="workspace">
           <article class="workspace-banner">
@@ -311,7 +311,7 @@
                   <span class="sheet-hint">Setas navegam · Enter desce · Tab avança · Esc desfaz · O campo ao lado do código edita a célula selecionada · Shift + roda rola na horizontal</span>
                 </div>
                 <div class="compare-table-wrap"><table class="compare-table compare-grid-table" id="compareTable"><colgroup id="compareCols"></colgroup><thead id="compareHead"></thead><tbody id="compareTableBody"></tbody><tfoot id="compareFoot"></tfoot></table></div>
-                <div class="compare-table-footer"><span id="compareCount">0 fontes exibidas</span><span>Células claras são editáveis • Enter salva • Esc cancela</span><span>Valores em reais (R$)</span></div>
+                <div class="compare-table-footer"><span id="sheetSelecao" class="sheet-selecao" hidden></span><span id="compareCount">0 fontes exibidas</span><span>Células claras são editáveis • Enter salva • Esc cancela</span><span>Valores em reais (R$)</span></div>
               </article>
 
               <article class="audit-panel" id="compareAuditPanel" hidden>

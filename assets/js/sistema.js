@@ -10,7 +10,6 @@
       const app = document.getElementById('wfaApp');
       const appSidebar = document.getElementById('appSidebar');
       const appToast = document.getElementById('appToast');
-      const pageTitle = document.getElementById('appPageTitle');
       let authAdapter = null;
       let toastTimer = null;
 
@@ -329,7 +328,6 @@
         document.querySelectorAll('.app-nav [data-app-view]').forEach(function (button) { button.classList.toggle('active', button.dataset.appView === view); });
         document.querySelectorAll('.app-nav [data-workspace-tool]').forEach(function (button) { button.classList.toggle('active', view === 'comparador-fontes' && button.dataset.workspaceTool === 'compare'); });
         atualizarResumoDosScripts();
-        pageTitle.textContent = viewTitles[view] || 'Sistema WFA';
         appSidebar.classList.remove('open');
         if (typeof closeCompareFilesSheet === 'function') closeCompareFilesSheet();
         document.querySelector('.app-main').scrollTo({ top: 0, behavior: 'smooth' });
@@ -651,7 +649,6 @@
         wrap: document.getElementById('workspaceTableWrap'),
         empty: document.getElementById('workspaceEmptyState'),
         search: document.getElementById('workspaceFileSearch'),
-        topSearch: document.getElementById('workspaceTopSearch'),
         filter: document.getElementById('workspaceFileFilter'),
         selectAll: document.getElementById('workspaceSelectAll'),
         hint: document.getElementById('workspaceSelectionHint'),
@@ -812,7 +809,6 @@
       workspaceDom.upload.addEventListener('change', function () { addWorkspaceFiles(workspaceDom.upload.files); });
       workspaceDom.search.addEventListener('input', renderWorkspaceFiles);
       workspaceDom.filter.addEventListener('change', renderWorkspaceFiles);
-      workspaceDom.topSearch.addEventListener('input', function () { workspaceDom.search.value = workspaceDom.topSearch.value; renderWorkspaceFiles(); });
       workspaceDom.selectAll.addEventListener('change', function () {
         visibleWorkspaceFiles().forEach(function (item) { if (workspaceDom.selectAll.checked) workspaceState.selected.add(item.id); else workspaceState.selected.delete(item.id); });
         renderWorkspaceFiles();
@@ -1319,6 +1315,7 @@
         }).join('');
         document.getElementById('compareFoot').innerHTML = '<tr><th class="sheet-corner"></th>' + totais + '</tr>';
 
+        compareDom.tableBody.dispatchEvent(new CustomEvent('wfa:redesenhou'));
         compareDom.view.classList.toggle('planilha-livre', compareState.modo === 'livre');
         document.getElementById('compareCount').textContent = compareState.modo === 'livre'
           ? rows.length + (rows.length === 1 ? ' linha' : ' linhas') + ' • ' + colunas.length + (colunas.length === 1 ? ' coluna' : ' colunas')
@@ -2320,7 +2317,7 @@
             workspaceState.files = restored;
             workspaceState.nextId = savedWorkspace.nextId || restored.length + 1;
             workspaceState.selected = new Set((savedWorkspace.selected || []).filter(function (id) { return restored.some(function (item) { return item.id === id; }); }));
-            if (savedWorkspace.search) { workspaceDom.search.value = savedWorkspace.search; workspaceDom.topSearch.value = savedWorkspace.search; }
+            if (savedWorkspace.search) workspaceDom.search.value = savedWorkspace.search;
             if (savedWorkspace.filter) workspaceDom.filter.value = savedWorkspace.filter;
             renderWorkspaceFiles();
           }
@@ -2511,6 +2508,193 @@
           }
           return false;
         }
+
+        /* ---------------- seleção de várias células ----------------
+           Como no Excel: arrastar pela tabela, clicar com Shift para esticar
+           até ali, ou Shift com as setas. Sobre a seleção valem Delete para
+           limpar e Ctrl+C para copiar, já no formato que o Excel entende. */
+        var selecao = null;          // { ancora:{linha,coluna}, foco:{linha,coluna} }
+        var arrastando = false;
+        var ancoraDoArrasto = null;
+
+        function retangulo() {
+          if (!selecao) return null;
+          return {
+            l1: Math.min(selecao.ancora.linha, selecao.foco.linha),
+            l2: Math.max(selecao.ancora.linha, selecao.foco.linha),
+            c1: Math.min(selecao.ancora.coluna, selecao.foco.coluna),
+            c2: Math.max(selecao.ancora.coluna, selecao.foco.coluna)
+          };
+        }
+        function limparSelecao() {
+          selecao = null;
+          corpo.querySelectorAll('td.celula-marcada').forEach(function (c) { c.classList.remove('celula-marcada'); });
+          atualizarResumoSelecao();
+        }
+        function pintarSelecao() {
+          corpo.querySelectorAll('td.celula-marcada').forEach(function (c) { c.classList.remove('celula-marcada'); });
+          var r = retangulo();
+          if (!r) { atualizarResumoSelecao(); return; }
+          if (r.l1 === r.l2 && r.c1 === r.c2) { atualizarResumoSelecao(); return; }
+          for (var l = r.l1; l <= r.l2; l += 1) {
+            var linha = corpo.rows[l];
+            if (!linha) continue;
+            for (var c = r.c1; c <= r.c2; c += 1) {
+              if (linha.children[c]) linha.children[c].classList.add('celula-marcada');
+            }
+          }
+          atualizarResumoSelecao();
+        }
+        // o rodapé conta e soma o que está marcado, como a barra de status do Excel
+        function atualizarResumoSelecao() {
+          var aviso = document.getElementById('sheetSelecao');
+          if (!aviso) return;
+          var r = retangulo();
+          if (!r || (r.l1 === r.l2 && r.c1 === r.c2)) { aviso.hidden = true; return; }
+          var quantas = 0;
+          var numeros = 0;
+          var soma = 0;
+          percorrerSelecao(function (campo) {
+            quantas += 1;
+            if (!campo) return;
+            var texto = campo.value;
+            var n = parseBrl(texto);
+            if (!n) n = Number(String(texto).replace(/\./g, '').replace(',', '.'));
+            if (texto && Number.isFinite(n) && n !== 0) { numeros += 1; soma += n; }
+          });
+          aviso.hidden = false;
+          aviso.textContent = quantas + ' células' + (numeros ? ' • soma ' + formatBrl(soma) : '');
+        }
+        function percorrerSelecao(acao) {
+          var r = retangulo();
+          if (!r) return;
+          for (var l = r.l1; l <= r.l2; l += 1) {
+            var linha = corpo.rows[l];
+            if (!linha) continue;
+            for (var c = r.c1; c <= r.c2; c += 1) {
+              var celula = linha.children[c];
+              if (!celula) continue;
+              acao(celula.querySelector('.cell-editor'), celula, l, c);
+            }
+          }
+        }
+
+        function definirSelecao(ancora, foco) {
+          selecao = { ancora: ancora, foco: foco };
+          pintarSelecao();
+        }
+
+        // arrastar pela tabela marca o retângulo; um clique simples continua editando
+        corpo.addEventListener('mousedown', function (evento) {
+          var celula = celulaDe(evento.target);
+          if (!celula || celula.classList.contains('sheet-row-number')) return;
+          var pos = coordenadas(celula);
+          if (evento.shiftKey && selecao) {
+            evento.preventDefault();
+            definirSelecao(selecao.ancora, pos);
+            return;
+          }
+          ancoraDoArrasto = pos;
+          arrastando = false;
+          // um clique simples deixa a âncora pronta: é dela que o Shift estica depois
+          definirSelecao(pos, pos);
+        });
+        corpo.addEventListener('mouseover', function (evento) {
+          if (!ancoraDoArrasto || evento.buttons !== 1) return;
+          var celula = celulaDe(evento.target);
+          if (!celula || celula.classList.contains('sheet-row-number')) return;
+          var pos = coordenadas(celula);
+          if (pos.linha === ancoraDoArrasto.linha && pos.coluna === ancoraDoArrasto.coluna) return;
+          if (!arrastando) {
+            arrastando = true;
+            var ativo = document.activeElement;
+            if (ativo && ativo.blur) ativo.blur();
+            document.body.classList.add('selecionando-celulas');
+          }
+          definirSelecao(ancoraDoArrasto, pos);
+        });
+        document.addEventListener('mouseup', function () {
+          ancoraDoArrasto = null;
+          arrastando = false;
+          document.body.classList.remove('selecionando-celulas');
+        });
+
+        // Shift com as setas estica a seleção a partir da célula em foco
+        corpo.addEventListener('keydown', function (evento) {
+          if (!evento.shiftKey) return;
+          var passos = { ArrowUp:[-1, 0], ArrowDown:[1, 0], ArrowLeft:[0, -1], ArrowRight:[0, 1] };
+          var passo = passos[evento.key];
+          if (!passo) return;
+          var celula = celulaDe(evento.target);
+          if (!celula) return;
+          evento.preventDefault();
+          var base = selecao ? selecao : { ancora: coordenadas(celula), foco: coordenadas(celula) };
+          var linha = Math.min(Math.max(base.foco.linha + passo[0], 0), corpo.rows.length - 1);
+          var maxColuna = (corpo.rows[linha] ? corpo.rows[linha].children.length : 1) - 1;
+          var coluna = Math.min(Math.max(base.foco.coluna + passo[1], 1), maxColuna);
+          definirSelecao(base.ancora, { linha: linha, coluna: coluna });
+        });
+
+        // apagar e copiar valem para tudo o que está marcado
+        document.addEventListener('keydown', function (evento) {
+          if (!selecao) return;
+          var r = retangulo();
+          if (!r || (r.l1 === r.l2 && r.c1 === r.c2)) return;
+          var editando = document.activeElement && document.activeElement.classList
+            && document.activeElement.classList.contains('cell-editor');
+
+          if ((evento.key === 'Delete' || evento.key === 'Backspace') && !editando) {
+            evento.preventDefault();
+            // recolhe todos os alvos antes de mexer: cada alteração redesenha a
+            // tabela e as células seguintes deixariam de existir no meio do caminho
+            var alvos = [];
+            percorrerSelecao(function (campo) {
+              if (!campo || campo.readOnly || campo.disabled) return;
+              if (!campo.dataset.compareExtra || campo.value === '') return;
+              alvos.push({ chave: campo.dataset.rowKey, coluna: campo.dataset.compareExtra });
+            });
+            if (!alvos.length) { showToast('Nada para limpar nas células marcadas.'); return; }
+            alvos.forEach(function (alvo) {
+              var linha = findCompareRow(alvo.chave);
+              if (linha && linha.extras) linha.extras[alvo.coluna] = '';
+            });
+            persistWfaLater();
+            regravarExecucaoAberta();
+            renderCompareTable();
+            showToast(alvos.length + (alvos.length === 1 ? ' célula limpa.' : ' células limpas.'));
+            return;
+          }
+          if ((evento.ctrlKey || evento.metaKey) && (evento.key === 'c' || evento.key === 'C')) {
+            var linhas = [];
+            var atual = null;
+            var ultimaLinha = -1;
+            percorrerSelecao(function (campo, celula, l) {
+              if (l !== ultimaLinha) { atual = []; linhas.push(atual); ultimaLinha = l; }
+              atual.push(campo ? campo.value : celula.textContent.trim());
+            });
+            var texto = linhas.map(function (l) { return l.join('\t'); }).join('\n');
+            try {
+              navigator.clipboard.writeText(texto);
+              showToast('Copiado. Pode colar no Excel.');
+            } catch (erro) { /* navegador sem área de transferência */ }
+            evento.preventDefault();
+            return;
+          }
+          if (evento.key === 'Escape' && !editando) limparSelecao();
+        });
+
+        // depois de redesenhar, a marcação continua onde estava, ajustada ao que sobrou
+        corpo.addEventListener('wfa:redesenhou', function () {
+          if (!selecao) return;
+          var ultimaLinha = corpo.rows.length - 1;
+          if (ultimaLinha < 0) { limparSelecao(); return; }
+          [selecao.ancora, selecao.foco].forEach(function (ponto) {
+            ponto.linha = Math.min(ponto.linha, ultimaLinha);
+            var ultimaColuna = corpo.rows[ponto.linha].children.length - 1;
+            ponto.coluna = Math.min(Math.max(ponto.coluna, 1), Math.max(ultimaColuna, 1));
+          });
+          pintarSelecao();
+        });
 
         corpo.addEventListener('focusin', function (evento) {
           var celula = celulaDe(evento.target);
