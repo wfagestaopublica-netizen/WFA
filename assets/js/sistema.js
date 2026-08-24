@@ -267,6 +267,7 @@
         compareState.formulas = {};
         compareState.larguras = {};
         compareState.alturas = {};
+        compareState.ordenacao = null;
         compareState.sourceSort = 'manual';
         compareState.editorMode = null;
         compareState.editorKey = null;
@@ -346,10 +347,12 @@
           if (colunas[coluna]) linha.extras[colunas[coluna].id] = valor;
         });
       }
-      function prepararColunas(titulos, larguras) {
+      // naoSomar: colunas cujo número não faz sentido totalizar, como um código
+      function prepararColunas(titulos, larguras, naoSomar) {
         compareState.colunasExtras = titulos.map(function (titulo, i) {
           const coluna = novaColunaLivre(larguras[i] || 130);
           coluna.titulo = titulo;
+          if (naoSomar && naoSomar.indexOf(i) !== -1) coluna.somar = false;
           return coluna;
         });
         compareState.titulos = {};
@@ -372,28 +375,28 @@
         prepararColunas(['Fonte de recurso', 'Descrição'].concat(grupos).concat(['Total da fonte']),
           [150, 260].concat(grupos.map(function () { return 130; })).concat([140]));
         compareState.rows = [];
+        /* Os totais são fórmula, não número gravado: se você corrigir uma
+           célula, a linha e a coluna acompanham na hora. */
+        const primeiroGrupo = LETRAS_COLUNA[2];
+        const ultimoGrupo = LETRAS_COLUNA[2 + grupos.length - 1];
         fontes.forEach(function (chave, linha) {
           const descricao = (relatorio.itens.find(function (item) { return item.chave === chave; }) || {}).chaveDescricao || '';
           const valores = grupos.map(function (grupo) { const v = soma(chave, grupo); return v ? formatBrl(v) : ''; });
-          const totalDaFonte = grupos.reduce(function (total, grupo) { return total + soma(chave, grupo); }, 0);
-          escreverLinhaLivre(linha, [chave, descricao].concat(valores).concat([formatBrl(totalDaFonte)]));
+          const totalDaFonte = '=SOMA(' + primeiroGrupo + (linha + 1) + ':' + ultimoGrupo + (linha + 1) + ')';
+          escreverLinhaLivre(linha, [chave, descricao].concat(valores).concat([totalDaFonte]));
         });
-        // rodapé com o total de cada consignatária
-        const totais = grupos.map(function (grupo) {
-          return formatBrl(relatorio.itens.reduce(function (t, item) { return item.grupo === grupo ? t + item.valor : t; }, 0));
-        });
-        escreverLinhaLivre(fontes.length, ['TOTAL', ''].concat(totais).concat([formatBrl(relatorio.extractedTotal)]));
+        // o total de cada coluna fica a cargo do rodapé da planilha
         compareState.sourceSort = 'manual';
       }
 
       function preencherConsignacoesCompleta(relatorio) {
         prepararColunas(['Fonte de recurso', 'Descrição da fonte', 'Código', 'Consignatária', 'Consignatária (grupo)', 'Ocorrências', 'Valor'],
-          [150, 250, 90, 250, 210, 110, 130]);
+          [150, 250, 90, 250, 210, 110, 130], [2]);
         compareState.rows = [];
         relatorio.itens.forEach(function (item, linha) {
           escreverLinhaLivre(linha, [item.chave, item.chaveDescricao, item.codigo, item.item, item.grupo, String(item.ocorrencias), formatBrl(item.valor)]);
         });
-        escreverLinhaLivre(relatorio.itens.length, ['TOTAL', '', '', '', '', '', formatBrl(relatorio.extractedTotal)]);
+        // idem: quem soma é o rodapé
         compareState.sourceSort = 'manual';
       }
 
@@ -613,7 +616,7 @@
       }
       function papeisCarregados() { return COMPARE_ROLES.filter(function (papel) { return Boolean(compareState.files[papel]); }); }
       function papeisComRelatorio() { return COMPARE_ROLES.filter(function (papel) { return Boolean(compareState.reports[papel]); }); }
-      const compareState = { files: { budget: null, committed: null, collected: null }, reports: {}, rows: [], audit: [], editorMode: null, editorKey: null, sourceSort: 'asc', colunasExtras: [], titulos: {}, formulas: {}, larguras: {}, alturas: {}, modo: 'livre' };
+      const compareState = { files: { budget: null, committed: null, collected: null }, reports: {}, rows: [], audit: [], editorMode: null, editorKey: null, sourceSort: 'asc', colunasExtras: [], titulos: {}, formulas: {}, larguras: {}, alturas: {}, ordenacao: null, modo: 'livre' };
       const compareDom = {
         run: document.getElementById('compareRun'), progress: document.getElementById('compareProgress'), alert: document.getElementById('compareAlert'), results: document.getElementById('compareResults'),
         processHint: document.getElementById('compareProcessHint'), tableBody: document.getElementById('compareTableBody'), search: document.getElementById('compareSearch'), status: document.getElementById('compareStatusFilter'),
@@ -1546,9 +1549,17 @@
                 }
                 const intervalo = parte.match(/^([A-Z])(\d+)\s*:\s*([A-Z])(\d+)$/);
                 if (intervalo) {
-                  const inicio = Math.min(Number(intervalo[2]), Number(intervalo[4]));
-                  const fim = Math.max(Number(intervalo[2]), Number(intervalo[4]));
-                  for (let n = inicio; n <= fim; n += 1) valores.push(valorDaCelula(intervalo[1], n, contexto));
+                  // o intervalo cobre o retângulo inteiro: C1:C8 desce, C5:I5 anda
+                  // de lado e C1:E3 pega os dois sentidos
+                  const linhaInicial = Math.min(Number(intervalo[2]), Number(intervalo[4]));
+                  const linhaFinal = Math.max(Number(intervalo[2]), Number(intervalo[4]));
+                  const colunaInicial = Math.min(LETRAS_COLUNA.indexOf(intervalo[1]), LETRAS_COLUNA.indexOf(intervalo[3]));
+                  const colunaFinal = Math.max(LETRAS_COLUNA.indexOf(intervalo[1]), LETRAS_COLUNA.indexOf(intervalo[3]));
+                  for (let linha = linhaInicial; linha <= linhaFinal; linha += 1) {
+                    for (let coluna = colunaInicial; coluna <= colunaFinal; coluna += 1) {
+                      valores.push(valorDaCelula(LETRAS_COLUNA[coluna], linha, contexto));
+                    }
+                  }
                   return;
                 }
                 valores.push(avaliarAritmetica(parte, contexto, linhaDaFormula));
@@ -1681,6 +1692,84 @@
       }
       window.addEventListener('resize', ajustarAlturaDaPlanilha);
 
+      /* ---------------- ordenar por uma coluna ----------------
+         Vale para as duas planilhas: a da comparação e a livre, onde as
+         automações escrevem. Número ordena como número, texto como texto, e
+         célula vazia vai sempre para o fim, suba ou desça.               */
+      function valorDeOrdenacao(row, coluna) {
+        if (coluna.tipo === 'livre') return (row.extras && row.extras[coluna.id]) || '';
+        if (coluna.id === 'key') return row.key || '';
+        if (coluna.id === 'description') return row.description || '';
+        if (coluna.id === 'diferenca') return diferencaDaLinha(row);
+        if (coluna.id === 'execucao') return execucaoDaLinha(row);
+        if (coluna.id === 'situacao') return compareStatus(row).label;
+        if (coluna.tipo === 'moeda') return row[coluna.id];
+        return '';
+      }
+      function numeroDeOrdenacao(valor) {
+        if (typeof valor === 'number') return Number.isFinite(valor) ? valor : null;
+        const texto = String(valor == null ? '' : valor).trim().replace(/^R\$\s*/, '');
+        // precisa ter forma de número: nada de letras nem de espaço no meio,
+        // senão um código como "01 0500 0000 0000" viraria um valor gigante
+        if (!/^-?\d{1,3}(\.\d{3})*(,\d+)?$|^-?\d+(,\d+)?$/.test(texto)) return null;
+        const numero = parseBrl(texto);
+        return Number.isFinite(numero) ? numero : null;
+      }
+      function compararPorColuna(coluna, direcao) {
+        const sinal = direcao === 'desc' ? -1 : 1;
+        return function (esquerda, direita) {
+          const a = valorDeOrdenacao(esquerda, coluna);
+          const b = valorDeOrdenacao(direita, coluna);
+          const vazioA = a === '' || a == null;
+          const vazioB = b === '' || b == null;
+          if (vazioA && vazioB) return 0;
+          if (vazioA) return 1;          // vazio sempre no fim
+          if (vazioB) return -1;
+          const na = numeroDeOrdenacao(a);
+          const nb = numeroDeOrdenacao(b);
+          if (na !== null && nb !== null) return sinal * (na - nb);
+          return sinal * String(a).localeCompare(String(b), 'pt-BR', { numeric:true, sensitivity:'base' });
+        };
+      }
+      function ordenarPorColuna(id, direcao) {
+        compareState.ordenacao = direcao ? { coluna:id, direcao:direcao } : null;
+        compareState.sourceSort = 'manual';
+        renderCompareTable();
+        persistWfaLater();
+        regravarExecucaoAberta();
+      }
+
+      /* Rodapé da planilha livre: soma sozinho o que for número em cada coluna,
+         como a linha de totais de uma folha de cálculo. Antes ficava vazio e a
+         automação precisava escrever uma linha TOTAL de mentira. */
+      function rodapeDaColunaLivre(coluna, linhas, colunas) {
+        const definicao = (compareState.colunasExtras || []).find(function (c) { return c.id === coluna.id; });
+        if (definicao && definicao.somar === false) return '<th></th>';
+        const contexto = { colunas: colunas, letras: colunas.map(function (c, i) { return LETRAS_COLUNA[i]; }), linhas: linhas };
+        let soma = 0;
+        let temNumero = false;
+        linhas.forEach(function (row) {
+          const bruto = (row.extras && row.extras[coluna.id]) || '';
+          if (!bruto) return;
+          let valor;
+          if (ehFormula(bruto)) {
+            const saida = avaliarFormula(bruto, { colunas:contexto.colunas, letras:contexto.letras, linhas:contexto.linhas }, linhas.indexOf(row) + 1);
+            if (saida.erro) return;
+            valor = saida.valor;
+          } else {
+            valor = numeroDeOrdenacao(bruto);
+          }
+          if (valor === null || !Number.isFinite(valor)) return;
+          temNumero = true;
+          soma += valor;
+        });
+        if (!temNumero) {
+          // a primeira coluna sem número serve de rótulo da linha de totais
+          return colunas.indexOf(coluna) === 0 ? '<th>Total</th>' : '<th></th>';
+        }
+        return '<th class="num">' + formatBrl(soma) + '</th>';
+      }
+
       function renderCompareTable() {
         const query = normalizeSearch(compareDom.search.value);
         const filter = compareDom.status.value;
@@ -1695,7 +1784,11 @@
           if (filter === 'edited') matchesStatus = row.edited || row.manual;
           return matchesSearch && matchesStatus;
         });
-        if (compareState.sourceSort === 'manual') {
+        const pedido = compareState.ordenacao;
+        const colunaOrdenada = pedido && colunas.find(function (coluna) { return coluna.id === pedido.coluna; });
+        if (colunaOrdenada) {
+          rows.sort(compararPorColuna(colunaOrdenada, pedido.direcao));
+        } else if (compareState.sourceSort === 'manual') {
           rows.sort(function (left, right) { return (left.ordem || 0) - (right.ordem || 0); });
         } else {
           rows.sort(function (left, right) {
@@ -1722,6 +1815,7 @@
             return '<th class="' + (numerica ? 'num ' : '') + 'col-' + escapeHtml(coluna.id) + (coluna.tipo === 'calculada' ? ' coluna-calculada' : '') + '">' +
               '<span class="cabecalho-topo">' +
                 '<span class="titulo-coluna" contenteditable="true" spellcheck="false" data-coluna="' + escapeHtml(coluna.id) + '" title="' + escapeHtml(coluna.dica ? coluna.dica : 'Clique para renomear') + '">' + escapeHtml(coluna.titulo) + '</span>' + seta +
+                (pedido && pedido.coluna === coluna.id ? '<span class="marca-ordem" title="Ordenada">' + (pedido.direcao === 'desc' ? '↓' : '↑') + '</span>' : '') +
                 '<button class="menu-coluna" type="button" data-menu-coluna="' + escapeHtml(coluna.id) + '" title="Opções da coluna" aria-label="Opções da coluna">▾</button>' +
               '</span>' +
               (coluna.dica ? '<small class="dica-coluna">' + escapeHtml(coluna.dica) + '</small>' : '') +
@@ -1793,7 +1887,7 @@
             const alvo = parTotal ? somar(parTotal.alvo) : 0;
             return '<th class="num">' + formatPercent(base ? (alvo / base) * 100 : NaN) + '</th>';
           }
-          if (compareState.modo === 'livre') return '<th></th>';
+          if (compareState.modo === 'livre') return rodapeDaColunaLivre(coluna, rows, colunas);
           if (coluna.id === 'key') return '<th>' + (filtrado ? 'Total exibido (' + rows.length + ' de ' + allRows.length + ')' : 'Total das fontes') + '</th>';
           return '<th></th>';
         }).join('');
@@ -1930,6 +2024,9 @@
         const extras = compareState.colunasExtras || [];
         const ehLivre = extras.some(function (coluna) { return coluna.id === id; });
         const itens = [
+          { rotulo:'Ordenar A → Z', acao:function () { ordenarPorColuna(id, 'asc'); } },
+          { rotulo:'Ordenar Z → A', acao:function () { ordenarPorColuna(id, 'desc'); } },
+          { separador:true },
           { rotulo:'Inserir coluna à esquerda', acao:function () { criarColunaLivre(id, 'antes'); } },
           { rotulo:'Inserir coluna à direita', acao:function () { criarColunaLivre(id, 'depois'); } },
           { separador:true },
@@ -1942,6 +2039,9 @@
             selecao.addRange(faixa);
           } }
         ];
+        if (compareState.ordenacao && compareState.ordenacao.coluna === id) {
+          itens.splice(2, 0, { rotulo:'Voltar à ordem original', acao:function () { ordenarPorColuna(id, null); } });
+        }
         const definicao = colunasDaTabela().find(function (coluna) { return coluna.id === id; });
         if (definicao && definicao.tipo === 'formula') {
           itens.push({ rotulo:'Editar fórmula da coluna', acao:function () { editarFormulaDeColuna(id); } });
@@ -2074,6 +2174,7 @@
       const cabecalhoTabela = document.getElementById('compareHead');
       cabecalhoTabela.addEventListener('click', function (evento) {
         if (evento.target.closest('#compareSortSource')) {
+          compareState.ordenacao = null;
           compareState.sourceSort = compareState.sourceSort === 'asc' ? 'desc' : 'asc';
           renderCompareTable();
           return;
@@ -2784,6 +2885,7 @@
             colunasExtras: compareState.colunasExtras,
             larguras: compareState.larguras,
             alturas: compareState.alturas,
+            ordenacao: compareState.ordenacao,
             titulos: compareState.titulos,
             formulas: compareState.formulas,
             execucaoAberta: typeof execucaoAberta === 'string' ? execucaoAberta : null,
@@ -2828,6 +2930,7 @@
           if (savedCompare) {
             compareState.sourceSort = savedCompare.sourceSort || 'asc';
             compareState.colunasExtras = savedCompare.colunasExtras || [];
+            compareState.ordenacao = savedCompare.ordenacao || null;
             compareState.larguras = savedCompare.larguras || {};
             compareState.alturas = savedCompare.alturas || {};
             compareState.titulos = savedCompare.titulos || {};
@@ -3570,7 +3673,7 @@
               return acc;
             }, {})
           };
-          await stores.state.setItem(PREFIXO_EXEC + id, { resumo: resumo, modo: compareState.modo, reports: compareState.reports, rows: compareState.rows, audit: compareState.audit, colunasExtras: compareState.colunasExtras, larguras: compareState.larguras, alturas: compareState.alturas, titulos: compareState.titulos, formulas: compareState.formulas });
+          await stores.state.setItem(PREFIXO_EXEC + id, { resumo: resumo, modo: compareState.modo, reports: compareState.reports, rows: compareState.rows, audit: compareState.audit, colunasExtras: compareState.colunasExtras, larguras: compareState.larguras, alturas: compareState.alturas, ordenacao: compareState.ordenacao, titulos: compareState.titulos, formulas: compareState.formulas });
           execucaoAberta = id;
           renderExecucoes();
         } catch (error) { /* sem armazenamento: a execução segue apenas na tela */ }
@@ -3646,6 +3749,7 @@
             registro.audit = compareState.audit;
             registro.modo = compareState.modo;
             registro.colunasExtras = compareState.colunasExtras;
+            registro.ordenacao = compareState.ordenacao;
             registro.larguras = compareState.larguras;
             registro.alturas = compareState.alturas;
             registro.titulos = compareState.titulos;
@@ -3688,6 +3792,7 @@
           compareState.rows = registro.rows;
           compareState.audit = registro.audit || [];
           compareState.colunasExtras = registro.colunasExtras || [];
+          compareState.ordenacao = registro.ordenacao || null;
           compareState.larguras = registro.larguras || {};
           compareState.alturas = registro.alturas || {};
           compareState.titulos = registro.titulos || {};

@@ -494,6 +494,7 @@
     .area-vazia-botao { padding: 9px 22px; background: #205e8a; border: 1px solid #205e8a; color: white; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
     .area-vazia-botao:hover { background: #1a4e73; }
     .sheet-cmd-automacao { font-weight: 700; color: #205e8a; }
+    .marca-ordem { margin-left: 4px; color: var(--gold-400); font-size: 10px; font-weight: 700; }
     .sidebar-marcados { margin-left: 4px; color: #a4693a; font-size: 9.5px; font-weight: 700; letter-spacing: .02em; text-transform: none; }
     .sidebar-marcados.pronto { color: #4fae7c; }
     .sidebar-dica { margin: 8px 14px 0; color: #8fa6b5; font-size: 10.5px; line-height: 1.45; }
