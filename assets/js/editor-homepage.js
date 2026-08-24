@@ -56,8 +56,14 @@
               no.replaceChild(document.createTextNode(filho.textContent || ''), filho);
               continue;
             }
+            // guarda a cor antes de limpar: é o único estilo que sobrevive,
+            // e mesmo assim só se for uma cor reconhecível
+            var corDoTrecho = filho.style && filho.style.color;
             for (var a = filho.attributes.length - 1; a >= 0; a -= 1) {
               if (filho.attributes[a].name !== 'class') filho.removeAttribute(filho.attributes[a].name);
+            }
+            if (corDoTrecho && /^(#[0-9a-fA-F]{3,8}|rgba?\([\d\s.,%]+\))$/.test(corDoTrecho.trim())) {
+              filho.style.color = corDoTrecho.trim();
             }
             limpa(filho);
           }
@@ -499,15 +505,27 @@
         toast('Cartão movido. Publique para valer no site.');
       });
 
+      /* Uma vez fechada por clique fora, a barra só volta quando você mexer de
+         novo dentro de um trecho. Sem isso o navegador guarda a seleção antiga
+         e qualquer movimento a trazia de volta. */
+      var formatacaoDispensada = false;
       function esconderFormatacao() {
         var barra = document.getElementById('cmsFormatBar');
         if (barra) barra.hidden = true;
       }
       function mostrarFormatacao() {
         var barra = document.getElementById('cmsFormatBar');
-        if (!barra || !editando) return;
+        if (!barra || !editando || formatacaoDispensada) return;
+        // sair da homepage para o painel não desligava a edição, e a barra ficava
+        // flutuando sobre o sistema sem nada que a fechasse
+        if (!document.body.classList.contains('cms-editando') || document.body.classList.contains('app-active')) { esconderFormatacao(); return; }
         var sel = window.getSelection();
-        if (!sel || sel.isCollapsed || !blocoDaSelecao()) { esconderFormatacao(); return; }
+        var bloco = blocoDaSelecao();
+        if (!sel || sel.isCollapsed || !bloco) { esconderFormatacao(); return; }
+        // clicar fora tira o foco do trecho, mas o navegador guarda a seleção:
+        // sem esta checagem a barra reaparecia sozinha a cada movimento
+        var ativo = document.activeElement;
+        if (ativo !== bloco && !bloco.contains(ativo) && !(ativo && ativo.closest && ativo.closest('.cms-format-bar'))) { esconderFormatacao(); return; }
         var caixa = sel.getRangeAt(0).getBoundingClientRect();
         if (!caixa.width && !caixa.height) { esconderFormatacao(); return; }
         barra.hidden = false;
@@ -554,10 +572,21 @@
         if (!sel || sel.isCollapsed) esconderFormatacao();
       });
       document.addEventListener('mousedown', function (evento) {
-        if (!editando || !evento.target.closest) return;
+        if (!evento.target.closest) return;
         if (evento.target.closest('.cms-format-bar, .cms-color-panel, .cms-edit-bar')) return;
+        formatacaoDispensada = !evento.target.closest('[data-cms-inline]');
         esconderFormatacao();
       }, true);
+      // mexer dentro de um trecho volta a permitir a barra
+      document.addEventListener('keydown', function (evento) {
+        if (evento.target.closest && evento.target.closest('[data-cms-inline]')) formatacaoDispensada = false;
+      }, true);
+      // Esc fecha, e voltar ao painel também
+      document.addEventListener('keydown', function (evento) { if (evento.key === 'Escape') esconderFormatacao(); });
+      ['backToApp', 'appViewSite', 'appLogout'].forEach(function (id) {
+        var botao = document.getElementById(id);
+        if (botao) botao.addEventListener('click', esconderFormatacao);
+      });
       document.addEventListener('focusout', function (evento) {
         if (!editando || !evento.target.closest) return;
         if (evento.target.closest('[data-cms-inline]')) esconderFormatacao();
@@ -566,13 +595,14 @@
       function tagDeDestaque(bloco) {
         return bloco && bloco.closest('.hero') && bloco.tagName === 'H1' ? 'span' : 'em';
       }
-      function envolverSelecao(tag, classe) {
+      function envolverSelecao(tag, classe, cor) {
         var bloco = blocoDaSelecao();
         var sel = window.getSelection();
         if (!bloco || !sel.rangeCount || sel.isCollapsed) return;
         var faixa = sel.getRangeAt(0);
         var marca = document.createElement(tag);
         if (classe) marca.className = classe;
+        if (cor) marca.style.color = cor;
         try { faixa.surroundContents(marca); }
         catch (error) { marca.appendChild(faixa.extractContents()); faixa.insertNode(marca); }
         sel.removeAllRanges();
@@ -890,6 +920,25 @@
         document.querySelectorAll('.cms-cores button').forEach(function (botao) {
           botao.addEventListener('mousedown', function (e) { e.preventDefault(); envolverSelecao('span', botao.dataset.cor); });
         });
+        /* A cor livre abre o seletor do sistema, e isso tira o foco do texto —
+           por isso a faixa selecionada é guardada antes e devolvida na hora de
+           pintar. */
+        var seletorCor = document.getElementById('cmsCorLivre');
+        if (seletorCor) {
+          var faixaGuardada = null;
+          seletorCor.addEventListener('mousedown', function () {
+            var sel = window.getSelection();
+            faixaGuardada = sel && sel.rangeCount && !sel.isCollapsed ? sel.getRangeAt(0).cloneRange() : null;
+          });
+          seletorCor.addEventListener('input', function () {
+            if (!faixaGuardada) return;
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(faixaGuardada);
+            envolverSelecao('span', null, seletorCor.value);
+            faixaGuardada = null;
+          });
+        }
         var botaoImagem = document.getElementById('cmsImgBtn');
         botaoImagem.addEventListener('click', function () {
           if (botaoImagem.dataset.chave) abrirSeletorImagem(botaoImagem.dataset.chave);
