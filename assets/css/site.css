@@ -2524,9 +2524,29 @@
     .compare-view.active .compare-menu-only { display: none !important; }
     .compare-view.active .compare-table-wrap { max-height: calc(100vh - 268px); overflow: auto; }
     .compare-view.active .compare-toolbar { min-height: 56px; }
+    /* as duas faixas de comando usam a mesma altura, para não parecerem
+       dois programas diferentes empilhados */
     .compare-view.active .compare-filters input,
     .compare-view.active .compare-filters select,
-    .compare-view.active .compare-table-options-trigger { height: 39px; min-height: 39px; font-size: 13px; }
+    .compare-view.active .compare-table-options-trigger { height: 28px; min-height: 28px; font-size: 11.5px; }
+    .compare-view.active .compare-toolbar { min-height: 0; padding: 6px 9px; }
+    .compare-view.active .sheet-formula,
+    .compare-view.active .sheet-namebox,
+    .compare-view.active .sheet-commands button { height: 28px; min-height: 28px; font-size: 11.5px; }
+    .compare-view.active .sheet-namebox { display: inline-flex; align-items: center; justify-content: center; padding: 0 9px; }
+    .compare-view.active .sheet-commands button { padding: 0 10px; }
+    .compare-view.active .sheet-formula { padding: 0 9px; }
+
+    /* seta própria: a nativa desalinhava dentro da caixa baixa */
+    .compare-view.active .compare-filters select {
+      appearance: none; -webkit-appearance: none; -moz-appearance: none;
+      padding: 0 26px 0 9px;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%235b7688' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 9px center;
+      background-size: 9px 6px;
+    }
+    .compare-view.active .compare-filters input { padding: 0 9px; }
     .compare-view.active .compare-grid-table th { height: 43px; padding: 8px 10px; font-size: 12.5px; }
     .compare-view.active .compare-grid-table td { height: 44px; padding: 8px 10px; font-size: 13px; }
     .compare-view.active .compare-grid-table td.editable-cell { padding: 0; }
