@@ -522,7 +522,13 @@
       function dentroDaBarra(el) {
         return Boolean(el && el.closest && el.closest('.cms-format-bar'));
       }
+      /* Um ponto único de fechamento, e ele consulta o estado vivo da página em
+         vez de um sinalizador: enquanto o foco estiver dentro da própria barra
+         é porque o seletor de cor está em uso, e fechar agora mataria o clique
+         dele. Assim que o foco sai, ela volta a fechar normalmente — não há
+         estado que possa ficar preso. */
       function esconderFormatacao() {
+        if (dentroDaBarra(document.activeElement)) return;
         var barra = document.getElementById('cmsFormatBar');
         if (barra) barra.hidden = true;
       }
@@ -580,6 +586,13 @@
         }
       }
       document.addEventListener('selectionchange', function () { if (editando) mostrarFormatacao(); });
+      // o foco saiu da barra: agora ela pode se recolher
+      document.addEventListener('focusout', function (evento) {
+        if (!dentroDaBarra(evento.target)) return;
+        window.setTimeout(function () {
+          if (!dentroDaBarra(document.activeElement)) esconderFormatacao();
+        }, 0);
+      }, true);
       window.addEventListener('scroll', function () { if (editando) esconderFormatacao(); }, { passive:true });
       document.addEventListener('mouseup', function () {
         if (!editando) return;
