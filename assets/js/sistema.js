@@ -1021,7 +1021,7 @@
         // Planilha em branco: existem só as colunas que você criou.
         if (compareState.modo !== 'livre') {
         colunas.push({ id:'key', tipo:'texto', titulo:'Fonte de recurso', largura:150, classe:'cell-code' });
-        colunas.push({ id:'description', tipo:'texto', titulo:'Descrição', largura:300, classe:'' });
+        colunas.push({ id:'description', tipo:'texto', titulo:'Descrição', largura:380, classe:'' });
         papeisComRelatorio().forEach(function (papel) {
           colunas.push({ id:papel, tipo:'moeda', titulo:ROLE_INFO[papel].curto, largura:118, classe:'cell-money' });
         });
@@ -1350,27 +1350,23 @@
           });
         }
 
-        // colunas
-        let temFlexivel = false;
+        /* Colunas com a largura pedida, mais uma coluna vazia no fim. É ela que
+           recebe a sobra da tela: sem isso, ou a tabela estica e engorda todas
+           as colunas, ou termina no meio da caixa e a grade fica falhada. */
         document.getElementById('compareCols').innerHTML = '<col class="col-row-number">' +
           colunas.map(function (coluna) {
             // Numa tela larga a tabela estica e reparte a sobra por todas as
             // colunas, engordando até a do código, que nunca precisa disso.
             // Sem largura declarada, a descrição fica com a sobra inteira.
-            const flexivel = coluna.id === 'description' && !(compareState.larguras || {})[coluna.id];
-            if (flexivel) temFlexivel = true;
-            return flexivel ? '<col>' : '<col style="width:' + larguraGuardada(coluna) + 'px">';
-          }).join('');
-        // Sem nenhuma coluna elástica, a tabela para de esticar: cada coluna fica
-        // com a largura pedida e a sobra vira espaço vazio, como no Excel.
-        document.getElementById('compareTable').classList.toggle('sem-elastica', !temFlexivel);
+            return '<col style="width:' + larguraGuardada(coluna) + 'px">';
+          }).join('') + '<col class="col-preenchimento">';
 
         // cabeçalho: linha de letras + linha de títulos renomeáveis
         const letras = '<tr class="sheet-letters"><th class="sheet-corner"></th>' +
           colunas.map(function (coluna, indice) {
             return '<th>' + LETRAS_COLUNA[indice] +
               '<span class="pega-largura" data-redim-col="' + indice + '" title="Arraste para mudar a largura"></span></th>';
-          }).join('') + '</tr>';
+          }).join('') + '<th class="preenchimento"></th></tr>';
         const titulos = '<tr><th class="sheet-corner">#</th>' +
           colunas.map(function (coluna, indice) {
             const simbolo = compareState.sourceSort === 'asc' ? '↑' : compareState.sourceSort === 'desc' ? '↓' : '≡';
@@ -1384,7 +1380,7 @@
               (coluna.dica ? '<small class="dica-coluna">' + escapeHtml(coluna.dica) + '</small>' : '') +
               '<span class="pega-largura" data-redim-col="' + indice + '" title="Arraste para mudar a largura"></span>' +
               '</th>';
-          }).join('') + '</tr>';
+          }).join('') + '<th class="preenchimento"></th></tr>';
         document.getElementById('compareHead').innerHTML = letras + titulos;
 
         // corpo
@@ -1430,7 +1426,7 @@
             return '<td class="' + (coluna.tipo === 'moeda' ? 'num ' : '') + 'editable-cell col-' + escapeHtml(coluna.id) + '">' + (co ? '<div class="cell-stack">' + entrada + co + '</div>' : entrada) + '</td>';
           }).join('');
           const alturaLinha = compareState.alturas && compareState.alturas[row.key];
-          return '<tr' + (alturaLinha ? ' style="height:' + alturaLinha + 'px"' : '') + '><td class="sheet-row-number" data-menu-linha="' + escapeHtml(row.key) + '" title="Opções da linha"' + (compareState.alturas && compareState.alturas[row.key] ? ' style="height:' + compareState.alturas[row.key] + 'px"' : '') + '><span class="numero">' + (rowIndex + 1) + '</span><span class="pega-altura" data-redim-linha="' + escapeHtml(row.key) + '" title="Arraste para mudar a altura"></span><button class="menu-linha" type="button" data-abrir-menu-linha="' + escapeHtml(row.key) + '" title="Opções da linha" aria-label="Opções da linha">▾</button></td>' + celulas + '</tr>';
+          return '<tr' + (alturaLinha ? ' style="height:' + alturaLinha + 'px"' : '') + '><td class="sheet-row-number" data-menu-linha="' + escapeHtml(row.key) + '" title="Opções da linha"' + (compareState.alturas && compareState.alturas[row.key] ? ' style="height:' + compareState.alturas[row.key] + 'px"' : '') + '><span class="numero">' + (rowIndex + 1) + '</span><span class="pega-altura" data-redim-linha="' + escapeHtml(row.key) + '" title="Arraste para mudar a altura"></span><button class="menu-linha" type="button" data-abrir-menu-linha="' + escapeHtml(row.key) + '" title="Opções da linha" aria-label="Opções da linha">▾</button></td>' + celulas + '<td class="preenchimento"></td></tr>';
         }).join('');
 
         // rodapé de totais
@@ -1454,7 +1450,7 @@
           if (coluna.id === 'key') return '<th>' + (filtrado ? 'Total exibido (' + rows.length + ' de ' + allRows.length + ')' : 'Total das fontes') + '</th>';
           return '<th></th>';
         }).join('');
-        document.getElementById('compareFoot').innerHTML = '<tr><th class="sheet-corner"></th>' + totais + '</tr>';
+        document.getElementById('compareFoot').innerHTML = '<tr><th class="sheet-corner"></th>' + totais + '<th class="preenchimento"></th></tr>';
 
         compareDom.tableBody.dispatchEvent(new CustomEvent('wfa:redesenhou'));
         ajustarAlturaDaPlanilha();
@@ -2810,7 +2806,7 @@
         // arrastar pela tabela marca o retângulo; um clique simples continua editando
         corpo.addEventListener('mousedown', function (evento) {
           var celula = celulaDe(evento.target);
-          if (!celula || celula.classList.contains('sheet-row-number')) return;
+          if (!celula || celula.classList.contains('sheet-row-number') || celula.classList.contains('preenchimento')) return;
           var pos = coordenadas(celula);
           // com uma fórmula aberta, clicar em outra célula escreve a referência nela
           var emFormula = campoEmFormula();
@@ -2832,7 +2828,7 @@
         corpo.addEventListener('mouseover', function (evento) {
           if (!ancoraDoArrasto || evento.buttons !== 1) return;
           var celula = celulaDe(evento.target);
-          if (!celula || celula.classList.contains('sheet-row-number')) return;
+          if (!celula || celula.classList.contains('sheet-row-number') || celula.classList.contains('preenchimento')) return;
           var pos = coordenadas(celula);
           if (apontando) { estenderApontamento(pos); return; }
           if (pos.linha === ancoraDoArrasto.linha && pos.coluna === ancoraDoArrasto.coluna) return;
