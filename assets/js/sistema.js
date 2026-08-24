@@ -143,7 +143,7 @@
       const AUTOMACOES = [
         {
           id: 'comparacao-fontes',
-          nome: 'Comparação de fontes de relatório',
+          nome: 'Comparação de fonte por relatório',
           descricao: 'Lê o quadro Total por fonte de recurso no fim de cada relatório e cruza os valores fonte a fonte, com diferença e execução.',
           regra: 'Marque na barra lateral dois destes três relatórios:',
           // orçada, arrecadada e empenhada, na ordem em que aparecem no menu
@@ -158,6 +158,17 @@
             return { ok:true, texto:tipos.length + ' documentos marcados' };
           },
           executar: function () { launchWorkspaceComparator(); }
+        },
+        {
+          id: 'consignacoes-folha',
+          nome: 'Consignações por fonte de recurso (folha)',
+          descricao: 'Cruza os descontos consignados da folha com a fonte de recurso que os pagou.',
+          disponivel: false,
+          nota: 'em desenvolvimento',
+          regra: '',
+          requisitos: [],
+          situacao: function () { return { ok:false, texto:'em desenvolvimento' }; },
+          executar: function () {}
         }
       ];
 
@@ -167,13 +178,14 @@
         const painel = document.getElementById('sheetAutomacaoMenu');
         if (painel) painel.hidden = true;
       }
-      function abrirMenuAutomacoes() {
+      function abrirMenuAutomacoes(id) {
         const painel = document.getElementById('sheetAutomacaoMenu');
         const botao = document.getElementById('sheetAutomacao');
         if (!painel || !botao) return;
-        if (!painel.hidden) { fecharMenuAutomacoes(); return; }
+        const escolhidas = AUTOMACOES.filter(function (a) { return a.id === id; });
+        if (!escolhidas.length) { fecharMenuAutomacoes(); return; }
         const marcados = documentosSelecionados();
-        painel.innerHTML = AUTOMACOES.map(function (automacao) {
+        painel.innerHTML = escolhidas.map(function (automacao) {
           const situacao = automacao.situacao();
           const requisitos = (automacao.requisitos || []).map(function (papel) {
             const doc = marcados.find(function (item) { return item.role === papel; });
@@ -833,7 +845,21 @@
       // As automações moram dentro da planilha, na barra de comandos.
       document.getElementById('sheetAutomacao').addEventListener('click', function (evento) {
         evento.stopPropagation();
-        abrirMenuAutomacoes();
+        fecharMenuAutomacoes();
+        const itens = [{ titulo:'Automações desta planilha' }];
+        AUTOMACOES.forEach(function (automacao) {
+          const disponivel = automacao.disponivel !== false;
+          itens.push({
+            rotulo: automacao.nome,
+            nota: disponivel ? '' : automacao.nota || 'em desenvolvimento',
+            desabilitado: !disponivel,
+            dica: disponivel ? automacao.descricao : 'Esta automação ainda não está pronta.',
+            // o quadro abre depois que este clique termina, senão o fechamento
+            // por clique fora o derrubaria no mesmo instante
+            acao: function () { window.setTimeout(function () { abrirMenuAutomacoes(automacao.id); }, 0); }
+          });
+        });
+        abrirMenuPlanilha(evento, itens);
       });
       document.getElementById('sheetAutomacaoMenu').addEventListener('click', function (evento) {
         const botao = evento.target.closest('[data-rodar]');
@@ -1511,7 +1537,12 @@
         if (!menu) return;
         menu.innerHTML = itens.map(function (item, indice) {
           if (item.separador) return '<hr>';
-          return '<button type="button" data-item="' + indice + '"' + (item.perigo ? ' class="perigo"' : '') + '>' + escapeHtml(item.rotulo) + '</button>';
+          if (item.titulo) return '<span class="menu-titulo">' + escapeHtml(item.titulo) + '</span>';
+          const classes = (item.perigo ? 'perigo' : '') + (item.desabilitado ? ' desligado' : '');
+          return '<button type="button" data-item="' + indice + '"' + (classes.trim() ? ' class="' + classes.trim() + '"' : '') +
+            (item.desabilitado ? ' disabled' : '') +
+            (item.dica ? ' title="' + escapeHtml(item.dica) + '"' : '') + '>' + escapeHtml(item.rotulo) +
+            (item.nota ? '<small>' + escapeHtml(item.nota) + '</small>' : '') + '</button>';
         }).join('');
         menu.hidden = false;
         const largura = menu.offsetWidth || 200;
