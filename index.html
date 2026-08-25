@@ -6,7 +6,7 @@
   <meta name="description" content="WFA Gestão Pública — assessoria contábil, orçamentária e fiscal para municípios de Minas Gerais.">
   <meta name="theme-color" content="#071b2b">
   <title>WFA Gestão Pública | Assessoria Contábil em Minas Gerais</title>
-  <link rel="stylesheet" href="/assets/css/site.css?v=20260825b">
+  <link rel="stylesheet" href="/assets/css/site.css?v=20260825d">
 </head>
 <body class="em-construcao" data-construcao="on">
   <div class="construction-gate" id="constructionGate" role="dialog" aria-label="Site em construção">
@@ -325,27 +325,35 @@
         </section>
 
         <section class="app-view" data-view-panel="scripts">
-          <div class="view-heading"><div><h2>Scripts</h2><p>Envie um script, dê um nome e ele passa a aparecer em <b>Automação</b>, dentro da planilha.</p></div><div class="view-heading-actions"><button class="app-botao" id="scriptNovo" type="button">Novo script</button></div></div>
-          <div class="scripts-grade">
+          <div class="view-heading"><div><p>Automações que você mesmo envia</p><h2>Scripts</h2></div><div class="view-heading-actions"><button class="app-botao" id="scriptNovo" type="button">Novo script</button></div></div>
+          <div class="app-grid scripts-grade">
             <article class="app-card">
-              <div class="app-card-head"><h3>Salvos</h3></div>
-              <ul class="scripts-lista" id="scriptsLista"></ul>
-            </article>
-            <article class="app-card">
-              <div class="app-card-head"><h3>Enviar</h3></div>
-              <label class="script-campo"><span>Nome</span><input id="scriptNome" type="text" placeholder="Total por consignatária" autocomplete="off"></label>
-              <label class="script-campo"><span>Script</span><textarea id="scriptCorpo" rows="14" spellcheck="false" placeholder="Cole aqui o script gerado"></textarea></label>
-              <p class="script-aviso" id="scriptAviso" hidden></p>
-              <div class="script-acoes">
-                <button class="app-botao" id="scriptTestar" type="button">Testar com os documentos marcados</button>
-                <button class="app-botao primario" id="scriptSalvar" type="button">Salvar</button>
+              <div class="app-card-head"><h3>Enviar</h3><span class="script-passo">Cole, teste e salve</span></div>
+              <div class="app-card-corpo">
+                <label class="script-campo"><span>Nome</span><input id="scriptNome" type="text" placeholder="Total por consignatária" autocomplete="off"></label>
+                <label class="script-campo"><span>Script</span><textarea id="scriptCorpo" rows="12" spellcheck="false" placeholder="Cole aqui o script gerado"></textarea></label>
+                <p class="script-aviso" id="scriptAviso" hidden></p>
+                <div class="script-acoes">
+                  <button class="app-botao" id="scriptTestar" type="button">Testar com os documentos marcados</button>
+                  <button class="app-botao primario" id="scriptSalvar" type="button">Salvar</button>
+                </div>
+                <p class="script-nota">O script roda isolado: não enxerga a página, o token nem a internet. Recebe os documentos marcados e devolve a tabela.</p>
               </div>
             </article>
-            <article class="app-card scripts-guia">
-              <div class="app-card-head"><h3>Guia para pedir à IA</h3><p>Copie tudo isto e cole junto do seu pedido.</p></div>
-              <pre id="scriptGuia"></pre>
+            <article class="app-card">
+              <div class="app-card-head"><h3>Salvos</h3><span class="script-passo" id="scriptsContagem"></span></div>
+              <div class="app-card-corpo">
+                <ul class="scripts-lista" id="scriptsLista"></ul>
+              </div>
             </article>
           </div>
+          <details class="scripts-guia">
+            <summary><span>Guia para pedir à IA</span><small>Copie e cole junto do seu pedido</small></summary>
+            <div class="scripts-guia-corpo">
+              <button class="app-botao" id="scriptGuiaCopiar" type="button">Copiar guia</button>
+              <pre id="scriptGuia"></pre>
+            </div>
+          </details>
         </section>
         <section class="app-view" data-view-panel="personalizar">
           <div class="view-heading"><div><p>Identidade do ambiente</p><h2>Personalizar página</h2></div></div>
@@ -490,10 +498,10 @@
     </section>
   </div>
 
-  <script src="/assets/js/sistema.js?v=20260825b" defer></script>
+  <script src="/assets/js/sistema.js?v=20260825d" defer></script>
 
   <script src="/assets/js/firebase-config.js" defer></script>
   <script src="/assets/js/firebase-auth.js" type="module"></script>
-  <script src="/assets/js/editor-homepage.js?v=20260825b" defer></script>
+  <script src="/assets/js/editor-homepage.js?v=20260825d" defer></script>
 </body>
 </html>

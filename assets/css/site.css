@@ -500,28 +500,71 @@
     .app-botao:hover { border-color: #205e8a; color: #12293b; }
     .app-botao.primario { background: #205e8a; border-color: #205e8a; color: white; }
     .app-botao.primario:hover { background: #1a4e73; color: white; }
-    .scripts-grade { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap: 14px; align-items: start; }
-    .scripts-guia { grid-column: 1 / -1; }
+
+    .app-card-corpo { padding: 15px 16px; }
+    .script-passo { color: #8399a6; font-size: 11px; }
+    .scripts-grade { align-items: start; }
+
+    .script-campo { display: block; margin-bottom: 12px; }
+    .script-campo span { display: block; margin-bottom: 5px; color: #5b7688; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .script-campo input, .script-campo textarea { width: 100%; padding: 8px 10px; border: 1px solid #cdd8e0; background: #fcfdfe; color: #12293b; font: inherit; font-size: 12.5px; outline: 0; }
+    .script-campo textarea { min-height: 210px; background: #0d2233; color: #cfe0ec; border-color: #0d2233; font-family: Consolas, "Courier New", monospace; font-size: 12px; line-height: 1.6; resize: vertical; }
+    .script-campo textarea::placeholder { color: #6d8ba1; }
+    .script-campo input:focus { border-color: #205e8a; box-shadow: 0 0 0 2px rgba(32,94,138,.14); }
+    .script-campo textarea:focus { box-shadow: 0 0 0 2px rgba(32,94,138,.35); }
+
+    .script-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+    .script-aviso { margin: 0 0 11px; padding: 8px 11px; border-left: 3px solid #b3c2cd; background: #eef2f5; color: #45606f; font-size: 12px; }
+    .script-aviso.ok { border-left-color: #2f7d55; background: #e8f3ec; color: #1c6b46; }
+    .script-aviso.erro { border-left-color: #c9403f; background: #fbeceb; color: #9c3037; }
+    .script-nota { margin: 12px 0 0; padding-top: 11px; border-top: 1px solid #eef2f5; color: #8399a6; font-size: 11px; line-height: 1.5; }
+
     .scripts-lista { margin: 0; padding: 0; list-style: none; }
-    .scripts-lista li { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-bottom: 1px solid #eef2f5; font-size: 12.5px; }
-    .scripts-lista li:last-child { border-bottom: 0; }
-    .script-nome { flex: 1; color: #12293b; font-weight: 600; }
-    .script-data { color: #93a6b2; font-size: 11px; }
-    .scripts-lista button { padding: 4px 10px; border: 1px solid #cdd8e0; background: white; color: #365266; font: inherit; font-size: 11.5px; cursor: pointer; }
+    .scripts-lista li { display: flex; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid #eef2f5; font-size: 12.5px; }
+    .scripts-lista li:first-child { padding-top: 0; }
+    .scripts-lista li:last-child { padding-bottom: 0; border-bottom: 0; }
+    .script-nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #12293b; font-weight: 600; }
+    .script-data { color: #93a6b2; font-size: 10.5px; }
+    .scripts-lista button { padding: 3px 9px; border: 1px solid #cdd8e0; background: white; color: #5d6c77; font: inherit; font-size: 11px; cursor: pointer; }
     .scripts-lista button:hover { border-color: #205e8a; color: #12293b; }
     .scripts-lista button.perigo:hover { border-color: #c9403f; color: #c9403f; }
-    .script-vazio { color: #8399a6; font-style: italic; }
-    .script-campo { display: block; margin-bottom: 11px; }
-    .script-campo span { display: block; margin-bottom: 4px; color: #5b7688; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-    .script-campo input, .script-campo textarea { width: 100%; padding: 7px 9px; border: 1px solid #cdd8e0; background: white; color: #12293b; font: inherit; font-size: 12.5px; outline: 0; }
-    .script-campo textarea { font-family: Consolas, "Courier New", monospace; font-size: 12px; line-height: 1.5; resize: vertical; }
-    .script-campo input:focus, .script-campo textarea:focus { border-color: #205e8a; box-shadow: 0 0 0 2px rgba(32,94,138,.14); }
-    .script-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
-    .script-aviso { margin: 0 0 10px; padding: 7px 10px; background: #eef2f5; color: #45606f; font-size: 12px; }
-    .script-aviso.ok { background: #e8f3ec; color: #1c6b46; }
-    .script-aviso.erro { background: #fbeceb; color: #9c3037; }
-    .scripts-guia pre { margin: 0; max-height: 320px; overflow: auto; padding: 12px 14px; background: #0d2233; color: #cfe0ec; font-family: Consolas, "Courier New", monospace; font-size: 11.5px; line-height: 1.55; white-space: pre; }
-    @media (max-width: 900px) { .scripts-grade { grid-template-columns: 1fr; } }
+    .script-vazio { display: block; padding: 4px 0; color: #8399a6; font-size: 12px; font-style: italic; }
+
+    .scripts-guia { margin-top: 14px; background: white; border: 1px solid #d9dfe2; }
+    .scripts-guia summary { min-height: 46px; padding: 0 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none; }
+    .scripts-guia summary::-webkit-details-marker { display: none; }
+    .scripts-guia summary::before { content: "▸"; color: #8399a6; font-size: 11px; }
+    .scripts-guia[open] summary::before { content: "▾"; }
+    .scripts-guia summary span { color: var(--navy-900); font: 700 15px Cambria, Georgia, serif; }
+    .scripts-guia summary small { color: #8399a6; font-size: 11px; }
+    .scripts-guia summary:hover span { color: #205e8a; }
+    .scripts-guia-corpo { padding: 0 16px 16px; }
+    .scripts-guia-corpo .app-botao { margin-bottom: 10px; }
+    .scripts-guia pre { margin: 0; max-height: 340px; overflow: auto; padding: 13px 15px; background: #0d2233; color: #cfe0ec; font-family: Consolas, "Courier New", monospace; font-size: 11.5px; line-height: 1.6; white-space: pre; }
+    @media (max-width: 1000px) { .scripts-grade { grid-template-columns: 1fr; } }
+
+    /* ---- densidade da tela de scripts dentro do sistema ---- */
+    body.app-active [data-view-panel="scripts"] .app-card-head { min-height: 40px; padding: 0 12px; }
+    body.app-active [data-view-panel="scripts"] .app-card-head h3 { font-size: 14.5px; }
+    body.app-active .scripts-grade { margin-top: 10px; gap: 10px; grid-template-columns: minmax(0,1.45fr) minmax(260px,.55fr); }
+    body.app-active .app-card-corpo { padding: 11px 12px; }
+    body.app-active .script-campo { margin-bottom: 9px; }
+    body.app-active .script-campo span { margin-bottom: 3px; font-size: 9.5px; }
+    body.app-active .script-campo input { padding: 5px 8px; font-size: 12px; }
+    body.app-active .script-campo textarea { min-height: 250px; padding: 9px 11px; font-size: 11.5px; line-height: 1.55; }
+    body.app-active .script-acoes { gap: 6px; }
+    body.app-active .app-botao { padding: 5px 11px; font-size: 11.5px; }
+    body.app-active .script-aviso { margin-bottom: 8px; padding: 6px 9px; font-size: 11.5px; }
+    body.app-active .script-nota { margin-top: 9px; padding-top: 8px; font-size: 10.5px; }
+    body.app-active .scripts-lista li { padding: 6px 0; gap: 6px; font-size: 12px; }
+    body.app-active .scripts-lista button { padding: 2px 7px; font-size: 10.5px; }
+    body.app-active .script-data { font-size: 10px; }
+    body.app-active .scripts-guia { margin-top: 10px; }
+    body.app-active .scripts-guia summary { min-height: 36px; padding: 0 12px; }
+    body.app-active .scripts-guia summary span { font-size: 13.5px; }
+    body.app-active .scripts-guia summary small { font-size: 10.5px; }
+    body.app-active .scripts-guia-corpo { padding: 0 12px 12px; }
+    body.app-active .scripts-guia pre { max-height: 300px; padding: 10px 12px; font-size: 11px; }
 
     /* ---- área de trabalho sem planilha aberta ---- */
     .area-vazia { max-width: 470px; margin: 44px auto; padding: 26px 28px; background: white; border: 1px solid #cdd8e0; text-align: center; }

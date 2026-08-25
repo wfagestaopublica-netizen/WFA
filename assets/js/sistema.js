@@ -1983,6 +1983,8 @@
       async function renderScripts() {
         if (!scriptsDom.lista) return;
         const salvos = await lerScripts();
+        const contagem = document.getElementById('scriptsContagem');
+        if (contagem) contagem.textContent = salvos.length ? salvos.length + (salvos.length === 1 ? ' script' : ' scripts') : '';
         scriptsDom.lista.innerHTML = salvos.length
           ? salvos.map(function (s) {
               return '<li><span class="script-nome">' + escapeHtml(s.nome) + '</span>' +
@@ -2001,6 +2003,15 @@
       }
 
       if (scriptsDom.guia) scriptsDom.guia.textContent = GUIA_SCRIPT;
+      const botaoCopiarGuia = document.getElementById('scriptGuiaCopiar');
+      if (botaoCopiarGuia) {
+        botaoCopiarGuia.addEventListener('click', async function () {
+          try {
+            await navigator.clipboard.writeText(GUIA_SCRIPT);
+            showToast('Guia copiado. Cole junto do seu pedido à IA.');
+          } catch (erro) { showToast('Não foi possível copiar. Selecione o texto e copie à mão.'); }
+        });
+      }
 
       if (scriptsDom.lista) {
         scriptsDom.lista.addEventListener('click', async function (evento) {
@@ -2038,9 +2049,9 @@
           catch (erro) { avisoScript(erro.message, 'erro'); return; }
           try {
             const resultado = conferirResultado(await rodarScript(corpo, dados));
-            avisoScript('Funcionou: ' + resultado.colunas.length + ' colunas e ' + resultado.linhas.length +
-              (resultado.linhas.length === 1 ? ' linha' : ' linhas') + ' a partir de ' +
-              dados.documentos.map(function (d) { return d.nome; }).join(', ') + '.', 'ok');
+            avisoScript('Funcionou: ' + resultado.colunas.length + (resultado.colunas.length === 1 ? ' coluna' : ' colunas') +
+              ' e ' + resultado.linhas.length + (resultado.linhas.length === 1 ? ' linha' : ' linhas') +
+              ' a partir de ' + dados.documentos.map(function (d) { return d.nome; }).join(', ') + '.', 'ok');
           } catch (erro) {
             avisoScript(erro.message, 'erro');
           }
