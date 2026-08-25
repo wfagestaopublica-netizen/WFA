@@ -439,12 +439,22 @@
 
       /* Os documentos marcados, já lidos, no formato que o script recebe. */
       async function dadosParaScript() {
-        const marcados = documentosSelecionados();
+        const marcados = documentosMarcados();
         if (!marcados.length) throw new Error('Marque ao menos um documento na barra lateral.');
         const documentos = [];
         for (const item of marcados) {
           const descricao = ROLE_INFO[item.role];
-          if (!descricao) continue;
+          if (!descricao) {
+            // o sistema não conhece este relatório: entrega o texto cru
+            const paginas = await textoDoPdf(item.file);
+            documentos.push({
+              tipo: 'desconhecido', nome: item.file.name, titulo: 'Documento não reconhecido',
+              paginas: paginas,
+              textos: paginas.reduce(function (todas, pagina) { return todas.concat(pagina); }, []),
+              linhas: []
+            });
+            continue;
+          }
           if (descricao.modo === 'blocos') {
             const lido = await extrairRelatorioEmBlocos(item.role, item.file);
             documentos.push({
@@ -551,6 +561,30 @@
         showToast('Pronto: ' + resultado.linhas.length + (resultado.linhas.length === 1 ? ' linha.' : ' linhas.'));
       }
 
+      /* Documentos marcados, reconhecidos ou não. Um PDF que o sistema não sabe
+         ler não é inútil: o script pode lê-lo por conta própria, recebendo o
+         texto cru. As automações de fábrica continuam vendo só os conhecidos. */
+      function documentosMarcados() {
+        return workspaceState.files.filter(function (item) {
+          return workspaceState.selected.has(item.id);
+        });
+      }
+      // texto de um PDF, linha a linha, para o script se virar sozinho
+      async function textoDoPdf(file) {
+        const pdfjs = await getPdfJs();
+        const buffer = await file.arrayBuffer();
+        const pdf = await pdfjs.getDocument({ data:new Uint8Array(buffer), enableScripting:false, isEvalSupported:false }).promise;
+        const paginas = [];
+        for (let n = 1; n <= pdf.numPages; n += 1) {
+          const pagina = await pdf.getPage(n);
+          const conteudo = await pagina.getTextContent();
+          paginas.push(linesFromPdfItems(conteudo.items));
+          pagina.cleanup();
+        }
+        if (typeof pdf.destroy === 'function') await pdf.destroy();
+        return paginas;
+      }
+
       function documentosSelecionados() {
         return workspaceState.files.filter(function (item) {
           return workspaceState.selected.has(item.id) && item.status === 'ready' && ROLE_INFO[item.role];
@@ -565,7 +599,8 @@
       // Barra lateral: quantas planilhas existem e quantos documentos estão
       // marcados para as automações.
       function atualizarResumoDoBrief() {
-        const marcados = documentosSelecionados().length;
+        // conta todo documento marcado: os não reconhecidos servem aos scripts
+        const marcados = documentosMarcados().length;
         const aviso = document.getElementById('sidebarDocsMarcados');
         if (aviso) {
           aviso.textContent = marcados ? marcados + (marcados === 1 ? ' marcado' : ' marcados') : '';
@@ -1858,7 +1893,8 @@
         'dados.documentos é a lista dos documentos que você marcou na barra',
         'lateral, já lidos. Cada documento tem:',
         '',
-        '  tipo        budget, collected, committed ou consignacoes',
+        '  tipo        budget, collected, committed, consignacoes ou',
+        '              desconhecido, quando o sistema nao sabe ler o relatorio',
         '  nome        nome do arquivo',
         '  titulo      nome do relatório por extenso',
         '  municipio   município do cabeçalho',
@@ -1872,6 +1908,23 @@
         '  descricao   nome da fonte',
         '  valor       número',
         '  co          lista de códigos CO, quando houver',
+        '',
+        'Relatório que o sistema não conhece chega com tipo desconhecido,',
+        'linhas vazio e o texto cru em:',
+        '',
+        '  textos      todas as linhas do PDF, na ordem',
+        '  paginas     as mesmas linhas separadas por página',
+        '',
+        'Nesse caso é o script que lê. Exemplo — pegar linhas com valor:',
+        '',
+        '  var achadas = [];',
+        '  dados.documentos.forEach(function (doc) {',
+        '    (doc.textos || []).forEach(function (linha) {',
+        '      var m = linha.match(/^(.+?)\s+(-?[\d.]+,\d{2})$/);',
+        '      if (m) achadas.push([m[1], Number(m[2].replace(/\./g, "").replace(",", "."))]);',
+        '    });',
+        '  });',
+        '  return { colunas: ["Descrição", "Valor"], linhas: achadas };',
         '',
         'Cada linha da folha de consignações tem:',
         '  chave       código da fonte',
