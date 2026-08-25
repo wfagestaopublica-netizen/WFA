@@ -6,7 +6,7 @@
   <meta name="description" content="WFA Gestão Pública — assessoria contábil, orçamentária e fiscal para municípios de Minas Gerais.">
   <meta name="theme-color" content="#071b2b">
   <title>WFA Gestão Pública | Assessoria Contábil em Minas Gerais</title>
-  <link rel="stylesheet" href="/assets/css/site.css?v=20260825d">
+  <link rel="stylesheet" href="/assets/css/site.css?v=20260825g">
 </head>
 <body class="em-construcao" data-construcao="on">
   <div class="construction-gate" id="constructionGate" role="dialog" aria-label="Site em construção">
@@ -326,12 +326,18 @@
 
         <section class="app-view" data-view-panel="scripts">
           <div class="view-heading"><div><p>Automações que você mesmo envia</p><h2>Scripts</h2></div><div class="view-heading-actions"><button class="app-botao" id="scriptNovo" type="button">Novo script</button></div></div>
+          <ol class="scripts-passos">
+            <li><b>Marque os documentos</b> na barra lateral — são eles que o script vai ler.</li>
+            <li><b>Escreva o script</b> ou encomende-o, usando a especificação lá embaixo como base.</li>
+            <li><b>Cole aqui, dê um nome e teste.</b> O teste roda de verdade e mostra o que saiu.</li>
+            <li><b>Salve.</b> Ele passa a aparecer na planilha, em Automação → Scripts salvos.</li>
+          </ol>
           <div class="app-grid scripts-grade">
             <article class="app-card">
               <div class="app-card-head"><h3>Enviar</h3><span class="script-passo">Cole, teste e salve</span></div>
               <div class="app-card-corpo">
                 <label class="script-campo"><span>Nome</span><input id="scriptNome" type="text" placeholder="Total por consignatária" autocomplete="off"></label>
-                <label class="script-campo"><span>Script</span><textarea id="scriptCorpo" rows="12" spellcheck="false" placeholder="Cole aqui o script gerado"></textarea></label>
+                <label class="script-campo"><span>Script</span><textarea id="scriptCorpo" rows="12" spellcheck="false" placeholder="Cole aqui o script"></textarea></label>
                 <p class="script-aviso" id="scriptAviso" hidden></p>
                 <div class="script-acoes">
                   <button class="app-botao" id="scriptTestar" type="button">Testar com os documentos marcados</button>
@@ -348,9 +354,9 @@
             </article>
           </div>
           <details class="scripts-guia">
-            <summary><span>Guia para pedir à IA</span><small>Copie e cole junto do seu pedido</small></summary>
+            <summary><span>Especificação do script</span><small>Copie tudo e descreva o que precisa no fim</small></summary>
             <div class="scripts-guia-corpo">
-              <button class="app-botao" id="scriptGuiaCopiar" type="button">Copiar guia</button>
+              <button class="app-botao" id="scriptGuiaCopiar" type="button">Copiar especificação</button>
               <pre id="scriptGuia"></pre>
             </div>
           </details>
@@ -498,10 +504,10 @@
     </section>
   </div>
 
-  <script src="/assets/js/sistema.js?v=20260825d" defer></script>
+  <script src="/assets/js/sistema.js?v=20260825g" defer></script>
 
   <script src="/assets/js/firebase-config.js" defer></script>
   <script src="/assets/js/firebase-auth.js" type="module"></script>
-  <script src="/assets/js/editor-homepage.js?v=20260825d" defer></script>
+  <script src="/assets/js/editor-homepage.js?v=20260825g" defer></script>
 </body>
 </html>
