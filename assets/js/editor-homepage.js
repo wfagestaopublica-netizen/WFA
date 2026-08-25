@@ -998,16 +998,31 @@
         document.getElementById('cmsFormatOff').addEventListener('mousedown', function (e) { e.preventDefault(); limparFormatacao(); });
         document.getElementById('cmsFmtBold').addEventListener('mousedown', function (e) { e.preventDefault(); alternarMarcacao('bold'); });
         document.getElementById('cmsFmtItalic').addEventListener('mousedown', function (e) { e.preventDefault(); alternarMarcacao('italic'); });
-        document.querySelectorAll('.cms-cores button').forEach(function (botao) {
+        // só os quadradinhos de cor fixa: o botão da cor livre também vive aqui dentro
+        document.querySelectorAll('.cms-cores button[data-cor]').forEach(function (botao) {
           botao.addEventListener('mousedown', function (e) { e.preventDefault(); envolverSelecao('span', botao.dataset.cor); });
         });
         /* A cor livre abre o seletor do sistema, e isso tira o foco do texto —
            por isso a faixa selecionada é guardada antes e devolvida na hora de
            pintar. */
         var seletorCor = document.getElementById('cmsCorLivre');
-        if (seletorCor) {
+        var botaoCorLivre = document.getElementById('cmsCorLivreBotao');
+        if (seletorCor && botaoCorLivre) {
           var trechoPintado = null;
-          seletorCor.addEventListener('mousedown', function () { trechoPintado = null; });
+          /* Quem recebe o clique é um botão de verdade, que bloqueia o padrão do
+             mousedown: assim o texto continua selecionado e o foco não sai dele.
+             A paleta é aberta pelo próprio navegador, por showPicker quando
+             existe — antes o clique tinha de atravessar um campo invisível, e
+             era aí que ele se perdia. */
+          botaoCorLivre.addEventListener('mousedown', function (evento) { evento.preventDefault(); });
+          botaoCorLivre.addEventListener('click', function (evento) {
+            evento.preventDefault();
+            trechoPintado = null;
+            if (typeof seletorCor.showPicker === 'function') {
+              try { seletorCor.showPicker(); return; } catch (erro) { /* navegador recusou: cai no clique */ }
+            }
+            seletorCor.click();
+          });
           /* A paleta dispara a cada arrasto: na primeira vez o trecho é
              envolvido, nas seguintes só a cor dele muda. Assim não se acumulam
              marcações e dá para ajustar o tom sem selecionar de novo. */
