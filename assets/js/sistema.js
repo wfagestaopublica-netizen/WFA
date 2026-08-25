@@ -136,7 +136,7 @@
       });
       document.getElementById('appLogout').addEventListener('click', async function () { if (authAdapter) await authAdapter.signOut(); leaveApp(); });
 
-      const viewTitles = { workspace:'Central de documentos', 'comparador-fontes':'Área de trabalho', personalizar:'Personalizar página', configuracoes:'Configurações' };
+      const viewTitles = { workspace:'Central de documentos', 'comparador-fontes':'Área de trabalho', scripts:'Scripts', personalizar:'Personalizar página', configuracoes:'Configurações' };
       /* ============ Planilhas e automações ============
          A planilha nasce vazia e é sua. As automações são acionadas de dentro
          dela e a preenchem com os documentos marcados na barra lateral.      */
@@ -194,6 +194,18 @@
             }
           };
         })));
+      }
+      async function abrirMenuDeScripts() {
+        const salvos = await lerScripts();
+        if (!salvos.length) {
+          showToast('Nenhum script salvo. Envie um em Scripts, na barra lateral.');
+          return;
+        }
+        const posicao = document.getElementById('sheetAutomacao').getBoundingClientRect();
+        abrirMenuPlanilha({ clientX: posicao.left, clientY: posicao.bottom },
+          [{ titulo:'Scripts salvos' }].concat(salvos.map(function (script) {
+            return { rotulo: script.nome, acao: function () { executarScriptSalvo(script); } };
+          })));
       }
       function fecharMenuAutomacoes() {
         const painel = document.getElementById('sheetAutomacaoMenu');
@@ -400,6 +412,145 @@
         compareState.sourceSort = 'manual';
       }
 
+      /* ============ Scripts salvos ============
+         Um script recebe os documentos já lidos e devolve uma tabela. Ele roda
+         dentro de um Web Worker: lá não existe página, nem armazenamento, nem
+         token de publicação — só os dados que o sistema entrega e a resposta
+         que ele devolve. Assim um script errado não tem o que estragar.     */
+      const PREFIXO_SCRIPT = 'script-';
+      const TEMPO_LIMITE_SCRIPT = 5000;
+
+      async function lerScripts() {
+        try {
+          const stores = await getWfaStores();
+          const chaves = (await stores.state.keys()).filter(function (c) { return c.indexOf(PREFIXO_SCRIPT) === 0; });
+          const lidos = await Promise.all(chaves.map(function (c) { return stores.state.getItem(c); }));
+          return lidos.filter(Boolean).sort(function (a, b) { return a.nome.localeCompare(b.nome, 'pt-BR'); });
+        } catch (erro) { return []; }
+      }
+      async function gravarScript(script) {
+        const stores = await getWfaStores();
+        await stores.state.setItem(PREFIXO_SCRIPT + script.id, script);
+      }
+      async function apagarScript(id) {
+        const stores = await getWfaStores();
+        await stores.state.removeItem(PREFIXO_SCRIPT + id);
+      }
+
+      /* Os documentos marcados, já lidos, no formato que o script recebe. */
+      async function dadosParaScript() {
+        const marcados = documentosSelecionados();
+        if (!marcados.length) throw new Error('Marque ao menos um documento na barra lateral.');
+        const documentos = [];
+        for (const item of marcados) {
+          const descricao = ROLE_INFO[item.role];
+          if (!descricao) continue;
+          if (descricao.modo === 'blocos') {
+            const lido = await extrairRelatorioEmBlocos(item.role, item.file);
+            documentos.push({
+              tipo: item.role, nome: lido.fileName, titulo: descricao.nome,
+              municipio: lido.municipality, competencia: lido.competencia,
+              total: lido.extractedTotal,
+              linhas: lido.itens.map(function (i) {
+                return { chave:i.chave, descricao:i.chaveDescricao, codigo:i.codigo, item:i.item, grupo:i.grupo, ocorrencias:i.ocorrencias, valor:i.valor };
+              })
+            });
+          } else {
+            const lido = await extractCompareReport(item.role, item.file);
+            documentos.push({
+              tipo: item.role, nome: lido.fileName, titulo: descricao.nome,
+              municipio: lido.municipality, exercicio: lido.exercise,
+              total: lido.extractedTotal,
+              linhas: Array.from(lido.sources.values()).map(function (f) {
+                return { chave:f.key, descricao:f.description, valor:f.value, co:f.co.slice() };
+              })
+            });
+          }
+        }
+        if (!documentos.length) throw new Error('Nenhum documento reconhecido entre os marcados.');
+        return { documentos: documentos };
+      }
+
+      /* Roda o script isolado, com prazo. Se travar, o worker é encerrado. */
+      function rodarScript(corpo, dados) {
+        return new Promise(function (resolve, reject) {
+          const fonte = 'onmessage = function (evento) {\n' +
+            '  try {\n' +
+            '    var dados = evento.data;\n' +
+            '    var resultado = (function (dados) {\n' + corpo + '\n})(dados);\n' +
+            '    postMessage({ ok: true, resultado: resultado });\n' +
+            '  } catch (erro) { postMessage({ ok: false, erro: String(erro && erro.message || erro) }); }\n' +
+            '};';
+          let worker;
+          try {
+            worker = new Worker(URL.createObjectURL(new Blob([fonte], { type:'text/javascript' })));
+          } catch (erro) { reject(new Error('Este navegador não permite rodar scripts isolados.')); return; }
+          const prazo = window.setTimeout(function () {
+            worker.terminate();
+            reject(new Error('O script passou de ' + (TEMPO_LIMITE_SCRIPT / 1000) + ' segundos e foi interrompido.'));
+          }, TEMPO_LIMITE_SCRIPT);
+          worker.onmessage = function (evento) {
+            window.clearTimeout(prazo);
+            worker.terminate();
+            if (!evento.data || !evento.data.ok) { reject(new Error(evento.data && evento.data.erro || 'Erro no script.')); return; }
+            resolve(evento.data.resultado);
+          };
+          worker.onerror = function (erro) {
+            window.clearTimeout(prazo);
+            worker.terminate();
+            reject(new Error(erro.message || 'Erro no script.'));
+          };
+          worker.postMessage(dados);
+        });
+      }
+
+      /* A resposta precisa ter forma de tabela. Melhor recusar aqui do que
+         desenhar uma planilha quebrada. */
+      function conferirResultado(resultado) {
+        if (!resultado || typeof resultado !== 'object') throw new Error('O script precisa devolver { colunas, linhas }.');
+        if (!Array.isArray(resultado.colunas) || !resultado.colunas.length) throw new Error('Faltou a lista de colunas.');
+        if (!Array.isArray(resultado.linhas)) throw new Error('Faltou a lista de linhas.');
+        const largura = resultado.colunas.length;
+        resultado.linhas.forEach(function (linha, i) {
+          if (!Array.isArray(linha)) throw new Error('A linha ' + (i + 1) + ' não é uma lista.');
+          if (linha.length > largura) throw new Error('A linha ' + (i + 1) + ' tem mais células que colunas.');
+        });
+        return resultado;
+      }
+
+      // números viram moeda; o resto vai como texto
+      function celulaDoScript(valor) {
+        if (typeof valor === 'number' && Number.isFinite(valor)) return formatBrl(valor);
+        return valor == null ? '' : String(valor);
+      }
+
+      async function executarScriptSalvo(script) {
+        showToast('Lendo os documentos…');
+        let dados;
+        try { dados = await dadosParaScript(); }
+        catch (erro) { showToast(erro.message); return; }
+        let resultado;
+        try {
+          resultado = conferirResultado(await rodarScript(script.corpo, dados));
+        } catch (erro) {
+          showToast('Script “' + script.nome + '”: ' + erro.message);
+          return;
+        }
+        await novaPlanilha(true);
+        prepararColunas(resultado.colunas, resultado.colunas.map(function () { return 150; }));
+        compareState.rows = [];
+        resultado.linhas.forEach(function (linha, i) {
+          escreverLinhaLivre(i, linha.map(celulaDoScript));
+        });
+        compareState.sourceSort = 'manual';
+        addAudit('Script executado', script.nome + ' • ' + resultado.linhas.length + ' linhas a partir de ' +
+          dados.documentos.map(function (d) { return d.nome; }).join(', '), 'Script');
+        renderCompareTable();
+        renderAudit();
+        await salvarExecucao();
+        showToast('Pronto: ' + resultado.linhas.length + (resultado.linhas.length === 1 ? ' linha.' : ' linhas.'));
+      }
+
       function documentosSelecionados() {
         return workspaceState.files.filter(function (item) {
           return workspaceState.selected.has(item.id) && item.status === 'ready' && ROLE_INFO[item.role];
@@ -435,7 +586,7 @@
       /* ============ Endereços das telas ============
          Cada tela tem um endereço próprio, para poder ser guardada, compartilhada
          e navegada com os botões voltar e avançar do navegador.               */
-      var ROTAS = { workspace:'documentos', 'comparador-fontes':'planilhas', personalizar:'personalizar', configuracoes:'configuracoes' };
+      var ROTAS = { workspace:'documentos', 'comparador-fontes':'planilhas', scripts:'scripts', personalizar:'personalizar', configuracoes:'configuracoes' };
       var TELAS_POR_ROTA = Object.keys(ROTAS).reduce(function (mapa, tela) { mapa[ROTAS[tela]] = tela; return mapa; }, {});
       var navegandoPelaRota = false;
 
@@ -473,6 +624,7 @@
         wfaCurrentView = view;
         escreverRota(view);
         if (view === 'comparador-fontes') ajustarAlturaDaPlanilha();
+        if (view === 'scripts') renderScripts();
         document.querySelectorAll('[data-view-panel]').forEach(function (panel) { panel.classList.toggle('active', panel.dataset.viewPanel === view); });
         document.querySelectorAll('.app-nav [data-app-view]').forEach(function (button) { button.classList.toggle('active', button.dataset.appView === view); });
         document.querySelectorAll('.app-nav [data-workspace-tool]').forEach(function (button) { button.classList.toggle('active', view === 'comparador-fontes' && button.dataset.workspaceTool === 'compare'); });
@@ -1122,6 +1274,13 @@
             }
           });
         });
+        // scripts salvos entram no mesmo menu, depois das automações de fábrica
+        itens.push({ separador:true });
+        itens.push({
+          rotulo: 'Scripts salvos  ›',
+          dica: 'Scripts que você mesmo enviou',
+          acao: function () { window.setTimeout(abrirMenuDeScripts, 0); }
+        });
         abrirMenuPlanilha(evento, itens);
       });
       document.getElementById('sheetAutomacaoMenu').addEventListener('click', function (evento) {
@@ -1691,6 +1850,168 @@
         window.setTimeout(medir, 0);
       }
       window.addEventListener('resize', ajustarAlturaDaPlanilha);
+
+      /* ---------------- tela de scripts ---------------- */
+      const GUIA_SCRIPT = [
+        'O script recebe uma variável chamada dados e devolve uma tabela.',
+        '',
+        'dados.documentos é a lista dos documentos que você marcou na barra',
+        'lateral, já lidos. Cada documento tem:',
+        '',
+        '  tipo        budget, collected, committed ou consignacoes',
+        '  nome        nome do arquivo',
+        '  titulo      nome do relatório por extenso',
+        '  municipio   município do cabeçalho',
+        '  exercicio   ano (nos relatórios de fonte)',
+        '  competencia mês de referência (na folha)',
+        '  total       soma de tudo o que foi lido',
+        '  linhas      as linhas extraídas',
+        '',
+        'Cada linha de um relatório de fonte tem:',
+        '  chave       código da fonte, ex. "01 0500 0000 0000"',
+        '  descricao   nome da fonte',
+        '  valor       número',
+        '  co          lista de códigos CO, quando houver',
+        '',
+        'Cada linha da folha de consignações tem:',
+        '  chave       código da fonte',
+        '  descricao   nome da fonte',
+        '  codigo      código da verba',
+        '  item        nome da consignatária, ex. "EMPRESTIMO CAIXA I"',
+        '  grupo       consignatária sem o algarismo romano, ex. "EMPRESTIMO CAIXA"',
+        '  ocorrencias número de descontos',
+        '  valor       número',
+        '',
+        'O script precisa devolver um objeto assim:',
+        '',
+        '  return {',
+        '    colunas: ["Fonte", "Descrição", "Valor"],',
+        '    linhas: [',
+        '      ["01 0500 0000 0000", "Recursos não vinculados", 17263693.03]',
+        '    ]',
+        '  };',
+        '',
+        'Número vira dinheiro na planilha; texto vai como está.',
+        '',
+        'Exemplo completo — total por consignatária:',
+        '',
+        '  var doc = dados.documentos[0];',
+        '  var grupos = {};',
+        '  doc.linhas.forEach(function (l) {',
+        '    grupos[l.grupo] = (grupos[l.grupo] || 0) + l.valor;',
+        '  });',
+        '  return {',
+        '    colunas: ["Consignatária", "Total"],',
+        '    linhas: Object.keys(grupos).sort().map(function (g) {',
+        '      return [g, grupos[g]];',
+        '    })',
+        '  };',
+        '',
+        'Regras do ambiente: o script roda isolado, sem acesso à página, à',
+        'internet ou aos arquivos. Só recebe dados e devolve a tabela. Tem 5',
+        'segundos para responder.'
+      ].join('\n');
+
+      const scriptsDom = {
+        lista: document.getElementById('scriptsLista'),
+        nome: document.getElementById('scriptNome'),
+        corpo: document.getElementById('scriptCorpo'),
+        aviso: document.getElementById('scriptAviso'),
+        guia: document.getElementById('scriptGuia')
+      };
+      let scriptEmEdicao = null;
+
+      function avisoScript(texto, tipo) {
+        if (!scriptsDom.aviso) return;
+        scriptsDom.aviso.textContent = texto || '';
+        scriptsDom.aviso.className = 'script-aviso' + (tipo ? ' ' + tipo : '');
+        scriptsDom.aviso.hidden = !texto;
+      }
+      async function renderScripts() {
+        if (!scriptsDom.lista) return;
+        const salvos = await lerScripts();
+        scriptsDom.lista.innerHTML = salvos.length
+          ? salvos.map(function (s) {
+              return '<li><span class="script-nome">' + escapeHtml(s.nome) + '</span>' +
+                '<span class="script-data">' + new Date(s.criadoEm).toLocaleDateString('pt-BR') + '</span>' +
+                '<button type="button" data-script-editar="' + escapeHtml(s.id) + '">Abrir</button>' +
+                '<button type="button" class="perigo" data-script-apagar="' + escapeHtml(s.id) + '">Excluir</button></li>';
+            }).join('')
+          : '<li class="script-vazio">Nenhum script salvo ainda.</li>';
+        atualizarResumoDoBrief();
+      }
+      function limparFormularioScript() {
+        scriptEmEdicao = null;
+        if (scriptsDom.nome) scriptsDom.nome.value = '';
+        if (scriptsDom.corpo) scriptsDom.corpo.value = '';
+        avisoScript('');
+      }
+
+      if (scriptsDom.guia) scriptsDom.guia.textContent = GUIA_SCRIPT;
+
+      if (scriptsDom.lista) {
+        scriptsDom.lista.addEventListener('click', async function (evento) {
+          const abrir = evento.target.closest('[data-script-editar]');
+          const apagar = evento.target.closest('[data-script-apagar]');
+          if (abrir) {
+            const salvos = await lerScripts();
+            const escolhido = salvos.find(function (s) { return s.id === abrir.dataset.scriptEditar; });
+            if (!escolhido) return;
+            scriptEmEdicao = escolhido.id;
+            scriptsDom.nome.value = escolhido.nome;
+            scriptsDom.corpo.value = escolhido.corpo;
+            avisoScript('Script aberto para edição.', 'ok');
+            scriptsDom.nome.focus();
+          }
+          if (apagar) {
+            const sim = await window.wfaConfirmar('Este script sai da lista. As planilhas já criadas por ele continuam onde estão.', 'Excluir script', 'Excluir');
+            if (!sim) return;
+            await apagarScript(apagar.dataset.scriptApagar);
+            if (scriptEmEdicao === apagar.dataset.scriptApagar) limparFormularioScript();
+            await renderScripts();
+            showToast('Script excluído.');
+          }
+        });
+      }
+
+      const botaoTestar = document.getElementById('scriptTestar');
+      if (botaoTestar) {
+        botaoTestar.addEventListener('click', async function () {
+          const corpo = scriptsDom.corpo.value.trim();
+          if (!corpo) { avisoScript('Cole o script antes de testar.', 'erro'); return; }
+          avisoScript('Lendo os documentos marcados…');
+          let dados;
+          try { dados = await dadosParaScript(); }
+          catch (erro) { avisoScript(erro.message, 'erro'); return; }
+          try {
+            const resultado = conferirResultado(await rodarScript(corpo, dados));
+            avisoScript('Funcionou: ' + resultado.colunas.length + ' colunas e ' + resultado.linhas.length +
+              (resultado.linhas.length === 1 ? ' linha' : ' linhas') + ' a partir de ' +
+              dados.documentos.map(function (d) { return d.nome; }).join(', ') + '.', 'ok');
+          } catch (erro) {
+            avisoScript(erro.message, 'erro');
+          }
+        });
+      }
+
+      const botaoSalvarScript = document.getElementById('scriptSalvar');
+      if (botaoSalvarScript) {
+        botaoSalvarScript.addEventListener('click', async function () {
+          const nome = scriptsDom.nome.value.trim();
+          const corpo = scriptsDom.corpo.value.trim();
+          if (!nome) { avisoScript('Dê um nome ao script.', 'erro'); return; }
+          if (!corpo) { avisoScript('Cole o script antes de salvar.', 'erro'); return; }
+          await gravarScript({
+            id: scriptEmEdicao || 's' + Date.now().toString(36),
+            nome: nome, corpo: corpo, criadoEm: Date.now()
+          });
+          limparFormularioScript();
+          await renderScripts();
+          showToast('Script salvo. Ele já aparece em Automação.');
+        });
+      }
+      const botaoNovoScript = document.getElementById('scriptNovo');
+      if (botaoNovoScript) botaoNovoScript.addEventListener('click', function () { limparFormularioScript(); scriptsDom.nome.focus(); });
 
       /* ---------------- ordenar por uma coluna ----------------
          Vale para as duas planilhas: a da comparação e a livre, onde as

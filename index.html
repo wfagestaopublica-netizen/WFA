@@ -6,7 +6,7 @@
   <meta name="description" content="WFA Gestão Pública — assessoria contábil, orçamentária e fiscal para municípios de Minas Gerais.">
   <meta name="theme-color" content="#071b2b">
   <title>WFA Gestão Pública | Assessoria Contábil em Minas Gerais</title>
-  <link rel="stylesheet" href="/assets/css/site.css?v=20260824k">
+  <link rel="stylesheet" href="/assets/css/site.css?v=20260825a">
 </head>
 <body class="em-construcao" data-construcao="on">
   <div class="construction-gate" id="constructionGate" role="dialog" aria-label="Site em construção">
@@ -218,6 +218,7 @@
       <p class="sidebar-dica">Marque os relatórios e acione <b>Automação</b> dentro da planilha.</p>
       <nav class="app-nav sidebar-admin-nav" aria-label="Preferências">
         <button class="active" type="button" data-app-view="workspace" title="Central de documentos"><span class="app-nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3.5 6.5a1 1 0 0 1 1-1h3.2l1.3 1.7h6.5a1 1 0 0 1 1 1v6.3a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z"/></svg></span><span class="app-nav-texto">Central de documentos</span></button>
+        <button type="button" data-app-view="scripts" title="Scripts"><span class="app-nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M7.5 6 4 10l3.5 4M12.5 6 16 10l-3.5 4"/></svg></span><span class="app-nav-texto">Scripts</span></button>
         <button type="button" data-app-view="personalizar" title="Personalizar"><span class="app-nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 6.5h12M4 10h12M4 13.5h12"/><circle cx="8" cy="6.5" r="1.6"/><circle cx="13" cy="10" r="1.6"/><circle cx="7" cy="13.5" r="1.6"/></svg></span><span class="app-nav-texto">Personalizar</span></button>
         <button type="button" data-app-view="configuracoes" title="Configurações"><span class="app-nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="2.4"/><path d="M10 3.6v1.8M10 14.6v1.8M16.4 10h-1.8M5.4 10H3.6M14.5 5.5l-1.3 1.3M6.8 13.2l-1.3 1.3M14.5 14.5l-1.3-1.3M6.8 6.8 5.5 5.5"/></svg></span><span class="app-nav-texto">Configurações</span></button>
       </nav>
@@ -323,6 +324,29 @@
           </div>
         </section>
 
+        <section class="app-view" data-view-panel="scripts">
+          <div class="view-heading"><div><h2>Scripts</h2><p>Envie um script, dê um nome e ele passa a aparecer em <b>Automação</b>, dentro da planilha.</p></div><div class="view-heading-actions"><button class="app-botao" id="scriptNovo" type="button">Novo script</button></div></div>
+          <div class="scripts-grade">
+            <article class="app-card">
+              <div class="app-card-head"><h3>Salvos</h3></div>
+              <ul class="scripts-lista" id="scriptsLista"></ul>
+            </article>
+            <article class="app-card">
+              <div class="app-card-head"><h3>Enviar</h3></div>
+              <label class="script-campo"><span>Nome</span><input id="scriptNome" type="text" placeholder="Total por consignatária" autocomplete="off"></label>
+              <label class="script-campo"><span>Script</span><textarea id="scriptCorpo" rows="14" spellcheck="false" placeholder="Cole aqui o script gerado"></textarea></label>
+              <p class="script-aviso" id="scriptAviso" hidden></p>
+              <div class="script-acoes">
+                <button class="app-botao" id="scriptTestar" type="button">Testar com os documentos marcados</button>
+                <button class="app-botao primario" id="scriptSalvar" type="button">Salvar</button>
+              </div>
+            </article>
+            <article class="app-card scripts-guia">
+              <div class="app-card-head"><h3>Guia para pedir à IA</h3><p>Copie tudo isto e cole junto do seu pedido.</p></div>
+              <pre id="scriptGuia"></pre>
+            </article>
+          </div>
+        </section>
         <section class="app-view" data-view-panel="personalizar">
           <div class="view-heading"><div><p>Identidade do ambiente</p><h2>Personalizar página</h2></div></div>
           <div class="custom-grid">
@@ -466,10 +490,10 @@
     </section>
   </div>
 
-  <script src="/assets/js/sistema.js?v=20260824k" defer></script>
+  <script src="/assets/js/sistema.js?v=20260825a" defer></script>
 
   <script src="/assets/js/firebase-config.js" defer></script>
   <script src="/assets/js/firebase-auth.js" type="module"></script>
-  <script src="/assets/js/editor-homepage.js?v=20260824k" defer></script>
+  <script src="/assets/js/editor-homepage.js?v=20260825a" defer></script>
 </body>
 </html>

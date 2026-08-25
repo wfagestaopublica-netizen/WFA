@@ -495,6 +495,34 @@
     /* botão de pré-visualização legível sobre o rodapé claro da barra lateral */
     .app-view-site { background: white; border: 1px solid #24699a; color: #1c5278; font-weight: 700; }
     .app-view-site:hover { background: #24699a; border-color: #24699a; color: white; }
+    /* ---- tela de scripts ---- */
+    .app-botao { padding: 7px 14px; border: 1px solid #cdd8e0; background: white; color: #365266; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .app-botao:hover { border-color: #205e8a; color: #12293b; }
+    .app-botao.primario { background: #205e8a; border-color: #205e8a; color: white; }
+    .app-botao.primario:hover { background: #1a4e73; color: white; }
+    .scripts-grade { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); gap: 14px; align-items: start; }
+    .scripts-guia { grid-column: 1 / -1; }
+    .scripts-lista { margin: 0; padding: 0; list-style: none; }
+    .scripts-lista li { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-bottom: 1px solid #eef2f5; font-size: 12.5px; }
+    .scripts-lista li:last-child { border-bottom: 0; }
+    .script-nome { flex: 1; color: #12293b; font-weight: 600; }
+    .script-data { color: #93a6b2; font-size: 11px; }
+    .scripts-lista button { padding: 4px 10px; border: 1px solid #cdd8e0; background: white; color: #365266; font: inherit; font-size: 11.5px; cursor: pointer; }
+    .scripts-lista button:hover { border-color: #205e8a; color: #12293b; }
+    .scripts-lista button.perigo:hover { border-color: #c9403f; color: #c9403f; }
+    .script-vazio { color: #8399a6; font-style: italic; }
+    .script-campo { display: block; margin-bottom: 11px; }
+    .script-campo span { display: block; margin-bottom: 4px; color: #5b7688; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    .script-campo input, .script-campo textarea { width: 100%; padding: 7px 9px; border: 1px solid #cdd8e0; background: white; color: #12293b; font: inherit; font-size: 12.5px; outline: 0; }
+    .script-campo textarea { font-family: Consolas, "Courier New", monospace; font-size: 12px; line-height: 1.5; resize: vertical; }
+    .script-campo input:focus, .script-campo textarea:focus { border-color: #205e8a; box-shadow: 0 0 0 2px rgba(32,94,138,.14); }
+    .script-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+    .script-aviso { margin: 0 0 10px; padding: 7px 10px; background: #eef2f5; color: #45606f; font-size: 12px; }
+    .script-aviso.ok { background: #e8f3ec; color: #1c6b46; }
+    .script-aviso.erro { background: #fbeceb; color: #9c3037; }
+    .scripts-guia pre { margin: 0; max-height: 320px; overflow: auto; padding: 12px 14px; background: #0d2233; color: #cfe0ec; font-family: Consolas, "Courier New", monospace; font-size: 11.5px; line-height: 1.55; white-space: pre; }
+    @media (max-width: 900px) { .scripts-grade { grid-template-columns: 1fr; } }
+
     /* ---- área de trabalho sem planilha aberta ---- */
     .area-vazia { max-width: 470px; margin: 44px auto; padding: 26px 28px; background: white; border: 1px solid #cdd8e0; text-align: center; }
     .area-vazia-titulo { margin: 0 0 7px; color: #12293b; font: 700 17px/1.2 Cambria, Georgia, serif; }
